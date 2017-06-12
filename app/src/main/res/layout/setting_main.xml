@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <Button
+        android:id="@+id/setting_btn_alarm"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="120dp"
+        android:layout_centerHorizontal="true"
+        android:text="알림" />
+
+    <Button
+        android:id="@+id/setting_btn_sensitivity"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/setting_btn_alarm"
+        android:text="민감도" />
+
+    <Button
+        android:id="@+id/setting_btn_standard"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/setting_btn_sensitivity"
+        android:text="기준점" />
+
+    <Button
+        android:id="@+id/setting_btn_record"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/setting_btn_standard"
+        android:text="기록" />
+
+    <Button
+        android:id="@+id/setting_btn_capture"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="20dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/setting_btn_record"
+        android:text="캡처 길이" />
+
+    <Button
+        android:id="@+id/setting_btn_start"
+        android:layout_width="200dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="50dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/setting_btn_capture"
+        android:text="시작" />
+</RelativeLayout>

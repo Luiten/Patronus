@@ -1,36 +1,42 @@
 package luiten.patronus;
-
-import android.app.Activity;
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.app.AppCompatActivity;
+import android.os.Bundle;
 import android.util.Log;
 import android.view.SurfaceView;
+import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.TextView;
+
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
-import org.opencv.core.Mat;
 
-public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
-    private Mat img_input;
-    private Mat img_result;
-    private static final String TAG = "opencv";
-    private CameraBridgeViewBase mOpenCvCameraView;
+import java.io.File;
+import java.io.FileWriter;
 
-    public native int convertNativeLib(long matAddrInput, long matAddrResult);
+public class MainActivity extends AppCompatActivity {
 
-    static final int PERMISSION_REQUEST_CODE = 1;
-    String[] PERMISSIONS  = {"android.permission.CAMERA"};
-
+    // Used to load the 'native-lib' library on application startup.
     static {
-        System.loadLibrary("opencv_java3");
         System.loadLibrary("native-lib");
     }
+
+    public native int InitializeNativeLib(int width, int height);
+    public native int SetSettings(int type, double value);
+
+    static final int PERMISSION_REQUEST_CODE = 1;
+    String[] PERMISSIONS  = {"android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE",
+            "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE", "android.permission.READ_PHONE_STATE",
+            "android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION", "android.permission.VIBRATE" };
 
     private boolean hasPermissions(String[] permissions) {
         int ret = 0;
@@ -54,24 +60,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         }
     }
 
-
-
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS:
-                {
-                    mOpenCvCameraView.enableView();
-                } break;
-                default:
-                {
-                    super.onManagerConnected(status);
-                } break;
-            }
-        }
-    };
-
     @Override
     public void onRequestPermissionsResult(int permsRequestCode, String[] permissions, int[] grantResults){
         switch(permsRequestCode){
@@ -84,7 +72,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
                         if (!camreaAccepted  )
                         {
-                            showDialogforPermission("앱을 실행하려면 퍼미션을 허가하셔야합니다.");
+                            showDialogforPermission("앱을 실행하려면 퍼미션을 허가하셔야 합니다.");
                             return;
                         }else
                         {
@@ -98,7 +86,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     private void showDialogforPermission(String msg) {
 
-        final AlertDialog.Builder myDialog = new AlertDialog.Builder(  MainActivity.this);
+        final AlertDialog.Builder myDialog = new AlertDialog.Builder(MainActivity.this);
         myDialog.setTitle("알림");
         myDialog.setMessage(msg);
         myDialog.setCancelable(false);
@@ -123,7 +111,23 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        getWindow().addFlags( WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+/*        File file = new File("/sdcard/patronus/settings.txt");
+
+        // 일치하는 세팅 파일이 있으면 다음 액티비티
+        if( file.exists() ) {
+            Intent intent = new Intent(getApplicationContext(), FirstActivity.class);
+            startActivity(intent);
+            finish();
+        }*/
+
+        Button button1 = (Button)findViewById(R.id.main_btn_start);
+        button1.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getApplicationContext(), SettingActivity.class);
+                startActivity(intent);
+            }
+        });
 
         if (!hasPermissions(PERMISSIONS)) { //퍼미션 허가를 했었는지 여부를 확인
             requestNecessaryPermissions(PERMISSIONS);//퍼미션 허가안되어 있다면 사용자에게 요청
@@ -131,62 +135,29 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             //이미 사용자에게 퍼미션 허가를 받음.
         }
 
-        mOpenCvCameraView = (CameraBridgeViewBase)findViewById(R.id.activity_surface_view);
-        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-        mOpenCvCameraView.setCvCameraViewListener(this);
-        mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
-        mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+
+
+        // Manager 클래스 초기화
+        InitializeNativeLib(1280, 720);
+
+        // 세팅 값 읽기
+        SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
+
+        // Manager 클래스에 적용
+        SetSettings(1, settings.getBoolean("lane", true) ? 1 : 0);
+        SetSettings(2, settings.getBoolean("distance", true) ? 1 : 0);
+        SetSettings(3, settings.getBoolean("signal", true) ? 1 : 0);
+        SetSettings(4, settings.getBoolean("sleep", true) ? 1 : 0);
+        SetSettings(5, settings.getBoolean("sign", true) ? 1 : 0);
+        SetSettings(6, settings.getInt("sensitivity", 4));
     }
 
-    @Override
-    public void onPause()
-    {
-        super.onPause();
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-
-        if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "onResume :: Internal OpenCV library not found.");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
-        } else {
-            Log.d(TAG, "onResum :: OpenCV library found inside package. Using it!");
-            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-        }
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
-
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
-    }
-
-    @Override
-    public void onCameraViewStarted(int width, int height) {
+    public void onStartClick(){
 
     }
 
-    @Override
-    public void onCameraViewStopped() {
-
-    }
-
-    @Override
-    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
-
-        img_input = inputFrame.rgba();
-
-        if ( img_result != null ) img_result.release();
-        img_result = new Mat();
-
-        convertNativeLib(img_input.getNativeObjAddr(), img_result.getNativeObjAddr());
-
-        return img_result;
-    }
+    /**
+     * A native method that is implemented by the 'native-lib' native library,
+     * which is packaged with this application.
+     */
 }

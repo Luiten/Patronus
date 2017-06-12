@@ -1,11 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent" >
+    android:layout_height="match_parent">
 
-    <org.opencv.android.JavaCameraView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:id="@+id/activity_surface_view" />
+    <TextView
+        android:id="@+id/main_text_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="초기 설정을 시작합니다"
+        android:textSize="30dp"/>
+
+    <TextView
+        android:id="@+id/main_text_backlight"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/main_text_start"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="1m 거리에서 자동차 뒷면(후미등)을 찍어주세요"/>
+
+    <TextView
+        android:id="@+id/main_text_alarm"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/main_text_backlight"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="원하는 부분의 기능만 알림을 켜고 꺼주세요"/>
+
+    <TextView
+        android:id="@+id/main_text_sensitivity"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/main_text_alarm"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="충격 여부를 결정하는 민감도를 설정해주세요"/>
+
+    <TextView
+        android:id="@+id/main_text_capture"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/main_text_sensitivity"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="동영상을 캡처할 동영상 길이를 설정해주세요"/>
+
+    <TextView
+        android:id="@+id/main_text_camera"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/main_text_capture"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="30dp"
+        android:text="전면, 후면 카메라를 선택하여 캡처되게 설정해주세요"/>
+
+
+    <Button
+        android:id="@+id/main_btn_start"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:onClick="onStartClick"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="30dp"
+        android:text="시작하기" />
 
 </RelativeLayout>
