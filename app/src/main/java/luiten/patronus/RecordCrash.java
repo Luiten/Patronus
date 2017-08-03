@@ -1,13 +1,16 @@
 package luiten.patronus;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.view.Window;
 import android.widget.MediaController;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.VideoView;
 
 import java.io.File;
@@ -16,7 +19,7 @@ import java.io.File;
  * Created by LG on 2017-06-05.
  */
 
-public class RecordCrash extends SettingActivity {
+public class RecordCrash extends Activity {
 
     private String LogType[] = { "자동차간 거리", "끼어들기", "차선 침범", "신호 위반", "신호 주시 안함",
             "표지판", "졸음 운전", "충돌", "운전 점수" };
@@ -30,8 +33,8 @@ public class RecordCrash extends SettingActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.record_crash);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         Intent intent = getIntent();
         Logs = intent.getStringArrayExtra("Logs");
@@ -43,28 +46,25 @@ public class RecordCrash extends SettingActivity {
 
         // 경로 설정
         String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/video/";
+        dirPath += Logs[4];
         File file = new File(dirPath);
 
-        // 일치하는 폴더가 없으면 생성
+        // 일치하는 파일이 없으면 오류 메시지 출력
         if (!file.exists()) {
-            file.mkdirs();
+            Toast.makeText(getApplicationContext(), "동영상 파일이 존재하지 않습니다.", Toast.LENGTH_SHORT).show();
         }
+        else {
+            Uri video = Uri.parse(dirPath);
 
-        dirPath += Logs[4];
-
-        Uri video = Uri.parse(dirPath);
-
-        videoView.setMediaController(mediaController);
-        videoView.setVideoURI(video);
-        videoView.requestFocus();
+            videoView.setMediaController(mediaController);
+            videoView.setVideoURI(video);
+            videoView.requestFocus();
+        }
 
         //videoView.start();
 
-        final TextView tvTitle = (TextView)findViewById(R.id.recordcrash_text_title);
-        tvTitle.setText(LogType[Integer.valueOf(Logs[2]) - 1]);
-
         final TextView tvContent = (TextView)findViewById(R.id.recordcrash_text_content);
         tvContent.setText("날짜: " + Logs[0] + "\n시간: " + Logs[1] + "\n종류: " + LogType[Integer.valueOf(Logs[2]) - 1] + "\n영상: " +
-                Logs[4] + "\n\n내용\n" + Logs[3] + LogDescType[Integer.valueOf(Logs[2]) - 1]);
+                Logs[4] + "\n\n" + Logs[3] + LogDescType[Integer.valueOf(Logs[2]) - 1]);
     }
 }

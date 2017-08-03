@@ -3,7 +3,6 @@
 #include <list>
 #include <opencv2/core/core.hpp>
 #include <opencv2/video/tracking.hpp>
-#include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include "distance.cpp"
 #include "lane.cpp"
@@ -21,13 +20,13 @@ class Manager
 public:
     void Initialize()
     {
-        string checkcas = "/sdcard/checkcas.xml";
+        string checkcas = "/sdcard/Patronus/checkcas.xml";
 
         m_Detectcars.setnum();                  //set number of cars detected as 0
         m_Detectcars.checkcascade_load(checkcas);      //load the test cascade
 
         //Applying various cascades for a finer search.
-        string cas = "/sdcard/cas1.xml";
+        string cas = "/sdcard/Patronus/cars.xml";
         m_Detectcars.cascade_load(cas);
 
     /*    cas = "/sdcard/cas2.xml";
@@ -198,6 +197,12 @@ public:
 
     void SetSettings(int type, double value)
     {
+        int VideoSize[][2] = {
+                { 1920, 1080 },
+                { 1280, 720 },
+                { 800, 600 },
+                { 640, 480 } };
+
         switch (type)
         {
             // 차선
@@ -228,6 +233,12 @@ public:
             // 충돌 기준 가속도 값
             case 6:
                 m_fCollision = (float) (value + 1) * 5.8f;
+                break;
+
+            // 동영상 크기
+            case 7:
+                width = VideoSize[(int)value][0];
+                height = VideoSize[(int)value][1];
                 break;
 
             // GPS 위도 값

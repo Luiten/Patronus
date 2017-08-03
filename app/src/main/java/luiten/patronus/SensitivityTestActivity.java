@@ -1,5 +1,6 @@
 package luiten.patronus;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -10,6 +11,8 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.SeekBar;
 import android.widget.TextView;
@@ -18,7 +21,7 @@ import android.widget.TextView;
  * Created by LG on 2017-05-19.
  */
 
-public class SensitivityTestActivity extends SettingActivity implements SensorEventListener {
+public class SensitivityTestActivity extends Activity implements SensorEventListener {
 
     double nowAccel, maxAccel;
     SensorManager mSensorManager = null;
@@ -27,7 +30,8 @@ public class SensitivityTestActivity extends SettingActivity implements SensorEv
     @Override
     public void onCreate(Bundle savedIntanceState) {
         super.onCreate(savedIntanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+
+        requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.sensitivity_test);
 
         // 가속도 초기화
@@ -39,7 +43,7 @@ public class SensitivityTestActivity extends SettingActivity implements SensorEv
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((SensitivityActivity)SensitivityActivity.mContext).sb.setProgress((int)(maxAccel / 5.8));;
+                ((Setting)Setting.mContext).sb_sensi.setProgress((int)(maxAccel / 5.8));
                 finish();
             }
         });
@@ -73,6 +77,11 @@ public class SensitivityTestActivity extends SettingActivity implements SensorEv
         // SENSOR_DELAY_NORMAL 화면 방향 전환 등의 일상적인  주기
         // SENSOR_DELAY_GAME 게임에 적합한 주기
         mSensorManager.registerListener(this, accSensor, mSensorManager.SENSOR_DELAY_NORMAL);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     //정확도에 대한 메소드 호출 (사용안함)

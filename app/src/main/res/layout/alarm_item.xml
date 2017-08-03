@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/alarm_text_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Alarm Item List"
+        android:textSize="20dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginLeft="15dp"/>
+
+    <TextView
+        android:id="@+id/alarm_text_itemdesc"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="desc"
+        android:textSize="15dp"
+        android:layout_below="@+id/alarm_text_item"
+        android:layout_marginTop="5dp"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="15dp"/>
+
+    <CheckBox
+        android:id="@+id/alarm_chk_item"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:paddingRight="30dp"/>
+
+</RelativeLayout>

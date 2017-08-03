@@ -31,27 +31,31 @@
         android:theme="@style/AppTheme">
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyC6-t6p61cPA2KNNcThhV4P-yPT7w2ZZAg"/>
+            android:value="AIzaSyDHEf4YRXsF4V1xsl-eezoeiqwtYV_oqlY"/>
 
-        <activity android:name=".MainActivity">
+        <activity android:name=".MainActivity"/>
+        <activity android:name=".SensitivityTestActivity"
+            android:theme="@style/AppTheme.Dialog"/>
+        <activity android:name=".StandardActivity"
+            android:theme="@style/AppTheme.Dialog"/>
+        <activity android:name=".PointActivity"/>
+        <activity android:name=".RecordActivity"/>
+        <activity android:name=".RecordCrash"
+            android:theme="@style/AppTheme.Dialog"/>
+        <activity android:name=".RecordSignal"
+            android:theme="@style/AppTheme.Dialog"/>
+        <activity android:name=".RecordDrive"/>
+        <activity android:name=".Setting"/>
+
+        <activity android:name=".SplashActivity"
+            android:theme="@style/SplashTheme"
+            android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".SettingActivity"/>
-        <activity android:name=".SensitivityActivity"/>
-        <activity android:name=".SensitivityTestActivity"/>
-        <activity android:name=".AlarmActivity"/>
-        <activity android:name=".CaptureActivity"/>
-        <activity android:name=".StandardActivity"/>
-        <activity android:name=".FirstActivity"/>
-        <activity android:name=".PointActivity"/>
-        <activity android:name=".RecordActivity"/>
-        <activity android:name=".RecordCrash"/>
-        <activity android:name=".RecordSignal"/>
-        <activity android:name=".RecordDrive"/>
     </application>
 
 </manifest>

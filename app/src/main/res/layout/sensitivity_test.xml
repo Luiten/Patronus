@@ -1,87 +1,90 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="350dp"
+    android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/sensitivetest_text_title"
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:background="#DDDDDD"
-        android:text="민감도 테스트"
-        android:textAlignment="center"
-        android:textSize="20dp" />
+        android:layout_height="match_parent"
+        android:background="@color/colorBackground"
+        android:gravity="center"
+        android:orientation="vertical">
 
-    <TextView
-        android:id="@+id/sensitivetest_text_shake"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_below="@+id/sensitivetest_text_title"
-        android:layout_marginTop="20dp"
-        android:text="스마트폰을 흔들어 주세요"
-        android:textSize="20dp" />
+        <TextView
+            android:id="@+id/sensitivetest_text_shake"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:gravity="center"
+            android:background="@color/colorBackground"
+            android:text="스마트폰을 흔들어 주세요"
+            android:textSize="20dp" />
 
-    <TextView
-        android:id="@+id/sensitivetest_text_result"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_centerInParent="true"
-        android:layout_below="@+id/sensitivetest_text_shake"
-        android:layout_marginTop="20dp"
-        android:textSize="30dp" />
+        <TextView
+            android:id="@+id/sensitivetest_text_result"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@color/colorBackground"
+            android:gravity="center"
+            android:textSize="30dp" />
 
-    <TextView
-        android:id="@+id/sensitivetest_text_crash"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="위 수치는 최대 측정치가 표시됩니다"
-        android:layout_below="@+id/sensitivetest_text_result"
-        android:layout_centerHorizontal="true" />
+        <TextView
+            android:id="@+id/sensitivetest_text_crash"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:background="@color/colorBackground"
+            android:gravity="center"
+            android:text="위 수치는 최대 측정치가 표시됩니다" />
 
-    <TextView
-        android:id="@+id/sensitivetest_text_desc"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="해당 수치 이상 충격이 가해질 경우 충돌로 인식합니다"
-        android:layout_below="@+id/sensitivetest_text_crash"
-        android:layout_centerHorizontal="true" />
+        <TextView
+            android:id="@+id/sensitivetest_text_desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@color/colorBackground"
+            android:gravity="center"
+            android:text="해당 수치 이상 충격이 가해질 경우 충돌로 인식합니다" />
 
-    <TextView
-        android:id="@+id/sensitivetest_text_temp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text=""
-        android:layout_below="@+id/sensitivetest_text_desc"
-        android:layout_centerHorizontal="true" />
+        <TextView
+            android:id="@+id/sensitivetest_text_temp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/sensitivetest_text_desc"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="20dp"
+            android:background="@color/colorBackground"
+            android:text="" />
 
-    <Button
-        android:id="@+id/sensitivetest_btn_save"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginRight="20dp"
-        android:layout_toLeftOf="@+id/sensitivetest_text_temp"
-        android:layout_below="@+id/sensitivetest_text_desc"
-        android:layout_centerHorizontal="true"
-        android:text="적용" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:layout_marginBottom="10dp"
+            android:background="@color/colorBackground">
 
-    <Button
-        android:id="@+id/sensitivetest_btn_cancel"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:layout_marginLeft="20dp"
-        android:layout_toRightOf="@+id/sensitivetest_text_temp"
-        android:layout_below="@+id/sensitivetest_text_desc"
-        android:layout_centerHorizontal="true"
-        android:text="취소" />
+            <Button
+                android:id="@+id/sensitivetest_btn_save"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:text="적용"
+                android:layout_weight="1" />
 
+            <Button
+                android:id="@+id/sensitivetest_btn_cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:text="취소"
+                android:layout_weight="1" />
 
-</RelativeLayout>
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

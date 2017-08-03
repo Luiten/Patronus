@@ -1,6 +1,8 @@
 package luiten.patronus;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.provider.MediaStore;
@@ -20,14 +22,19 @@ import org.opencv.core.Mat;
  * Created by LG on 2017-05-29.
  */
 
-public class PointActivity extends MainActivity implements CameraBridgeViewBase.CvCameraViewListener2 {
+public class PointActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2 {
 
     private Mat img_input;
     private Mat img_result;
     private static final String TAG = "opencv";
     private CameraBridgeViewBase mOpenCvCameraView;
 
-    public native int InitializeNativeLib(int width, int height);
+    private int VideoSize[][] = {
+            { 1920, 1080 },
+            { 1280, 720 },
+            { 800, 600 },
+            { 640, 480 } };
+
     public native int convertNativeLib(long matAddrInput, long matAddrResult);
     public native int CaptureImage(long matAddrResult);
 
@@ -53,11 +60,11 @@ public class PointActivity extends MainActivity implements CameraBridgeViewBase.
     };
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.point_main);
-
 
         // Start
         Button button1 = (Button)findViewById(R.id.point_btn_capture);
@@ -78,9 +85,11 @@ public class PointActivity extends MainActivity implements CameraBridgeViewBase.
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
 
-        mOpenCvCameraView.setMaxFrameSize(1280, 720);
+        Intent intent = getIntent();
+        mOpenCvCameraView.setMaxFrameSize(VideoSize[intent.getIntExtra("resolution", 1)][0], VideoSize[intent.getIntExtra("resolution", 1)][1]);
 
-        InitializeNativeLib(1280, 720);
+        // 세팅 읽기
+        SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
 
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
     }
@@ -107,6 +116,7 @@ public class PointActivity extends MainActivity implements CameraBridgeViewBase.
         }
     }
 
+    @Override
     public void onDestroy() {
         super.onDestroy();
 

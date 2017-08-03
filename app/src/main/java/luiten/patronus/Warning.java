@@ -23,7 +23,7 @@ import java.util.Locale;
  * Created by power on 2017-06-12.
  */
 
-public class Warning extends MainActivity {
+public class Warning extends Activity {
     //TODO : 추가 :: TTS, 진동
     TextToSpeech tts;
     Vibrator vibrator;
@@ -37,7 +37,6 @@ public class Warning extends MainActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
         //TODO : TTS
         tts=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {

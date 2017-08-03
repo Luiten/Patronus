@@ -1,5 +1,6 @@
 package luiten.patronus;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -8,6 +9,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Parcelable;
+import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,63 +40,79 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.ExpandableListView.OnGroupClickListener;
+import android.widget.ExpandableListView.OnGroupCollapseListener;
+import android.widget.ExpandableListView.OnGroupExpandListener;
+
 /**
  * Created by LG on 2017-05-31.
  */
 
 
-public class RecordActivity extends SettingActivity {
+public class RecordActivity extends AppCompatActivity {
 
-    private ListView listView;
-    private ItemArrayAdapter itemArrayAdapter;
-
+    private ExpandableListView log_listview;
+    private ArrayList<String> log_date = new ArrayList<String>();
+    private ArrayList<ArrayList<Integer>> arrIndex = new ArrayList<ArrayList<Integer>>();
+    private ArrayList<ArrayList<String>> mChildList =  new ArrayList<ArrayList<String>>();
+    //private HashMap<String, ArrayList<String>> log_content = new HashMap<String, ArrayList<String>>();
+    private LogAdapter logadapter;
     private String LogType[] = { "자동차간 거리", "끼어들기", "차선 침범", "신호 위반", "신호 주시 안함",
             "표지판", "졸음 운전", "충돌", "운전 점수" };
 
     List<String[]> csvLogs;
 
+    ExpandableListAdapter listAdapter;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setTitle("로그");
         setContentView(R.layout.record_main);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
-        listView = (ListView)findViewById(R.id.record_listview);
-        itemArrayAdapter = new ItemArrayAdapter(getApplicationContext(), R.layout.record_log);
+        log_listview = (ExpandableListView)findViewById(R.id.record_exlistview);
+        setArrayData();
 
-        Parcelable state = listView.onSaveInstanceState();
-        listView.setAdapter(itemArrayAdapter);
-        listView.onRestoreInstanceState(state);
+        log_listview.setAdapter(new LogAdapter(this, log_date, mChildList));
 
-        // 경로 설정
-        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
-        File file = new File(dirPath);
+        // Listview Group click listener
+        log_listview.setOnGroupClickListener(new OnGroupClickListener() {
 
-        // 일치하는 폴더가 없으면 생성
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-
-        String csvName = "logs.csv";
-
-        try {
-            InputStream inputStream = new FileInputStream(dirPath + csvName);
-            CSVReader csv = new CSVReader(inputStream);
-
-            csvLogs = csv.read();
-
-            for(String[] ListData : csvLogs) {
-                String[] temp = Arrays.copyOf(ListData, ListData.length);
-                temp[2] = LogType[Integer.valueOf(ListData[2]) - 1];
-                itemArrayAdapter.add(temp);
-            }
-        }
-        catch (IOException e) {
-        }
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+            public boolean onGroupClick(ExpandableListView parent, View v,
+                                        int groupPosition, long id) {
+                // Toast.makeText(getApplicationContext(),
+                // "Group Clicked " + listDataHeader.get(groupPosition),
+                // Toast.LENGTH_SHORT).show();
+                return false;
+            }
+        });
+
+        // Listview Group expanded listener
+        log_listview.setOnGroupExpandListener(new OnGroupExpandListener() {
+            @Override
+            public void onGroupExpand(int groupPosition) {
+
+            }
+        });
+
+        // Listview Group collasped listener
+        log_listview.setOnGroupCollapseListener(new OnGroupCollapseListener() {
+            @Override
+            public void onGroupCollapse(int groupPosition) {
+
+            }
+        });
+
+        // 차일드 클릭 했을 경우 이벤트
+        // 출처: http://arabiannight.tistory.com/entry/360
+        log_listview.setOnChildClickListener(new OnChildClickListener() {
+            @Override
+            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
+
+                ArrayList<Integer> arrTemp = arrIndex.get(groupPosition);
+                int position = arrTemp.get(childPosition);
 
                 String[] temp = csvLogs.get(position);
                 Intent intent = null;
@@ -136,10 +154,69 @@ public class RecordActivity extends SettingActivity {
                         break;
 
                 }
+
+                return false;
             }
-
         });
-
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    private void setArrayData() {
+        ArrayList<String> arrChildList = new ArrayList<String>();
+
+        // 경로 설정
+        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
+        File file = new File(dirPath);
+
+        // 일치하는 폴더가 없으면 생성
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        String csvName = "logs.csv";
+        String strTemp = "";
+        ArrayList<Integer> arrTemp = new ArrayList<Integer>();
+        int idx = 0;
+
+        try {
+            InputStream inputStream = new FileInputStream(dirPath + csvName);
+            CSVReader csv = new CSVReader(inputStream);
+
+            csvLogs = csv.read();
+
+            for(String[] ListData : csvLogs) {
+                String[] strCSV = Arrays.copyOf(ListData, ListData.length);
+                strCSV[2] = LogType[Integer.valueOf(ListData[2]) - 1];
+
+                if (strTemp == "") {
+                    strTemp = strCSV[0];
+                }
+
+                // ** 계속 첫번째 문자열이 11개가 나오고 두번째부터 10개 나오는 이유: 텍스트 파일 맨 앞은 텍스트 인코딩 정보 때문에.
+                // 날짜가 달라지면 새로운 확장 리스트 추가
+                if (!strTemp.equals(strCSV[0])) {
+                    log_date.add(strTemp);
+                    mChildList.add(arrChildList);
+                    arrIndex.add(arrTemp);
+                    arrChildList = new ArrayList<String>();
+                    arrTemp = new ArrayList<Integer>();
+                    strTemp = strCSV[0];
+                }
+
+                arrTemp.add(idx++);
+                arrChildList.add(strCSV[2]);
+            }
+
+            log_date.add(strTemp);
+            mChildList.add(arrChildList);
+            arrIndex.add(arrTemp);
+        }
+        catch (IOException e) {
+        }
+
+    }
 }

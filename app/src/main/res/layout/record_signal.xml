@@ -1,38 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <TextView
-        android:id="@+id/recordsignal_text_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:background="#DDDDDD"
-        android:text="title"
-        android:textAlignment="center"
-        android:textSize="20dp" />
-
-    <TextView
-        android:id="@+id/recordsignal_text_content"
-        android:layout_width="250dp"
-        android:layout_marginLeft="30dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginRight="30dp"
-        android:layout_height="match_parent"
-        android:layout_below="@+id/recordsignal_text_title"
-        android:textSize="20dp"
-        android:text="TextView" />
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="350dp"
+    android:layout_height="wrap_content">
 
     <fragment
         android:id="@+id/recordsignal_map"
-        android:layout_width="300dp"
-        android:layout_height="match_parent"
-        class="com.google.android.gms.maps.MapFragment"
-        android:layout_below="@+id/recordsignal_text_title"
-        android:layout_alignParentBottom="true"
+        android:layout_width="match_parent"
+        android:layout_height="350dp"
+        android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"
-        android:layout_alignParentEnd="true" />
+        class="com.google.android.gms.maps.MapFragment" />
 
-</RelativeLayout>
+    <TextView
+        android:id="@+id/recordsignal_text_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20dp"
+        android:text="TextView"
+        android:layout_marginLeft="20dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_marginBottom="20dp"
+        android:layout_below="@+id/recordsignal_map"/>
+
+
+
+</LinearLayout>

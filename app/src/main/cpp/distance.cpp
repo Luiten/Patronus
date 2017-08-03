@@ -6,6 +6,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/opencv.hpp>
 #include <iterator>
+//#include "IPM.h"
 
 using namespace cv;
 using namespace std;
@@ -125,15 +126,15 @@ public:	    //variables kept public but precaution taken all over the code
 
         Mat gray;
 
-        cvtColor( img, gray, CV_BGR2GRAY );
+        cvtColor(img, gray, CV_BGR2GRAY);
 
-        Mat resize_image(cvRound (img.rows), cvRound(img.cols), CV_8UC1 );
+        //Mat resize_image(cvRound (img.rows), cvRound(img.cols), CV_8UC1 );
 
-        resize( gray, resize_image, resize_image.size(), 0, 0, INTER_LINEAR );
-        equalizeHist( resize_image, resize_image );
+        //resize( gray, resize_image, resize_image.size(), 0, 0, INTER_LINEAR );
+        equalizeHist(gray, gray);
 
 
-        cascade.detectMultiScale( resize_image, cars, 1.1, 2,0, Size(30, 30));                 //detection using main classifier
+        cascade.detectMultiScale(gray, cars, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30));                 //detection using main classifier
 
 
         for( vector<Rect>::const_iterator main = cars.begin(); main != cars.end(); main++, i++ )
@@ -157,19 +158,19 @@ public:	    //variables kept public but precaution taken all over the code
                 continue;
             }
 
-            resize_image_reg_of_interest = resize_image(*main);
-            checkcascade.detectMultiScale( resize_image_reg_of_interest, nestedcars, 1.1, 2,0, Size(30,30));
+            //resize_image_reg_of_interest = gray(*main);
+            //checkcascade.detectMultiScale( resize_image_reg_of_interest, nestedcars, 1.1, 2,0, Size(30, 30));
 
-            for( vector<Rect>::const_iterator sub = nestedcars.begin(); sub != nestedcars.end(); sub++ )      //testing the detected car by main using checkcascade
+            //for( vector<Rect>::const_iterator sub = nestedcars.begin(); sub != nestedcars.end(); sub++ )      //testing the detected car by main using checkcascade
             {
-                center.x = cvRound((main->x + sub->x + sub->width*0.5));        //getting center points for bouding a circle over the car detected by checkcascade
-                cen_x = center.x;
-                center.y = cvRound((main->y + sub->y + sub->height*0.5));
-                cen_y = center.y;
-                if(cen_x>(x0+15) && cen_x<(x1-15) && cen_y>(y0+15) && cen_y<(y1-15))         //if centre of bounding circle is inside the rectangle boundary over a threshold the the car is certified
+                //center.x = cvRound((main->x + sub->x + sub->width*0.5));        //getting center points for bouding a circle over the car detected by checkcascade
+                //cen_x = center.x;
+                //center.y = cvRound((main->y + sub->y + sub->height*0.5));
+                //cen_y = center.y;
+                //if(cen_x>(x0+15) && cen_x<(x1-15) && cen_y>(y0+15) && cen_y<(y1-15))         //if centre of bounding circle is inside the rectangle boundary over a threshold the the car is certified
                 {
-                    Rect roi = Rect(cvPoint(x0, y0), cvPoint(x1, y1));
-                    Mat ROIimg = image_input(roi);
+                    //Rect roi = Rect(cvPoint(x0, y0), cvPoint(x1, y1));
+                    //Mat ROIimg = image_input(roi);
 
                     rectangle( image_main_result, cvPoint(x0,y0),
                                cvPoint(x1,y1),
@@ -179,12 +180,157 @@ public:	    //variables kept public but precaution taken all over the code
 
                     listCar.push_back({cvPoint(x0, y0), cvPoint(x1, y1), ((float)400 / (x1 - x0)) * ((float)400 / (x1 - x0))});
 
-                    stringstream text;
+
+
+
+
+
+
+                    Mat matROI, matHSV, matBin;
+                    matHSV = image_input.clone();
+
+                    //----------------------------------------------------//
+                    // Left
+                    //----------------------------------------------------//
+                    Rect tempRect = *main;
+
+                    // 자동차 영역
+                    tempRect.x += (tempRect.width / 6);
+                    tempRect.y += (tempRect.height / 4);
+                    tempRect.width -= (tempRect.width / 4);
+                    tempRect.height -= (tempRect.height / 3);
+
+                    // 램프 영역
+                    tempRect.x += 0;
+                    tempRect.y += 0;
+                    tempRect.width -= (tempRect.width / 2) + (tempRect.width / 6);
+                    tempRect.height -= (tempRect.height / 4);
+
+                    cvtColor(matHSV, matHSV, COLOR_BGR2HSV);
+                    matROI = matHSV(tempRect);
+
+                    // HSV   출처: http://webnautes.tistory.com/942
+                    //지정한 HSV 범위를 이용하여 영상을 이진화
+                    inRange(matROI, Scalar(170, 0, 0), Scalar(179, 255, 255), matBin);
+
+                    //morphological matBin 작은 점들을 제거
+                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+                    //morphological closing 영역의 구멍 메우기
+                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+                    //라벨링
+                    Mat img_labels, stats, centroids;
+                    int numOfLables1 = connectedComponentsWithStats(matBin, img_labels, stats, centroids, 8, CV_32S);
+                    //rectangle(image_main_result, tempRect, Scalar(255, 255, 255), 2);
+
+                    //----------------------------------------------------//
+                    // Right
+                    //----------------------------------------------------//
+                    Rect tempRect2 = *main;
+
+                    // 자동차 영역
+                    tempRect2.x += tempRect2.width - (tempRect2.width / 6);
+                    tempRect2.y += (tempRect2.height / 4);
+                    tempRect2.width -= (tempRect2.width / 4);
+                    tempRect2.height -= (tempRect2.height / 3);
+
+                    // 램프 영역
+                    tempRect2.y += 0;
+                    tempRect2.width -= (tempRect2.width / 2) + (tempRect2.width / 6);
+                    tempRect2.height -= (tempRect2.height / 4);
+                    tempRect2.x -= tempRect2.width;
+
+                    //cvtColor(mResize, matHSV, COLOR_BGR2HSV);
+                    matROI = matHSV(tempRect2);
+
+                    // HSV   출처: http://webnautes.tistory.com/942
+                    //지정한 HSV 범위를 이용하여 영상을 이진화
+                    inRange(matROI, Scalar(170, 0, 0), Scalar(179, 255, 255), matBin);
+
+                    //morphological matBin 작은 점들을 제거
+                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+                    //morphological closing 영역의 구멍 메우기
+                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
+
+                    //라벨링
+                    int numOfLables2 = connectedComponentsWithStats(matBin, img_labels, stats, centroids, 8, CV_32S);
+                    //rectangle(image_main_result, tempRect2, Scalar(255, 255, 255), 2);
+
+
+
+
+                    // ***** 해결해야 할 점: 무조건 첫번째로 대칭되는 점만 헤드라이트로 인식하는데, 가끔 다른 영역이 잘못 검출되므로
+                    //							영역 크기나 추적을 통해 이전에 검출되었던 해당 위치를 집중적으로 인식해야함
+
+                    //영역박스 그리기
+                    for (int i = 1; i < numOfLables1; i++)
+                    {
+                        int area1 = stats.at<int>(i, CC_STAT_AREA);
+
+                        int left1 = stats.at<int>(i, CC_STAT_LEFT);
+                        int top1 = stats.at<int>(i, CC_STAT_TOP);
+                        int width1 = stats.at<int>(i, CC_STAT_WIDTH);
+                        int height1 = stats.at<int>(i, CC_STAT_HEIGHT);
+
+                        for (int j = 1; j < numOfLables2; j++)
+                        {
+                            int area2 = stats.at<int>(j, CC_STAT_AREA);
+
+                            int left2 = stats.at<int>(j, CC_STAT_LEFT);
+                            int top2 = stats.at<int>(j, CC_STAT_TOP);
+                            int width2 = stats.at<int>(j, CC_STAT_WIDTH);
+                            int height2 = stats.at<int>(j, CC_STAT_HEIGHT);
+
+                            // 높이가 5픽셀 이하로 비슷한 경우
+                            if (abs(top1 - top2) < 5)
+                            {
+                                rectangle(image_main_result, Point(left1 + tempRect.x, top1 + tempRect.y),
+                                          Point(left1 + width1 + tempRect.x, top1 + height1 + tempRect.y), Scalar(0, 255, 255), 2);
+                                rectangle(image_main_result, Point(left2 + tempRect2.x, top2 + tempRect2.y),
+                                          Point(left2 + width2 + tempRect2.x, top2 + height2 + tempRect2.y), Scalar(0, 255, 255), 2);
+
+                                line(image_main_result, Point(left1 + tempRect.x, top1 + tempRect.y + (height1 / 2)),
+                                     Point(left2 + tempRect2.x + width2, top2 + tempRect2.y + (height2 / 2)), Scalar(0, 255, 0), 2);
+
+
+
+                                // 임시 거리 계산
+                                float meter = abs((left1 + tempRect.x) - (left2 + tempRect2.x + width2));
+                                meter = 400 / meter;
+
+                                stringstream text;
+                                text << meter;
+                                text << "m";
+
+                                putText(image_main_result, text.str(), Point((*main).x, (*main).y), 2, 0.7, Scalar::all(255));
+                                //vFoundResult.push_back(*loc);
+
+                                i = numOfLables1;
+                                break;
+                            }
+                        }
+                    }
+
+
+
+
+
+
+
+
+
+/*                    stringstream text;
                     text << ((float)400 / (x1 - x0)) * ((float)400 / (x1 - x0));
                     text << "m";
 
                     //sprintf("%.1fm", text, (float)(x1 - x0) / 50);
-                    putText(image_main_result, text.str(), cvPoint(x0, y0), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(255, 0, 0), 3);
+                    putText(image_main_result, text.str(), cvPoint(x0, y0), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(255, 0, 0), 3);*/
 
                     //masking the detected car to detect second car if present
 
@@ -205,18 +351,18 @@ public:	    //variables kept public but precaution taken all over the code
         }
     }
 
-    void getdistance(Mat roi)
-    {
-        Mat HSV;
+        void getdistance(Mat roi)
+        {
+            Mat HSV;
 
 
-        cvtColor(roi, HSV, COLOR_RGB2HSV);
+            cvtColor(roi, HSV, COLOR_RGB2HSV);
 
-        //Mat Red_Img, Green_Img, Yellow_Img;
+            //Mat Red_Img, Green_Img, Yellow_Img;
 
-        //cvtColor(img_input, Red_Img, COLOR_RGB2GRAY);
-        Mat red1 = HSV, red2 = HSV;
-        Mat red;
+            //cvtColor(img_input, Red_Img, COLOR_RGB2GRAY);
+            Mat red1 = HSV, red2 = HSV;
+            Mat red;
 //    Scalar RedA = (0, 80, 80);
 //    Scalar RedB = (18, 255, 160);
 //    Scalar RedC = (156, 80, 80);

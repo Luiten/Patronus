@@ -71,7 +71,7 @@ public:
         vector<Vec4i> hierarchy;
         RotatedRect rotated_rect;
 
-        currFrame = Mat(720, 1280, CV_8UC1,
+        currFrame = Mat(img_input.rows, img_input.cols, CV_8UC1,
                         0.0);                        //initialised the image size to 320x480  //TODO : 해상도 변경
         resize(frame, currFrame, currFrame.size());             // resize the input to required size
         cvtColor(currFrame, currFrame, CV_BGR2GRAY);
