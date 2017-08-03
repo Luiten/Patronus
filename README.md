@@ -1,6 +1,6 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
 
-Version: 0.85 (2017-08-03)
+Version: 0.85.3 (2017-08-03)
 
 
 ## Change "CMakeLists.txt"
