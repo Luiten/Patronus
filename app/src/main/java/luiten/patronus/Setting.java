@@ -188,9 +188,12 @@ public class Setting extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 switch (position){
                     case 0 :
+                        Intent intent = new Intent(getApplicationContext(), RecordDrive
+                                .class);
+                        startActivity(intent);
                         break;
                     case 1 :
-                        Intent intent = new Intent(getApplicationContext(), RecordActivity.class);
+                        intent = new Intent(getApplicationContext(), RecordActivity.class);
                         startActivity(intent);
                         break;
                 }
