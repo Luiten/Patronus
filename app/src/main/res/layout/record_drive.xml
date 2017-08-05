@@ -39,7 +39,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:background="@drawable/border"
-                android:text="신호위반 : 30" />
+                android:text="신호위반 : 40" />
 
             <TextView
                 android:id="@+id/recorddrive_text_linescore"

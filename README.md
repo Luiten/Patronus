@@ -14,4 +14,4 @@ set(pathProject "This Project Path")
 ##2017.08.05
 1. build.gradle에 MPAndroid 라이브러리 추가
 2. 레이아웃 record_drive 수정
-3. 자바파일 RecordDrive 그래프 및 터치이벤트로 수정
+3. 자바파일 RecordDrive 그래프 및 터치이벤트(수정중)

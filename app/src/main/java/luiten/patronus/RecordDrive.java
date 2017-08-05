@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.components.YAxis;
@@ -91,15 +92,14 @@ public class RecordDrive extends Activity {
         drive_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
-                //e는 클릭한 데이터의 점수, dataSetIndex는 몇번째인지
-                switch(dataSetIndex){
-                    case 0 :
-                        crash_score.setText("충돌 : 50");
-                        signal_score.setText("신호 : 100");
-                    case 1 :
-                        crash_score.setText("충돌 100");
-
-                        break;
+                if(dataSetIndex==0){
+                    crash_score.setText("dddd");
+                }
+                if(dataSetIndex==1){
+                    crash_score.setText("ffff");
+                }
+                if(dataSetIndex==2){
+                    crash_score.setText("eeee");
                 }
             }
 
