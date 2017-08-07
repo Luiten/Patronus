@@ -1,5 +1,5 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.85.4 (2017-08-07)
+Version: 0.86.0 (2017-08-07)
 
 ---
 #### Change "CMakeLists.txt"
@@ -10,8 +10,9 @@ set(pathProject "This Project Path")
 #### Problem
 1. PointActivity: Setting에서 해상도 변경시 멈추는 문제
 2. RecordDrive: 그래프 클릭시 멈추는 문제(View 값이 null)
+2. MainActivity: 800x600 해상도 실행시 팅기는 문제
 ---
-#### 0.85.4 (2017-08-07)
+#### 0.86.0 (2017-08-07)
 1. record_signal.xml: 지도 높이 350dp -> 300dp로 수정
 2. distance.cpp: 차 검출 및 거리 추정 알고리즘 전체 수정(자체 로그파일 출력 추가)
 3. Manager.cpp: distance.cpp 변경에 따른 초기화, 검출 수정
