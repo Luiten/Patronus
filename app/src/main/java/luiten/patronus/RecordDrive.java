@@ -3,12 +3,14 @@ package luiten.patronus;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
 import com.github.mikephil.charting.data.BarDataSet;
@@ -77,31 +79,54 @@ public class RecordDrive extends Activity {
 
         BarDataSet barDataSet = new BarDataSet(valueSet,"최근 운전 점수");
 
+        barDataSet.setColor(R.color.colorAccent);
+        barDataSet.setValueTextSize(10);
+
         dataSets = new ArrayList<>();
         dataSets.add(barDataSet);
 
         YAxis yAxisRight = drive_chart.getAxisRight();
         yAxisRight.setEnabled(false);
 
+        XAxis xAxis = drive_chart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+
         BarData data = new BarData(mDate,dataSets);
         drive_chart.setExtraOffsets(0, 0, 0, 20);
         drive_chart.setData(data);
+        drive_chart.setScaleXEnabled(false);
+        drive_chart.setScaleYEnabled(false);
+        drive_chart.setDescription("");
         drive_chart.animateXY(2000,2000);
         drive_chart.invalidate();
 
         drive_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
 @Override
 public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
-        if(dataSetIndex==0){
-        crash_score.setText("dddd");
-        }
-        if(dataSetIndex==1){
-        crash_score.setText("ffff");
-        }
-        if(dataSetIndex==2){
-        crash_score.setText("eeee");
-        }
-        }
+    if(e==null)
+        return;
+
+    switch (e.getXIndex()){
+        case 0 :
+            crash_score.setText("aaaa");
+            break;
+        case 1 :
+            crash_score.setText("bbbb");
+            break;
+        case 2 :
+            crash_score.setText("cccc");
+            break;
+        case 3 :
+            crash_score.setText("dddd");
+            break;
+        case 4 :
+            crash_score.setText("eeee");
+            break;
+        case 5 :
+            crash_score.setText("ffff");
+            break;
+    }
+}
 
 @Override
 public void onNothingSelected() {
@@ -110,4 +135,4 @@ public void onNothingSelected() {
         });
 
         }
-        }
+}

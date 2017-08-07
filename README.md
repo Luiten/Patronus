@@ -12,6 +12,11 @@ set(pathProject "This Project Path")
 2. RecordDrive: 그래프 클릭시 멈추는 문제(View 값이 null)
 2. MainActivity: 800x600 해상도 실행시 팅기는 문제
 ---
+#### 0.86.1 (2017-08-07)
+1. record_drive.xml : 패딩, 마진, 텍스트 뷰 추가
+2. record_drive.java : 그래프 클릭시 해당 클릭 인덱스 번호에 따라 데이터값이 들어가게 수정
+3. 그래프 색깔 변화 및 데이터 값 텍스트 사이즈 라벨 위치 수정
+---
 #### 0.86.0 (2017-08-07)
 1. record_signal.xml: 지도 높이 350dp -> 300dp로 수정
 2. distance.cpp: 차 검출 및 거리 추정 알고리즘 전체 수정(자체 로그파일 출력 추가)
