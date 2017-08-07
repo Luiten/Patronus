@@ -61,6 +61,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     double accelSpeed = 0.0;
     double nowSpeed = 0.0;
 
+    public native int InitializeNativeLib(int w, int h);
     public native int convertNativeLib(long matAddrInput, long matAddrResult);
     public native int PushbackAccel(float fValue);
     public native int SetSettings(int type, double value);
@@ -127,6 +128,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
                 mOpenCvCameraView.setMaxFrameSize(VideoSize[settings.getInt("resolution", 1)][0], VideoSize[settings.getInt("resolution", 1)][1]);
 
+                InitializeNativeLib(VideoSize[settings.getInt("resolution", 1)][0], VideoSize[settings.getInt("resolution", 1)][1]);
+
                 mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
             }
         });
@@ -159,8 +162,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         mOpenCvCameraView.setVisibility(SurfaceView.INVISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
-
-        //InitializeNativeLib(1280, 720);
 
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
 

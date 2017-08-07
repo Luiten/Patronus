@@ -26,7 +26,6 @@ public class SplashActivity extends AppCompatActivity {
         System.loadLibrary("native-lib");
     }
 
-    public native int InitializeNativeLib();
     public native int SetSettings(int type, double value);
 
     static final int PERMISSION_REQUEST_CODE = 1;
@@ -113,9 +112,6 @@ public class SplashActivity extends AppCompatActivity {
         } else {
             //이미 사용자에게 퍼미션 허가를 받음.
         }
-
-        // Manager 클래스 초기화
-        InitializeNativeLib();
 
         // 세팅 값 읽기
         SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);

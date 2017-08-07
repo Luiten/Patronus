@@ -35,6 +35,7 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
             { 800, 600 },
             { 640, 480 } };
 
+    public native int InitializeNativeLib(int w, int h);
     public native int convertNativeLib(long matAddrInput, long matAddrResult);
     public native int CaptureImage(long matAddrResult);
 
@@ -88,8 +89,7 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
         Intent intent = getIntent();
         mOpenCvCameraView.setMaxFrameSize(VideoSize[intent.getIntExtra("resolution", 1)][0], VideoSize[intent.getIntExtra("resolution", 1)][1]);
 
-        // 세팅 읽기
-        SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
+        InitializeNativeLib(VideoSize[intent.getIntExtra("resolution", 1)][0], VideoSize[intent.getIntExtra("resolution", 1)][1]);
 
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
     }

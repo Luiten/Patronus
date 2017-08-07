@@ -30,7 +30,9 @@ add_library( # Sets the name of the library.
              src/main/cpp/distance.cpp
              src/main/cpp/lane.cpp
              src/main/cpp/light.cpp
-             src/main/cpp/log.cpp)
+             src/main/cpp/log.cpp
+             src/main/cpp/IPM.cpp
+             src/main/cpp/IPM.h)
 
 add_library( lib_opencv SHARED IMPORTED )
 

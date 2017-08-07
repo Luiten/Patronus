@@ -33,7 +33,8 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyDHEf4YRXsF4V1xsl-eezoeiqwtYV_oqlY"/>
 
-        <activity android:name=".MainActivity"/>
+        <activity android:name=".MainActivity"
+            android:hardwareAccelerated="true"/>
         <activity android:name=".SensitivityTestActivity"
             android:theme="@style/AppTheme.Dialog"/>
         <activity android:name=".StandardActivity"

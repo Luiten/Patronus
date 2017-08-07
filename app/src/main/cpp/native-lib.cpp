@@ -9,9 +9,9 @@ Manager mgr;
 extern "C"
 {
 JNIEXPORT jint JNICALL
-Java_luiten_patronus_SplashActivity_InitializeNativeLib(JNIEnv *, jobject)
+Java_luiten_patronus_MainActivity_InitializeNativeLib(JNIEnv *, jobject, jint w, jint h)
 {
-    mgr.Initialize();
+    mgr.Initialize(w, h);
     return 0;
 }
 
@@ -30,6 +30,13 @@ JNIEXPORT jint JNICALL
 Java_luiten_patronus_MainActivity_PushbackAccel(JNIEnv *, jobject, jfloat value)
 {
     mgr.Pushback_Collision(value);
+    return 0;
+}
+
+JNIEXPORT jint JNICALL
+Java_luiten_patronus_PointActivity_InitializeNativeLib(JNIEnv *, jobject, jint w, jint h)
+{
+    mgr.Initialize(w, h);
     return 0;
 }
 

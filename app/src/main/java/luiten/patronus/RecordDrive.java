@@ -90,24 +90,24 @@ public class RecordDrive extends Activity {
         drive_chart.invalidate();
 
         drive_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
-            @Override
-            public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
-                if(dataSetIndex==0){
-                    crash_score.setText("dddd");
-                }
-                if(dataSetIndex==1){
-                    crash_score.setText("ffff");
-                }
-                if(dataSetIndex==2){
-                    crash_score.setText("eeee");
-                }
-            }
+@Override
+public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
+        if(dataSetIndex==0){
+        crash_score.setText("dddd");
+        }
+        if(dataSetIndex==1){
+        crash_score.setText("ffff");
+        }
+        if(dataSetIndex==2){
+        crash_score.setText("eeee");
+        }
+        }
 
-            @Override
-            public void onNothingSelected() {
-                score_layout.setVisibility(View.INVISIBLE);
-            }
+@Override
+public void onNothingSelected() {
+        score_layout.setVisibility(View.INVISIBLE);
+        }
         });
 
-    }
-}
+        }
+        }

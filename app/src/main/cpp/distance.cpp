@@ -1,15 +1,14 @@
 
-// https://github.com/abhi-kumar/CAR-DETECTION
-
+#include <jni.h>
 #include <opencv2/core/core.hpp>
-#include <opencv2/video/tracking.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
-#include <iterator>
-//#include "IPM.h"
+#include <fstream>
+#include "IPM.h"
 
 using namespace cv;
 using namespace std;
+
 
 
 struct CarInfo
@@ -18,425 +17,775 @@ struct CarInfo
     Point end;
     float distance;
 };
-
-class cars     //main class
+class Distance
 {
-public:	    //variables kept public but precaution taken all over the code
+private:
+    CascadeClassifier classifier;
+    CascadeClassifier classifier2;
 
-    Mat image_input;          //main input image
-    Mat image_main_result;    //the final result
-    Mat storage;              //introduced to stop detection of same car more than once
+    int averageSat = 0;
+    int averageVal = 0;
+    Point ptCenter;
 
-    CascadeClassifier cascade;    //the main cascade classifier
-    CascadeClassifier checkcascade;        //a test classifier,car detected by both main and test is stated as car
-    //Ptr<Tracker> tracker;
+    int width, height;
+    bool bInit = false;
 
-    int num;
+    timeval time_begin, time_end;
 
-    void getimage(Mat src) //getting the input image
+//------------------------------------------------------------------------------------------------//
+// 검출된 자동차 상자 그리기
+//------------------------------------------------------------------------------------------------//
+    void draw_locations(Mat &img, const vector<Rect> &locations, const Scalar &color)
     {
-
-        if(! src.data )
+        if (!locations.empty())
         {
-            //cout <<  "src not filled" << endl ;
-        }
-
-        else
-        {
-            image_input = src.clone();
-            storage = src.clone();              //initialising storage
-            image_main_result = src.clone();    //initialising result
-
-            //cout << "got image" <<endl;
+            vector<Rect>::const_iterator loc = locations.begin();
+            vector<Rect>::const_iterator end = locations.end();
+            for (; loc != end; ++loc)
+            {
+                rectangle(img, *loc, color, 2);
+            }
         }
     }
 
-
-    void cascade_load(string cascade_string)            //loading the main cascade
+    void SaveLog(int ps, int detect, vector<float> vecDist, float fLatitude, float fLongitude)
     {
-        //cascade.load(cascade_string);
+        static ofstream offile;
+        time_t now = time(0); //현재 시간을 time_t 타입으로 저장
+        struct tm tstruct;
+        char buf[80];
+        tstruct = *localtime(&now);
 
-        if( !cascade.load(cascade_string) )
+        if (ps < 0)
         {
-            //cout << endl << "Could not load classifier cascade" << endl;
-        }
-        else
-        {
-            //cout << "cascade : " << cascade_string << " loaded" << endl;
+
+            if (offile)
+            {
+                offile.close();
+            }
+
+            strftime(buf, sizeof(buf), "%Y-%m-%d_%H-%M", &tstruct); // YYYY-MM-DD.HH:mm:ss 형태의 스트링
+
+            stringstream filename;
+            filename << "/sdcard/Patronus/";
+            filename << "DistanceLog_" << buf << ".csv";
+
+            offile.open(filename.str(), ofstream::in | ofstream::out | ofstream::app);
+            offile << "Width,Height" << endl;
+            offile << width << "," << height << endl;
+            offile << "Time,Processing Speed(ms),Detected,Latitude,Longitude,Distance" << endl;
+            return;
         }
 
+        strftime(buf, sizeof(buf), "%H:%M:%S", &tstruct); // YYYY-MM-DD.HH:mm:ss 형태의 스트링
+
+        offile << buf << "," << ps << "," << detect << "," << fLatitude << "," << fLongitude;
+        for (int i = 0; i < vecDist.size(); i++)
+        {
+            offile << "," << vecDist[i];
+        }
+        offile << endl;
+        //offile.close();
     }
 
-    void checkcascade_load(string checkcascade_string)               //loading the test/check cascade
+//------------------------------------------------------------------------------------------------//
+// 두 선분의 교차 검사
+// 출처: http://neoplanetz.tistory.com/entry/OpenCV-2개의-라인에서-교점-찾기Calculate-Intersection-between-Lines
+//------------------------------------------------------------------------------------------------//
+    bool GetIntersection(const Point2f AP1, const Point2f AP2, const Point2f BP1, const Point2f BP2, Point2f &result)
     {
-        // Instead of MIL, you can also use BOOSTING, KCF, TLD, MEDIANFLOW or GOTURN
-        //tracker = Tracker::create( "MIL" );
+        double t;
+        double s;
+        double under = (BP2.y - BP1.y) * (AP2.x - AP1.x) - (BP2.x - BP1.x) * (AP2.y - AP1.y);
+        if (under == 0) return false;
 
-        //checkcascade.load(checkcascade_string);
+        double _t = (BP2.x - BP1.x) * (AP1.y - BP1.y) - (BP2.y - BP1.y) * (AP1.x - BP1.x);
+        double _s = (AP2.x - AP1.x) * (AP1.y - BP1.y) - (AP2.y - AP1.y) * (AP1.x - BP1.x);
 
-        if( !checkcascade.load(checkcascade_string) )
+        t = _t / under;
+        s = _s / under;
+
+        if (t < 0.0 || t > 1.0 || s < 0.0 || s > 1.0) return false;
+        if (_t == 0 && _s == 0) return false;
+
+        result.x = AP1.x + t * (double) (AP2.x - AP1.x);
+        result.y = AP1.y + t * (double) (AP2.y - AP1.y);
+
+        return true;
+    }
+
+    void eliminateOutLiers(vector<Vec2f> &aLines)
+    {
+        int num = aLines.size();
+        if (num == 0 || num == 1 || num == 2)
+            return;
+
+        for (int i = 0; i < aLines.size(); i++)
         {
-            //cout << endl << "Could not load classifier checkcascade" << endl;
-        }
-        else
-        {
-            //cout<< "checkcascade : " << checkcascade_string << " loaded" << endl;
+            float i_theta = aLines[i][1];
+            float i_degree = i_theta * 180 / CV_PI;
+
+            for (int j = i + 1; j < aLines.size();)
+            {
+                float j_theta = aLines[j][1];
+                float j_degree = j_theta * 180 / CV_PI;
+
+                if (abs(i_degree - j_degree) < 5)
+                {
+                    aLines.erase(aLines.begin() + j);
+                }
+                else
+                {
+                    j++;
+                }
+            }
         }
     }
 
-
-    void get_result(Mat& img_result)             // function to display input
+public:
+    void Initialize(int w, int h)
     {
-        if(!image_main_result.empty() )
+        if (bInit == false)
         {
-            image_main_result.copyTo(img_result);
+            classifier.load("/sdcard/Patronus/cars.xml");
+            classifier2.load("/sdcard/Patronus/checkcas.xml");
+            bInit = true;
         }
+
+        width = w;
+        height = h;
+
+        averageSat = 0;
+        averageVal = 0;
+        ptCenter = Point(width / 2, (height / 2) / 3);
+
+        vector<float> vecDist;
+        SaveLog(-1, 0, vecDist, 0, 0);
+        gettimeofday(&time_begin, NULL);
     }
 
-    void get_input(Mat& img_result)            //function to display output
+    void ExecuteDistance(Mat &matInput, Mat &matResult, vector<CarInfo>& listCar, float fLatitude, float fLongitude)
     {
-        if(!image_input.empty() )
-        {
-            image_input.copyTo(img_result);
-        }
-    }
+        Mat matGray, matResize, matBirdOutput;
+        vector<Rect> vFound;
+        vector<Rect> vFound2;
+        vector<Rect> vFoundResult;
 
-    void setnum()
-    {
-        num = 0;
-    }
+        Mat matHSV;
+        Mat matBirdView;
+        Mat matBinTtack;
+        Mat matCanny;
 
-    void findcars(vector <CarInfo>& listCar)                 //main function
-    {
-        int i = 0;
+        vector<float> vecDist;
+        int nDetect = 0;
+
+        //int averageHue = 0;
 
         listCar.clear();
 
-        Mat img = storage.clone();
-        Mat temp;                    //for region of interest.If a car is detected(after testing) by one classifier,then it will not be available for other one
+        resize(matInput, matResize, Size(width, height));
+        //matResize.copyTo(matOutput);
 
-        if(img.empty() )
+        //--------------------------------------------------------------------------//
+        // CamShift를 위한 HSV 및 이진화   출처: http://webnautes.tistory.com/945
+        //--------------------------------------------------------------------------//
+        //HSV로 변환
+        cvtColor(matResize, matHSV, COLOR_BGR2HSV);
+
+        //지정한 HSV 범위를 이용하여 영상을 이진화
+        inRange(matHSV, Scalar(0, 0, 120), Scalar(180, 255, 255), matBinTtack);
+
+        //--------------------------------------------------------------------------//
+        // 도로 이진화   출처: http://vgg.fiit.stuba.sk/2016-06/car-detection-in-videos/
+        //--------------------------------------------------------------------------//
+        Mat matRoadTarget = matHSV(Rect(width / 2 - 30, height - 100, 60, 10)).clone();
+        Mat matRoadBin = matHSV.clone();
+
+        int sumHue = 0, sumSat = 0, sumVal = 0;
+
+        for (int i = 0; i < matRoadTarget.rows; i++)
         {
-            //cout << endl << "detect not successful" << endl;
-        }
-        int cen_x;
-        int cen_y;
-        vector<Rect> cars;
-        const static Scalar colors[] =  { CV_RGB(0,0,255),CV_RGB(0,255,0),CV_RGB(255,0,0),CV_RGB(255,255,0),CV_RGB(255,0,255),CV_RGB(0,255,255),CV_RGB(255,255,255),CV_RGB(128,0,0),CV_RGB(0,128,0),CV_RGB(0,0,128),CV_RGB(128,128,128),CV_RGB(0,0,0)};
-
-        Mat gray;
-
-        cvtColor(img, gray, CV_BGR2GRAY);
-
-        //Mat resize_image(cvRound (img.rows), cvRound(img.cols), CV_8UC1 );
-
-        //resize( gray, resize_image, resize_image.size(), 0, 0, INTER_LINEAR );
-        equalizeHist(gray, gray);
-
-
-        cascade.detectMultiScale(gray, cars, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30));                 //detection using main classifier
-
-
-        for( vector<Rect>::const_iterator main = cars.begin(); main != cars.end(); main++, i++ )
-        {
-            Mat resize_image_reg_of_interest;
-            vector<Rect> nestedcars;
-            Point center;
-            Scalar color = colors[i%8];
-
-
-            //getting points for bouding a rectangle over the car detected by main
-            int x0 = cvRound(main->x);
-            int y0 = cvRound(main->y);
-            int x1 = cvRound((main->x + main->width-1));
-            int y1 = cvRound((main->y + main->height-1));
-
-
-
-            if(checkcascade.empty())
+            for (int j = 0; j < matRoadTarget.cols; j++)
             {
-                continue;
+                sumHue += matRoadTarget.at<Vec3b>(i, j)[0];
+                sumSat += matRoadTarget.at<Vec3b>(i, j)[1];
+                sumVal += matRoadTarget.at<Vec3b>(i, j)[2];
+            }
+        }
+
+        //averageHue = ((averageHue * 9) + (sumHue / (matRoadTarget.rows * matRoadTarget.cols))) / 10;
+        averageSat = ((averageSat * 9) + (sumSat / (matRoadTarget.rows * matRoadTarget.cols))) / 10;
+        averageVal = ((averageVal * 9) + (sumVal / (matRoadTarget.rows * matRoadTarget.cols))) / 10;
+
+        inRange(matRoadBin, Scalar(0, averageSat - 30, averageVal - 50), Scalar(180, averageSat + 30, averageVal + 50), matRoadBin);
+
+        rectangle(matResult, Rect(width / 2 - 30, height - 100, 60, 10), Scalar(0, 0, 255), 2);
+
+        //--------------------------------------------------------------------------//
+        // 차선 검출
+        //--------------------------------------------------------------------------//
+        //Rect Roi(Point(matResize.cols / 5, 65 * matResize.rows / 100), Point(4 * matResize.cols / 5, matResize.rows));
+        Rect Roi(Point(0, matResize.rows * 50 / 100), Point(matResize.cols, matResize.rows));
+        Mat matLaneROI = matResult(Roi);
+
+        cvtColor(matLaneROI, matGray, CV_BGR2GRAY);
+
+        GaussianBlur(matGray, matGray, Size(3, 3), 1.5, 1.5);
+
+        cv::Mat grad;
+        int scale = 1;
+        int delta = 0;
+        int ddepth = CV_16S;
+
+        // Generate grad_x and grad_y
+        Mat grad_x, grad_y;
+        Mat sobel_dx, sobel_dy;
+
+        // Gradient X
+        Sobel(matGray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT);
+        convertScaleAbs(grad_x, sobel_dx);
+
+        // Gradient Y
+        Sobel(matGray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT);
+        convertScaleAbs(grad_y, sobel_dy);
+
+        // Total Gradient (approximate)
+        cv::addWeighted(sobel_dx, 2, sobel_dy, 2, 0, grad);
+
+        Mat non_maxima = matGray.clone();
+
+        Mat sobel;
+
+        grad.copyTo(sobel);
+
+        int i, j, h, w, tan255, tan675, index, magni;
+        float slope;
+        bool maxima;
+        tan255 = 424;
+        tan675 = 2472;
+        h = grad.rows;
+        w = grad.cols;
+        for (i = 1; i < h; i++)
+        {
+            for (j = 1; j < w; j++)
+            {
+                index = w * i + j;
+                maxima = true;
+                magni = grad.at<uchar>(i, j);
+                non_maxima.at<uchar>(i, j) = 0;
+                if (magni > 30)
+                {
+                    if (sobel_dx.at<uchar>(i, j) != 0)
+                    {
+
+                        slope = (sobel_dy.at<uchar>(i, j) << 10) / sobel_dx.at<uchar>(i, j);
+                        if (slope > 0)
+                        {
+                            if (slope < tan255)
+                            {
+                                if (magni < sobel.at<uchar>(i, j - 1) ||
+                                    magni < sobel.at<uchar>(i, j + 1))
+                                    maxima = false;
+                            }
+                            else if (slope < tan675)
+                            {
+                                if (magni < sobel.at<uchar>(i - 1, j + 1) ||
+                                    magni < sobel.at<uchar>(i - 1, j - 1))
+                                    maxima = false;
+                            }
+                            else //2
+                            {
+                                if (magni < sobel.at<uchar>(i - 1, j) ||
+                                    magni < sobel.at<uchar>(i + 1, j))
+                                    maxima = false;
+                            }
+                        } else
+                        {
+                            if (slope < -tan675)
+                            {
+                                if (magni < sobel.at<uchar>(i + 1, j) ||
+                                    magni < sobel.at<uchar>(i - 1, j))
+                                    maxima = false;
+                            }
+                            else if (slope < -tan255)
+                            {
+                                if (magni < sobel.at<uchar>(i - 1, j - 1) ||
+                                    magni < sobel.at<uchar>(i + 1, j + 1))
+                                    maxima = false;
+                            }
+                            else
+                            {
+                                if (magni < sobel.at<uchar>(i, j - 1) ||
+                                    magni < sobel.at<uchar>(i, j + 1))
+                                    maxima = false;
+                            }
+                        }
+                        if (maxima)
+                            non_maxima.at<uchar>(i, j) = sobel.at<uchar>(i, j);
+
+                    }
+                }
+            }
+        }
+
+        threshold(non_maxima, non_maxima, 200, 255, 0);
+
+        Mat right_border;
+
+        non_maxima.copyTo(right_border);
+
+        for (int i = 1; i < h - 1; i++)
+        {
+            for (int j = 1; j < w - 5; j++)
+            {
+                if (right_border.at<uchar>(i, j) == 255)
+                {
+                    for (int t = 4; t <= 50; t++)
+                    {
+                        if (j + t < w)
+                        {
+                            right_border.at<uchar>(i, j + t) = 0;
+                        } else
+                        {
+                            right_border.at<uchar>(i, j) = 0;
+                        }
+                    }
+                    if (j + 50 < w)
+                        j = j + 50;
+                    else
+                        j = w - 1;
+                }
+            }
+        }
+
+        Mat left_border;
+
+        non_maxima.copyTo(left_border);
+
+        for (int i = 1; i < h - 1; i++)
+        {
+            for (int j = w - 1; j > 3; j--)
+            {
+                if (left_border.at<uchar>(i, j) == 255)
+                {
+                    for (int t = 4; t <= 50; t++)
+                    {
+                        if (j - t > 0)
+                        {
+                            left_border.at<uchar>(i, j - t) = 0;
+                        } else
+                        {
+                            left_border.at<uchar>(i, j) = 0;
+                        }
+                    }
+                    if (j - 50 > 0)
+                        j = j - 50;
+                    else
+                        j = 4;
+                }
+            }
+        }
+
+        vector<Vec2f> s_lines;
+        vector<Vec2f> left_lines;
+        vector<Vec2f> right_lines;
+        int hough_threshold = w / 15;
+
+        HoughLines(right_border, s_lines, 1, CV_PI / 180, hough_threshold, 0, 0);
+
+        for (int i = 0; i < s_lines.size(); i++)
+        {
+            float r = s_lines[i][0], theta = s_lines[i][1];
+            float degree = theta * 180 / CV_PI;
+
+            if (90 < degree && degree < 170) // lane on leftside
+            {
+                right_lines.push_back(s_lines[i]);
+            }
+            if (10 < degree && degree < 90) // lane on leftside
+            {
+                left_lines.push_back(s_lines[i]);
+            }
+        }
+
+        eliminateOutLiers(right_lines);
+        eliminateOutLiers(left_lines);
+
+        //drawLines(matLaneROI, right_lines);
+        //drawLines(matLaneROI, left_lines);
+
+        vector<Vec2f> vLines;
+        for (int i = 0; i < right_lines.size(); i++)
+        {
+            vLines.push_back(right_lines[i]);
+        }
+        for (int i = 0; i < left_lines.size(); i++)
+        {
+            vLines.push_back(left_lines[i]);
+        }
+
+        // 소실점 검출
+        vector<Point2f> vInterPoint;
+
+        // 교차점 구하기
+        int num = vLines.size();
+        for (int i = 0; i < num - 1; i++)
+        {
+            float rho = vLines[i][0];   // 첫 번째 요소는 rho 거리
+            float theta = vLines[i][1]; // 두 번째 요소는 델타 각도
+
+            Point pt1(rho / cos(theta), 0); // 첫 행에서 해당 선의 교차점
+            Point pt2((rho - h * sin(theta)) / cos(theta), h);
+
+            for (int j = i + 1; j < num; j++)
+            {
+                float rho = vLines[j][0];   // 첫 번째 요소는 rho 거리
+                float theta = vLines[j][1]; // 두 번째 요소는 델타 각도
+
+                Point pt3(rho / cos(theta), 0); // 첫 행에서 해당 선의 교차점
+                Point pt4((rho - h * sin(theta)) / cos(theta), h);
+
+                Point2f result;
+
+                if (GetIntersection(pt1, pt2, pt3, pt4, result))
+                {
+                    vInterPoint.push_back(result);
+                    //circle(matLaneROI, result, 3, Scalar(255, 0, 0), CV_FILLED, CV_AA);
+                }
+            }
+        }
+
+        // 중심으로부터 가장 가까운 점 찾기
+        float minDis, raito;
+        minDis = raito = sqrt(pow(w, 2) + pow(h, 2)) * 0.07;
+        Point2f minPt;
+        for (i = 0; i < vInterPoint.size(); i++)
+        {
+            if (minDis > sqrt(pow(ptCenter.x - vInterPoint[i].x, 2) + pow(ptCenter.y - vInterPoint[i].y, 2)))
+            {
+                minPt = vInterPoint[i];
+                minDis = sqrt(pow(ptCenter.x - vInterPoint[i].x, 2) + pow(ptCenter.y - vInterPoint[i].y, 2));
+            }
+        }
+
+        vector<Point2f> vResultPoint;
+        // 만약 중심과 일정 범위 내 가까운 점을 찾았다면
+        if (minDis < raito)
+        {
+            // 그 근처 점들을 모으기
+            for (i = 0; i < vInterPoint.size(); i++)
+            {
+                if (raito > sqrt(pow(minPt.x - vInterPoint[i].x, 2) + pow(minPt.y - vInterPoint[i].y, 2)))
+                {
+                    vResultPoint.push_back(vInterPoint[i]);
+                }
+
+            }
+        }
+
+        //circle(matLaneROI, minPt, 10, Scalar(0, 0, 255), CV_FILLED, CV_AA);
+
+        if (!vResultPoint.empty())
+        {
+            // 점들 평균 구하기
+            Point2f avgPt;
+            for (i = 0; i < vResultPoint.size(); i++)
+            {
+                avgPt.x += vResultPoint[i].x;
+                avgPt.y += vResultPoint[i].y;
             }
 
-            //resize_image_reg_of_interest = gray(*main);
-            //checkcascade.detectMultiScale( resize_image_reg_of_interest, nestedcars, 1.1, 2,0, Size(30, 30));
+            avgPt.x = avgPt.x / vResultPoint.size();
+            avgPt.y = avgPt.y / vResultPoint.size();
 
-            //for( vector<Rect>::const_iterator sub = nestedcars.begin(); sub != nestedcars.end(); sub++ )      //testing the detected car by main using checkcascade
+            //for (i = 0; i < vResultPoint.size(); i++)
+            //{
+            //	circle(matLaneROI, vResultPoint[i], 3, Scalar(0, 0, 255), CV_FILLED, CV_AA);
+            //}
+
+            //circle(matLaneROI, avgPt, raito, Scalar(0, 0, 255), 3, CV_AA);
+
+            // 비율로 센터 점 옮기기
+            ptCenter.x = (ptCenter.x * 9 + avgPt.x) / 10;
+            ptCenter.y = (ptCenter.y * 9 + avgPt.y) / 10;
+        }
+
+        circle(matLaneROI, ptCenter, 10, Scalar(255, 0, 0), CV_FILLED, CV_AA);
+
+        //--------------------------------------------------------------------------//
+        // Bird's Eye View   출처: https://marcosnietoblog.wordpress.com/2014/02/22/source-code-inverse-perspective-mapping-c-opencv/
+        //--------------------------------------------------------------------------//
+        Point2f Bird1(0, height);
+        Point2f Bird2(width, height);
+        vector<Point2f> origPoints;
+        vector<Point2f> dstPoints;
+        IPM *ipm;
+
+        // The 4-points at the input image
+        origPoints.push_back(Bird1); // *** 운전학원 카메라
+        origPoints.push_back(Bird2);
+        origPoints.push_back(Point(width, ptCenter.y + (height - h)));
+        origPoints.push_back(Point(0, ptCenter.y + (height - h)));
+
+        // 변환할 BEV 영역의 높이
+        int nViewHeight = h + ptCenter.y;
+
+        // 변환된 BEV 내에서 중심점에 따라서 dstPoints 3, 4번째 x 이동
+        int nBEVMoveX = ((float) ((width / 2) - ptCenter.x) / (width / 2) * (nViewHeight * 8.4));
+
+        // The 4-points correspondences in the destination image
+        dstPoints.push_back(Point2f((width / 2) - (width / 13), 720));
+        dstPoints.push_back(Point2f((width / 2) + (width / 13), 720));
+        dstPoints.push_back(Point2f(width + nBEVMoveX + (nViewHeight * 8.4), 0));
+        dstPoints.push_back(Point2f(nBEVMoveX - (nViewHeight * 8.4), 0));
+
+        // IPM object
+        ipm = new IPM(Size(width, height), Size(width, height), origPoints, dstPoints);
+
+        matBirdView = matResize.clone();
+
+        // Process
+        ipm->applyHomography(matBirdView, matBirdOutput);
+
+        // 결과 화면에 Bird's Eye View 영역 보기
+        ipm->drawPoints(origPoints, matResult);
+
+        //--------------------------------------------------------------------------//
+        // Haar 검출
+        //--------------------------------------------------------------------------//
+        // Apply the classifier to the frame
+        cvtColor(matResize, matGray, COLOR_BGR2GRAY);
+        equalizeHist(matGray, matGray);
+        classifier.detectMultiScale(matGray, vFound, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30)); // cars1.xml
+
+        if (!vFound.empty())
+        {
+            vector<Rect>::const_iterator loc = vFound.begin();
+            vector<Rect>::const_iterator end = vFound.end();
+
+            for (; loc != end; ++loc)
             {
-                //center.x = cvRound((main->x + sub->x + sub->width*0.5));        //getting center points for bouding a circle over the car detected by checkcascade
-                //cen_x = center.x;
-                //center.y = cvRound((main->y + sub->y + sub->height*0.5));
-                //cen_y = center.y;
-                //if(cen_x>(x0+15) && cen_x<(x1-15) && cen_y>(y0+15) && cen_y<(y1-15))         //if centre of bounding circle is inside the rectangle boundary over a threshold the the car is certified
+                Mat roi = matGray(*loc);
+                classifier2.detectMultiScale(roi, vFound2, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30)); // checkcas.xml
+
+                if (!vFound2.empty())
                 {
-                    //Rect roi = Rect(cvPoint(x0, y0), cvPoint(x1, y1));
-                    //Mat ROIimg = image_input(roi);
+                    //--------------------------------------------------------------------------//
+                    // 자동차, 도로 검출
+                    //--------------------------------------------------------------------------//
+                    bool bCarFind = false;
 
-                    rectangle( image_main_result, cvPoint(x0,y0),
-                               cvPoint(x1,y1),
-                               color ,3, 8, 0);               //detecting boundary rectangle over the final result
+                    Mat matROIBin = matRoadBin(*loc);
 
-                    //getdistance(ROIimg);
-
-                    listCar.push_back({cvPoint(x0, y0), cvPoint(x1, y1), ((float)400 / (x1 - x0)) * ((float)400 / (x1 - x0))});
-
-
-
-
-
-
-
-                    Mat matROI, matHSV, matBin;
-                    matHSV = image_input.clone();
-
-                    //----------------------------------------------------//
-                    // Left
-                    //----------------------------------------------------//
-                    Rect tempRect = *main;
-
-                    // 자동차 영역
-                    tempRect.x += (tempRect.width / 6);
-                    tempRect.y += (tempRect.height / 4);
-                    tempRect.width -= (tempRect.width / 4);
-                    tempRect.height -= (tempRect.height / 3);
-
-                    // 램프 영역
-                    tempRect.x += 0;
-                    tempRect.y += 0;
-                    tempRect.width -= (tempRect.width / 2) + (tempRect.width / 6);
-                    tempRect.height -= (tempRect.height / 4);
-
-                    cvtColor(matHSV, matHSV, COLOR_BGR2HSV);
-                    matROI = matHSV(tempRect);
-
-                    // HSV   출처: http://webnautes.tistory.com/942
-                    //지정한 HSV 범위를 이용하여 영상을 이진화
-                    inRange(matROI, Scalar(170, 0, 0), Scalar(179, 255, 255), matBin);
-
-                    //morphological matBin 작은 점들을 제거
-                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-
-                    //morphological closing 영역의 구멍 메우기
-                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-
-                    //라벨링
-                    Mat img_labels, stats, centroids;
-                    int numOfLables1 = connectedComponentsWithStats(matBin, img_labels, stats, centroids, 8, CV_32S);
-                    //rectangle(image_main_result, tempRect, Scalar(255, 255, 255), 2);
-
-                    //----------------------------------------------------//
-                    // Right
-                    //----------------------------------------------------//
-                    Rect tempRect2 = *main;
-
-                    // 자동차 영역
-                    tempRect2.x += tempRect2.width - (tempRect2.width / 6);
-                    tempRect2.y += (tempRect2.height / 4);
-                    tempRect2.width -= (tempRect2.width / 4);
-                    tempRect2.height -= (tempRect2.height / 3);
-
-                    // 램프 영역
-                    tempRect2.y += 0;
-                    tempRect2.width -= (tempRect2.width / 2) + (tempRect2.width / 6);
-                    tempRect2.height -= (tempRect2.height / 4);
-                    tempRect2.x -= tempRect2.width;
-
-                    //cvtColor(mResize, matHSV, COLOR_BGR2HSV);
-                    matROI = matHSV(tempRect2);
-
-                    // HSV   출처: http://webnautes.tistory.com/942
-                    //지정한 HSV 범위를 이용하여 영상을 이진화
-                    inRange(matROI, Scalar(170, 0, 0), Scalar(179, 255, 255), matBin);
-
-                    //morphological matBin 작은 점들을 제거
-                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-
-                    //morphological closing 영역의 구멍 메우기
-                    dilate(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-                    erode(matBin, matBin, getStructuringElement(MORPH_ELLIPSE, Size(5, 5)));
-
-                    //라벨링
-                    int numOfLables2 = connectedComponentsWithStats(matBin, img_labels, stats, centroids, 8, CV_32S);
-                    //rectangle(image_main_result, tempRect2, Scalar(255, 255, 255), 2);
-
-
-
-
-                    // ***** 해결해야 할 점: 무조건 첫번째로 대칭되는 점만 헤드라이트로 인식하는데, 가끔 다른 영역이 잘못 검출되므로
-                    //							영역 크기나 추적을 통해 이전에 검출되었던 해당 위치를 집중적으로 인식해야함
-
-                    //영역박스 그리기
-                    for (int i = 1; i < numOfLables1; i++)
+                    sumHue = 0;
+                    for (int i = matROIBin.rows / 4 * 3; i < matROIBin.rows; i++)
                     {
-                        int area1 = stats.at<int>(i, CC_STAT_AREA);
-
-                        int left1 = stats.at<int>(i, CC_STAT_LEFT);
-                        int top1 = stats.at<int>(i, CC_STAT_TOP);
-                        int width1 = stats.at<int>(i, CC_STAT_WIDTH);
-                        int height1 = stats.at<int>(i, CC_STAT_HEIGHT);
-
-                        for (int j = 1; j < numOfLables2; j++)
+                        for (int j = 0; j < matROIBin.cols; j++)
                         {
-                            int area2 = stats.at<int>(j, CC_STAT_AREA);
-
-                            int left2 = stats.at<int>(j, CC_STAT_LEFT);
-                            int top2 = stats.at<int>(j, CC_STAT_TOP);
-                            int width2 = stats.at<int>(j, CC_STAT_WIDTH);
-                            int height2 = stats.at<int>(j, CC_STAT_HEIGHT);
-
-                            // 높이가 5픽셀 이하로 비슷한 경우
-                            if (abs(top1 - top2) < 5)
-                            {
-                                rectangle(image_main_result, Point(left1 + tempRect.x, top1 + tempRect.y),
-                                          Point(left1 + width1 + tempRect.x, top1 + height1 + tempRect.y), Scalar(0, 255, 255), 2);
-                                rectangle(image_main_result, Point(left2 + tempRect2.x, top2 + tempRect2.y),
-                                          Point(left2 + width2 + tempRect2.x, top2 + height2 + tempRect2.y), Scalar(0, 255, 255), 2);
-
-                                line(image_main_result, Point(left1 + tempRect.x, top1 + tempRect.y + (height1 / 2)),
-                                     Point(left2 + tempRect2.x + width2, top2 + tempRect2.y + (height2 / 2)), Scalar(0, 255, 0), 2);
-
-
-
-                                // 임시 거리 계산
-                                float meter = abs((left1 + tempRect.x) - (left2 + tempRect2.x + width2));
-                                meter = 400 / meter;
-
-                                stringstream text;
-                                text << meter;
-                                text << "m";
-
-                                putText(image_main_result, text.str(), Point((*main).x, (*main).y), 2, 0.7, Scalar::all(255));
-                                //vFoundResult.push_back(*loc);
-
-                                i = numOfLables1;
-                                break;
-                            }
+                            sumHue += matROIBin.at<uchar>(i, j);
                         }
                     }
 
+                    int avg = sumHue / ((matROIBin.rows / 4) * matROIBin.cols);
 
+                    if (avg > 150)
+                    {
+                        sumHue = 0;
+                        for (int i = matROIBin.rows / 4 * 2; i < matROIBin.rows / 4 * 3; i++)
+                        {
+                            for (int j = matROIBin.cols / 4 * 1;
+                                 j < matROIBin.cols / 4 * 3; j++)
+                            {
+                                sumHue += matROIBin.at<uchar>(i, j);
+                            }
+                        }
 
+                        avg = sumHue / ((matROIBin.rows / 4) * matROIBin.cols);
 
+                        if (avg < 60)
+                        {
+                            bCarFind = true;
+                        }
+                    }
 
+                    rectangle(matROIBin, Rect(0, matROIBin.rows / 4 * 3, matROIBin.cols, matROIBin.rows / 4), Scalar(0), 2);
+                    rectangle(matROIBin, Rect(matROIBin.cols / 4, matROIBin.rows / 4 * 2, matROIBin.cols / 4 * 2, matROIBin.rows / 4), Scalar(0), 2);
 
+                    if (!bCarFind) continue;
 
+                    nDetect++;
 
+                    //--------------------------------------------------------------------------//
+                    // 차선 뷰(Bird's Eye View) 관심영역에 드는지 검사
+                    //--------------------------------------------------------------------------//
+                    bCarFind = false;
+                    //----------------------------------------------------//
+                    // 박스 아래 선
+                    //----------------------------------------------------//
+                    Point2f temp;
+                    // 뷰 왼쪽 선
+                    if (GetIntersection(origPoints[0], origPoints[3],
+                                        Point2f((*loc).x, (*loc).y + (*loc).height), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
+                    // 뷰 오른쪽 선
+                    if (GetIntersection(origPoints[1], origPoints[2],
+                                        Point2f((*loc).x, (*loc).y + (*loc).height), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
+                    // 뷰 중앙 위쪽 선
+                    if (GetIntersection(origPoints[3], origPoints[2],
+                                        Point2f((*loc).x, (*loc).y + (*loc).height), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
 
-/*                    stringstream text;
-                    text << ((float)400 / (x1 - x0)) * ((float)400 / (x1 - x0));
-                    text << "m";
+                    //----------------------------------------------------//
+                    // 박스 왼쪽 선
+                    //----------------------------------------------------//
+                    if (GetIntersection(origPoints[0], origPoints[3],
+                                        Point2f((*loc).x, (*loc).y), Point2f((*loc).x, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
+                    if (GetIntersection(origPoints[1], origPoints[2],
+                                        Point2f((*loc).x, (*loc).y), Point2f((*loc).x, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
+                    // 뷰 중앙 위쪽 선
+                    if (GetIntersection(origPoints[3], origPoints[2],
+                                        Point2f((*loc).x, (*loc).y), Point2f((*loc).x, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
 
-                    //sprintf("%.1fm", text, (float)(x1 - x0) / 50);
-                    putText(image_main_result, text.str(), cvPoint(x0, y0), FONT_HERSHEY_SIMPLEX, 1.0, Scalar(255, 0, 0), 3);*/
+                    //----------------------------------------------------//
+                    // 박스 오른쪽 선
+                    //----------------------------------------------------//
+                    if (GetIntersection(origPoints[0], origPoints[3],
+                                        Point2f((*loc).x + (*loc).width, (*loc).y), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
+                    if (GetIntersection(origPoints[1], origPoints[2],
+                                        Point2f((*loc).x + (*loc).width, (*loc).y), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
+                    // 뷰 중앙 위쪽 선
+                    if (GetIntersection(origPoints[3], origPoints[2],
+                                        Point2f((*loc).x + (*loc).width, (*loc).y), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                    {
+                        bCarFind = true;
+                    }
 
-                    //masking the detected car to detect second car if present
+                    //--------------------------------------------------------------------------//
+                    // 자동차를 찾은 경우 추적 및 거리를 계산한다
+                    //--------------------------------------------------------------------------//
+                    if (bCarFind)
+                    {
+                        vFoundResult.push_back(*loc);
 
-                    Rect region_of_interest = Rect(x0, y0, x1-x0, y1-y0);
-                    temp = storage(region_of_interest);
-                    temp = Scalar(255,255,255);
+                        //--------------------------------------------------------------------------//
+                        // 거리 계산
+                        //--------------------------------------------------------------------------//
+                        //----------------------------------------------------//
+                        // 자동차 끝부분 검출
+                        //----------------------------------------------------//
+                        matCanny = matResize(*loc).clone();
+                        cvtColor(matCanny, matCanny, COLOR_BGR2HSV);
 
-                    num = num+1;     //num if number of cars detected
+                        //지정한 HSV 범위를 이용하여 영상을 이진화
 
+                        //cvtColor(matResult, matResult, COLOR_BGR2HSV);
+                        inRange(matCanny, Scalar(0, 0, 50), Scalar(180, 255, 255), matCanny);
+                        //inRange(matCanny, Scalar(50, 50, 50), Scalar(255, 255, 255), matCanny);
+                        Canny(matCanny, matCanny, 10, 200, 3);
+
+                        vector<Vec2f> lines;
+                        int threshold = 30; // r,θ 평면에서 몇개의 곡선이 한점에서 만났을 때 직선으로 판단할지에 대한 최소값
+                        HoughLines(matCanny, lines, 1, CV_PI / 180, threshold);
+
+                        //matCanny = matResize(*loc);
+
+                        //----------------------------------------------------//
+                        // 선 검출   출처: http://hongkwan.blogspot.kr/2013/01/opencv-7-2-example.html
+                        //----------------------------------------------------//
+                        int max = -1;
+                        Point maxpt1, maxpt2;
+
+                        // 선 벡터를 반복해 선 그리기
+                        vector<Vec2f>::const_iterator it = lines.begin();
+                        while (it != lines.end())
+                        {
+                            float rho = (*it)[0];   // 첫 번째 요소는 rho 거리
+                            float theta = (*it)[1]; // 두 번째 요소는 델타 각도
+                            if (theta > 1.8 * CV_PI / 4. && theta < 2.2 * CV_PI / 4.)
+                            {
+                                // 수평 행
+                                Point pt1(0, rho / sin(theta)); // 첫 번째 열에서 해당 선의 교차점
+                                Point pt2(matCanny.cols, (rho - matCanny.cols * cos(theta)) / sin(theta));
+                                if (pt1.y + pt2.y > max)
+                                {
+                                    max = pt1.y + pt2.y;
+                                    maxpt1 = pt1;
+                                    maxpt2 = pt2;
+                                }
+                            }
+                            ++it;
+                        }
+
+                        //----------------------------------------------------//
+                        // Bird's Eye View 내에서 거리 계산
+                        //----------------------------------------------------//
+                        if (max > 0)
+                        {
+                            // 해당 직선을 수평으로 맞추기
+                            maxpt1.y = maxpt2.y = MIN(maxpt1.y, maxpt2.y) + (abs(maxpt1.y - maxpt2.y) / 2);
+
+                            // 기존 영상 크기에 맞게 직선 위치 변환
+                            maxpt1.y = maxpt2.y = maxpt1.y + (*loc).y;
+                            maxpt1.x = 0;
+                            maxpt2.x = width;
+
+                            // 마지막 열에서 해당 선의 교차점
+                            line(matResult, maxpt1, maxpt2, cv::Scalar(255, 0, 0), 1); // 빨간 선으로 그리기
+
+                            // 해당 직선이 거리계산 관심영역(IPM)에 들면 IPM에 맞는 직선 변환
+                            if (origPoints[0].y >= maxpt1.y && origPoints[3].y <= maxpt1.y)
+                            {
+                                maxpt1 = ipm->applyHomography(maxpt1);
+                                maxpt2 = ipm->applyHomography(maxpt2);
+
+                                // 마지막 열에서 해당 선의 교차점
+                                line(matBirdOutput, maxpt1, maxpt2, cv::Scalar(255, 0, 0), 2); // 빨간 선으로 그리기
+
+                                // 거리 계산
+                                float tempDist = 0.4 * (dstPoints[0].y - maxpt1.y);
+
+                                vecDist.push_back(tempDist);
+
+                                stringstream text;
+                                text << tempDist;
+                                text << "m";
+
+                                putText(matResult, text.str(), Point((*loc).x, (*loc).y), 2, 1.3, Scalar(255, 0, 0), 2);
+                            }
+                        }
+                    }
                 }
             }
-
         }
 
-        if(image_main_result.empty() )
-        {
-            //cout << endl << "result storage not successful" << endl;
-        }
-    }
+        draw_locations(matResult, vFoundResult, Scalar(0, 255, 0));
 
-        void getdistance(Mat roi)
-        {
-            Mat HSV;
+        delete ipm;
 
-
-            cvtColor(roi, HSV, COLOR_RGB2HSV);
-
-            //Mat Red_Img, Green_Img, Yellow_Img;
-
-            //cvtColor(img_input, Red_Img, COLOR_RGB2GRAY);
-            Mat red1 = HSV, red2 = HSV;
-            Mat red;
-//    Scalar RedA = (0, 80, 80);
-//    Scalar RedB = (18, 255, 160);
-//    Scalar RedC = (156, 80, 80);
-//    Scalar RedD = (180, 255, 160);
-//    Scalar GreenA = (30, 20480, 20480);
-//    Scalar GreenB = (78, 65535, 40960); // 40~105
-//    Scalar YellowA = (0, 0, 0);
-//    Scalar YellowB = (180, 255, 255);
-//    inRange(HSV, RedA, RedB, RED1);
-//    inRange(HSV, RedA, RedB, RED2);
-//    IplImage *RedTemp1 = new IplImage(RED1);
-//    IplImage *RedTemp2 = new IplImage(RED2);
-//    IplImage *RedResult;
-        //RedResult = cvCreateImage(cvGetSize(RedTemp1), IPL_DEPTH_8U, 3);
-        //cvAdd(RedTemp1, RedTemp2, RedResult);
-        //cvReleaseImage(&RedTemp1);
-        //cvReleaseImage(&RedTemp2);
-
-        //Mat RED = cvarrToMat(RedResult);
-        //cvReleaseImage(&RedResult);
-
-
-
-//    inRange(HSV, GreenA ,GreenB , img_result);
-        //inRange(HSV, YellowA, YellowB, YELLOW);
-
-
-        //red
-        cv::inRange(HSV, cv::Scalar(0, 80, 80, 0), cv::Scalar(10, 255, 160, 0), red1);
-        cv::inRange(HSV, cv::Scalar(150, 80, 80, 0), cv::Scalar(180, 255, 160, 0), red2);
-        red = red1 | red2;
-
-        //GaussianBlur(red, image_main_result, Size(3, 3), 2, 2);
-        //Mat mask = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(1, 1));
-        //morphologyEx(green, green, cv::MorphTypes::MORPH_CLOSE, mask);
-/*
-        vector<Vec3f> circles;
-        HoughCircles(red, circles, CV_HOUGH_GRADIENT, 2, 100);
-        for(int i=0; i<circles.size(); i++)
-        {
-            Point center((int)(circles[i][0]+0.5), (int)(circles[i][1]+0.5));
-            int radius=(int)(circles[i][2]);
-            circle(roi, center, radius, Scalar(255,0,0), 3);
-        }
-*/
-
-
-//        bitwise_not(green, green);
-
-        //Mat circles;
-//       Mat srcImage;
-//       cvtColor(img_input, srcImage, COLOR_RGB2GRAY);
-//
-//        vector<Vec3f> circles;
-//        HoughCircles(srcImage, circles, HOUGH_GRADIENT, 1, 50);
-//        Mat dstImage(srcImage.size(), CV_8UC3);
-//        //cvtColor(green, dstImage, COLOR_GRAY2BGR);
-//
-//        Vec3f params;
-//        int cx, cy, r;
-//        //for(int k = 0; k < circles.cols; k++);
-//        for(int k = 0; k < circles.size(); k++){
-//            params = circles[k];
-//            cx = cvRound(params[0]);
-//            cy = cvRound(params[1]);
-//            r = cvRound(params[2]);
-//
-//            Point center(cx, cy);
-//            circle(srcImage, center, r, Scalar(0, 0, 255), 2);
-//            rectangle(srcImage, Point(50, 50), Point(100, 100), Scalar(0, 255, 0), 3);
-//
-//        }
-
-
-        red.copyTo(image_main_result);
+        gettimeofday(&time_end, NULL);
+        SaveLog((time_end.tv_usec - time_begin.tv_usec) / 1000, nDetect, vecDist, fLatitude, fLongitude);
+        time_begin = time_end;
     }
 };

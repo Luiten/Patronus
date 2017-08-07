@@ -18,28 +18,12 @@ class Manager
 {
 
 public:
-    void Initialize()
+    void Initialize(int w, int h)
     {
-        string checkcas = "/sdcard/Patronus/checkcas.xml";
+        width = w;
+        height = h;
 
-        m_Detectcars.setnum();                  //set number of cars detected as 0
-        m_Detectcars.checkcascade_load(checkcas);      //load the test cascade
-
-        //Applying various cascades for a finer search.
-        string cas = "/sdcard/Patronus/cars.xml";
-        m_Detectcars.cascade_load(cas);
-
-    /*    cas = "/sdcard/cas2.xml";
-        detectcars.cascade_load(cas);
-
-        cas = "/sdcard/cas3.xml";
-        detectcars.cascade_load(cas);
-
-        cas = "/sdcard/cas4.xml";
-        detectcars.cascade_load(cas);*/
-
-        width = 1280;
-        height = 720;
+        m_Detectcars.Initialize(width, height);
     }
 
     //-----------------------------------------------------------------------------------------------//
@@ -63,16 +47,7 @@ public:
         //------------------------------------------------------------//
         if (m_bDistance)
         {
-            m_Detectcars.setnum();
-            m_Detectcars.getimage(input);           //get the image
-
-            m_Detectcars.findcars(m_listCar);
-
-            if (m_Detectcars.num == 0)
-            {
-                //cout << endl << "cars not found" << endl;
-            }
-            m_Detectcars.get_result(img_result);          //get the final result
+            m_Detectcars.ExecuteDistance(input, img_result, m_listCar, m_fLatitude, m_fLongitude);
         }
 
         //------------------------------------------------------------//
@@ -259,7 +234,7 @@ public:
     }
 
 private:
-    cars m_Detectcars;                      //creating a object
+    Distance m_Detectcars;                      //creating a object
     Lane m_Lane;
     Light m_Light;
     Log m_Log;
