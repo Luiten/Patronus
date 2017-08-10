@@ -30,7 +30,7 @@ private:
     int width, height;
     bool bInit = false;
 
-    timeval time_begin, time_end;
+    clock_t time_begin, time_end;
 
 //------------------------------------------------------------------------------------------------//
 // 검출된 자동차 상자 그리기
@@ -161,7 +161,7 @@ public:
 
         vector<float> vecDist;
         SaveLog(-1, 0, vecDist, 0, 0);
-        gettimeofday(&time_begin, NULL);
+        time_begin = clock();
     }
 
     void ExecuteDistance(Mat &matInput, Mat &matResult, vector<CarInfo>& listCar, float fLatitude, float fLongitude)
@@ -784,8 +784,8 @@ public:
 
         delete ipm;
 
-        gettimeofday(&time_end, NULL);
-        SaveLog((time_end.tv_usec - time_begin.tv_usec) / 1000, nDetect, vecDist, fLatitude, fLongitude);
+        time_end = clock();
+        SaveLog((time_end - time_begin) * 1000 / CLOCKS_PER_SEC, nDetect, vecDist, fLatitude, fLongitude);
         time_begin = time_end;
     }
 };

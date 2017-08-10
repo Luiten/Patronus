@@ -61,6 +61,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     double accelSpeed = 0.0;
     double nowSpeed = 0.0;
 
+    // 버튼 보여주기 상태
+    private boolean bButtonShow = false;
+
     public native int InitializeNativeLib(int w, int h);
     public native int convertNativeLib(long matAddrInput, long matAddrResult);
     public native int PushbackAccel(float fValue);
@@ -103,15 +106,26 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         main_layout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                switch (event.getAction()){
-                    case MotionEvent.ACTION_DOWN :
-                        btn_layout.setVisibility(View.VISIBLE);
-                        mHandler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                btn_layout.setVisibility(View.INVISIBLE);
-                            }
-                        }, 3000);
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        // 버튼이 표지되어 있지 않으면 5초간 표시
+                        if (bButtonShow == false) {
+                            btn_layout.setVisibility(View.VISIBLE);
+                            bButtonShow = true;
+                            mHandler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    btn_layout.setVisibility(View.INVISIBLE);
+                                    bButtonShow = false;
+                                }
+                            }, 5000);
+                        }
+                        // 버튼이 표시되고 있으면 핸들러 제거후 버튼 안보이게 하기
+                        else {
+                            mHandler.removeMessages(0);
+                            btn_layout.setVisibility(View.INVISIBLE);
+                            bButtonShow = false;
+                        }
                 }
                 return true;
             }
