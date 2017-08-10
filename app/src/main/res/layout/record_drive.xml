@@ -9,13 +9,6 @@
     android:paddingTop="10dp"
     android:paddingBottom="10dp">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="운전 점수"
-        android:textSize="20dp"
-        android:gravity="center"/>
-
     <com.github.mikephil.charting.charts.BarChart
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -45,7 +38,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:background="@drawable/border"
-                android:text="충돌 : 30" />
+                android:text="충돌 : 0" />
 
             <TextView
                 android:id="@+id/recorddrive_text_signalscore"
@@ -54,7 +47,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:background="@drawable/border"
-                android:text="신호위반 : 40" />
+                android:text="신호위반 : 0" />
 
             <TextView
                 android:id="@+id/recorddrive_text_linescore"
@@ -63,7 +56,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:background="@drawable/border"
-                android:text="차선침범 : 30" />
+                android:text="차선침범 : 0" />
 
 
         </LinearLayout>
@@ -81,7 +74,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:background="@drawable/border"
-                android:text="졸음 : 30" />
+                android:text="졸음 : 0" />
 
             <TextView
                 android:id="@+id/recorddrive_text_attentionscore"
@@ -90,7 +83,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:background="@drawable/border"
-                android:text="부주의 : 30" />
+                android:text="부주의 : 0" />
 
             <TextView
                 android:id="@+id/recorddrive_text_signscore"
@@ -99,7 +92,7 @@
                 android:layout_weight="1"
                 android:gravity="center"
                 android:background="@drawable/border"
-                android:text="표지판 : 30" />
+                android:text="표지판 : 0" />
 
 
         </LinearLayout>
@@ -111,7 +104,7 @@
             android:layout_weight="1"
             android:gravity="center"
             android:background="@drawable/border"
-            android:text="총점수 : 70"/>
+            android:text="총점수 : 0"/>
 
 
    </LinearLayout>

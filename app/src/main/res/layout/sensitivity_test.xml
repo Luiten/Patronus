@@ -12,29 +12,40 @@
         android:orientation="vertical">
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="민감도 테스트"
+            android:gravity="center"
+            android:textSize="20dp"
+            android:background="@color/colorBackgroundDark"/>
+
+        <TextView
+            android:id="@+id/sensitivetest_text_result"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:textColor="@color/colorAccent"
+            android:gravity="center"
+            android:textSize="30dp" />
+
+        <TextView
             android:id="@+id/sensitivetest_text_shake"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:gravity="center"
             android:background="@color/colorBackground"
-            android:text="스마트폰을 흔들어 주세요"
-            android:textSize="20dp" />
-
-        <TextView
-            android:id="@+id/sensitivetest_text_result"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:background="@color/colorBackground"
-            android:gravity="center"
-            android:textSize="30dp" />
+            android:text="스마트폰을 흔들어 주세요" />
 
         <TextView
             android:id="@+id/sensitivetest_text_crash"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:background="@color/colorBackground"
             android:gravity="center"
             android:text="위 수치는 최대 측정치가 표시됩니다" />
@@ -44,6 +55,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:background="@color/colorBackground"
             android:gravity="center"
             android:text="해당 수치 이상 충격이 가해질 경우 충돌로 인식합니다" />

@@ -8,10 +8,13 @@ set(pathProject "This Project Path")
 
 ---
 #### Problem
-1. PointActivity: Setting에서 해상도 변경시 멈추는 문제
-2. RecordDrive: 그래프 클릭시 멈추는 문제(View 값이 null)
+1. StandardActivity: 다시찍기시 해상도 적용x
 2. MainActivity: 800x600 해상도 실행시 팅기는 문제
-2. RecordCrash: 동영상이 없을 경우 화면이 너무 커지는 문제
+3. RecordCrash: 동영상이 없을 경우 화면이 너무 커지는 문제
+---
+#### 0.86.3 (2017-08-10)
+1. sensitivity_test.xml, standard_main.xml : 타이틀바 추가 및 크기 조정
+2. Record_drive.java : null 포인트 오류 해결, 라벨 제거, value format값 수정
 ---
 #### 0.86.2 (2017-08-10)
 1. MainActivity: 버튼 View 다시 터치시 사라지기 및 시간 3초 -> 5초로 수정

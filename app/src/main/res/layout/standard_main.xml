@@ -12,13 +12,22 @@
         android:orientation="vertical">
 
         <TextView
+            android:layout_width="match_parent"
+            android:layout_height="40dp"
+            android:text="현재 기준점"
+            android:gravity="center"
+            android:textSize="20dp"
+            android:background="@color/colorBackgroundDark"/>
+
+        <TextView
             android:id="@+id/standard_text_retry"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="20dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:text="기준점을 다시 맞추고 싶은 경우"
-            android:textSize="20dp"
             android:background="@color/colorBackground"/>
 
         <TextView
@@ -27,14 +36,15 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="5dp"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
             android:text="[다시 촬영] 버튼을 눌러주세요"
-            android:textSize="20dp"
             android:background="@color/colorBackground"/>
 
         <ImageView
             android:id="@+id/standard_image_camera"
             android:layout_width="match_parent"
-            android:layout_height="300dp"
+            android:layout_height="200dp"
             android:background="@color/colorBackground"
             android:layout_marginTop="20dp" />
 

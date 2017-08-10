@@ -3,6 +3,7 @@ package luiten.patronus;
 import android.app.Activity;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -10,6 +11,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.github.mikephil.charting.charts.BarChart;
+import com.github.mikephil.charting.components.Legend;
 import com.github.mikephil.charting.components.XAxis;
 import com.github.mikephil.charting.components.YAxis;
 import com.github.mikephil.charting.data.BarData;
@@ -28,7 +30,7 @@ import java.util.ArrayList;
  * Created by power on 2017-06-12.
  */
 
-public class RecordDrive extends Activity {
+public class RecordDrive extends AppCompatActivity {
 
     private BarChart drive_chart;
     private LinearLayout score_layout;
@@ -44,6 +46,7 @@ public class RecordDrive extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getSupportActionBar().setTitle("운전 점수");
         setContentView(R.layout.record_drive);
 
         tot_score = 100-(crash*30+signal*10+line*10+sleep*10+sign+5+attention*5);// 토탈값을 구한후 밑에 barchart에 삽입
@@ -80,7 +83,7 @@ public class RecordDrive extends Activity {
         BarDataSet barDataSet = new BarDataSet(valueSet,"최근 운전 점수");
 
         barDataSet.setColor(R.color.colorAccent);
-        barDataSet.setValueTextSize(10);
+        barDataSet.setValueTextSize(15);
 
         dataSets = new ArrayList<>();
         dataSets.add(barDataSet);
@@ -92,6 +95,11 @@ public class RecordDrive extends Activity {
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
         BarData data = new BarData(mDate,dataSets);
+        data.setValueFormatter(new CustomValueFormatter());
+
+        Legend legend = drive_chart.getLegend();
+        legend.setEnabled(false);
+
         drive_chart.setExtraOffsets(0, 0, 0, 20);
         drive_chart.setData(data);
         drive_chart.setScaleXEnabled(false);
@@ -99,6 +107,7 @@ public class RecordDrive extends Activity {
         drive_chart.setDescription("");
         drive_chart.animateXY(2000,2000);
         drive_chart.invalidate();
+        drive_chart.setDrawBorders(false);
 
         drive_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
 @Override
@@ -130,9 +139,9 @@ public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
 
 @Override
 public void onNothingSelected() {
-        score_layout.setVisibility(View.INVISIBLE);
+        Toast.makeText(getApplicationContext(), "다시 눌러주세요", Toast.LENGTH_LONG).show();
         }
-        });
+    });
 
         }
 }
