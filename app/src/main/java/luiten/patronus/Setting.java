@@ -119,7 +119,7 @@ public class Setting extends AppCompatActivity {
         recordadapter = new RecordAdapter(this);
         recordlistview.setAdapter(recordadapter);
 
-        alarmadapter.addItem("차선", "차선을 넘었을 경우", settings.getBoolean("lane" , true));
+        alarmadapter.addItem("차선", "차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우차선을 넘었을 경우", settings.getBoolean("lane" , true));
         alarmadapter.addItem("앞차간 거리", "앞차간 거리가 가까울 경우", settings.getBoolean("distance", true));
         alarmadapter.addItem("신호 위반", "신호 위반일 경우", settings.getBoolean("signal", true));
         alarmadapter.addItem("졸음 운전", "운전자가 졸음을 감지할 경우", settings.getBoolean("sleep", true));
