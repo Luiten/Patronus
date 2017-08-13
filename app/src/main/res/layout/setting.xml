@@ -12,7 +12,7 @@
 
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:paddingRight="10dp"
             android:paddingLeft="10dp"
             android:paddingTop="10dp"
@@ -38,7 +38,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/set_listview_alarm"
-                android:textSize="5dp"/>
+                android:textSize="10dp"/>
 
             <TextView
                 android:id="@+id/set_text_caplength"
@@ -105,7 +105,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/set_listview_caplength"
-                android:textSize="5dp"/>
+                android:textSize="10dp"/>
 
             <TextView
                 android:id="@+id/set_text_resolution"
@@ -191,7 +191,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/set_listview_resolution"
-                android:textSize="5dp"/>
+                android:textSize="10dp"/>
 
             <TextView
                 android:id="@+id/set_text_standard"
@@ -215,7 +215,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/set_listview_sensitivity"
-                android:textSize="5dp"/>
+                android:textSize="10dp"/>
+
+            <TextView
+                android:id = "@+id/margin05"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/set_listview_standard"
+                android:textSize="10dp"/>
 
             <TextView
                 android:id="@+id/set_text_record"
@@ -233,14 +240,6 @@
 
                 android:background="@color/colorBackground"
                 android:layout_below="@+id/set_text_record" />
-
-            <TextView
-                android:id = "@+id/margin05"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/set_listview_standard"
-                android:textSize="5dp"/>
-
         </RelativeLayout>
     </ScrollView>
 

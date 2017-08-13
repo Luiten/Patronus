@@ -7,8 +7,9 @@
         android:id="@+id/sensitivity_text_item"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="ddddddddd"
+        android:text="Title"
         android:textSize="20dp"
+        android:textColor="@color/colorTextDark"
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
         android:layout_marginLeft="15dp"/>

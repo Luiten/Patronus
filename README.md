@@ -1,5 +1,5 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.87.0 (2017-08-12)
+Version: 0.87.1 (2017-08-13)
 
 ---
 #### Change "CMakeLists.txt"
@@ -11,6 +11,12 @@ set(pathProject "This Project Path")
 1. StandardActivity: [다시 찍기] 터치시 설정 해상도가 적용이 안되는 문제
 2. MainActivity: 800x600 해상도 실행시 팅기는 문제
 3. RecordCrash: 동영상이 없을 경우 화면이 너무 커지는 문제
+3. 너비나 크기를 dp로 설정시 글자 크기, 화면 크기에 따라 레이아웃 일부가 짤릴 수 있는 문제
+---
+#### 0.87.1 (2017-08-13)
+1. alarm_item.xml: 설명이 여러 줄이 될 경우 레이아웃 분배 수정 *
+2. Setting: 알림 설명 변경
+3. setting.xml: 타이틀 텍스트 색상 검정으로 변경
 ---
 #### 0.87.0 (2017-08-12)
 1. SplashActivity: 파일 검사 및 다운로드 추가
