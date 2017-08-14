@@ -36,7 +36,7 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
             { 640, 480 } };
 
     public native int InitializeNativeLib(int w, int h);
-    public native int convertNativeLib(long matAddrInput, long matAddrResult);
+    public native int convertNativeLib(long matAddrInput, long matAddrResult, int iCamera);
     public native int CaptureImage(long matAddrResult);
 
     static {
@@ -139,7 +139,7 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
         img_input = inputFrame.rgba();
         img_result = new Mat();
 
-        convertNativeLib(img_input.getNativeObjAddr(), img_result.getNativeObjAddr());
+        convertNativeLib(img_input.getNativeObjAddr(), img_result.getNativeObjAddr(), 0);
 
         return img_result;
     }

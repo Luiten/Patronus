@@ -4,10 +4,25 @@
     android:layout_height="match_parent"
     android:id="@+id/main_layout">
 
-    <org.opencv.android.JavaCameraView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:id="@+id/activity_surface_view" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal"
+        android:background="@color/colorBackground">
+
+        <org.opencv.android.JavaCameraView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/activity_surface_view"
+            android:layout_weight="0.5"/>
+
+        <org.opencv.android.JavaCameraView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:id="@+id/activity_surface_view2"
+            android:layout_weight="0.5"/>
+
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/main_layout_button"

@@ -16,12 +16,12 @@ Java_luiten_patronus_MainActivity_InitializeNativeLib(JNIEnv *, jobject, jint w,
 }
 
 JNIEXPORT jint JNICALL
-Java_luiten_patronus_MainActivity_convertNativeLib(JNIEnv *, jobject, jlong addrInput, jlong addrResult)
+Java_luiten_patronus_MainActivity_convertNativeLib(JNIEnv *, jobject, jlong addrInput, jlong addrResult, jint iCamera)
 {
     Mat &img_input = *(Mat *) addrInput;
     Mat &img_result = *(Mat *) addrResult;
 
-    mgr.Execute(img_input, img_result);
+    mgr.Execute(img_input, img_result, iCamera);
     return 0;
 }
 
@@ -41,12 +41,12 @@ Java_luiten_patronus_PointActivity_InitializeNativeLib(JNIEnv *, jobject, jint w
 }
 
 JNIEXPORT jint JNICALL
-Java_luiten_patronus_PointActivity_convertNativeLib(JNIEnv *, jobject, jlong addrInput, jlong addrResult)
+Java_luiten_patronus_PointActivity_convertNativeLib(JNIEnv *, jobject, jlong addrInput, jlong addrResult, jint iCamera)
 {
     Mat &img_input = *(Mat *) addrInput;
     Mat &img_result = *(Mat *) addrResult;
 
-    mgr.Execute(img_input, img_result);
+    mgr.Execute(img_input, img_result, iCamera);
     return 0;
 }
 

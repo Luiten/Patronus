@@ -1,10 +1,16 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.87.1 (2017-08-13)
+Version: 0.88.0 (2017-08-14)
 
 ---
-#### Change "CMakeLists.txt"
-set(pathOpenCv "Your OpenCV 3.1 Android SDK Path")
+<br>
+<br>
+
+### Change "CMakeLists.txt"
+set(pathOpenCv "Your OpenCV 3.1 Android SDK Path")<br>
 set(pathProject "This Project Path")
+
+<br>
+<br>
 
 ---
 #### Problem
@@ -12,6 +18,13 @@ set(pathProject "This Project Path")
 2. MainActivity: 800x600 해상도 실행시 팅기는 문제
 3. RecordCrash: 동영상이 없을 경우 화면이 너무 커지는 문제
 3. 너비나 크기를 dp로 설정시 글자 크기, 화면 크기에 따라 레이아웃 일부가 짤릴 수 있는 문제
+4. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제
+---
+#### 0.88.0 (2017-08-14)
+1. MainActivity, native-lib.cpp, Manager.cpp: 듀얼 카메라 추가 * 
+1. RecordCrash, record_crash.xml: 동영상이 없을 경우 팝업창 크기 수정
+2. setting_main.xml 제거 후 setting.xml -> setting_main.xml로 이름 변경
+3. setting_main.xml: capscore, sensiscore 오른쪽 정렬 및 색상 변경
 ---
 #### 0.87.1 (2017-08-13)
 1. alarm_item.xml: 설명이 여러 줄이 될 경우 레이아웃 분배 수정 *

@@ -6,7 +6,7 @@
     <VideoView
         android:id="@+id/recordcrash_videoView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="300dp"
         android:layout_alignParentLeft="true"
         android:layout_alignParentRight="true"/>
 

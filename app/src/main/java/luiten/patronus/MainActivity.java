@@ -1,7 +1,6 @@
 package luiten.patronus;
 
 import android.app.Activity;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
@@ -9,11 +8,9 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Build;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Message;
-import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -41,7 +38,14 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private Mat img_result;
     private static final String TAG = "opencv";
     private CameraBridgeViewBase mOpenCvCameraView;
+    private CameraBridgeViewBase mOpenCvCameraView2;
     private boolean bStart = false;
+
+    private boolean frontCamera = false;
+    private boolean backCamera = false;
+
+    private int switchCamera = 0;
+    private boolean changed = false;
 
     private int VideoSize[][] = {
             { 1920, 1080 },
@@ -65,7 +69,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private boolean bButtonShow = false;
 
     public native int InitializeNativeLib(int w, int h);
-    public native int convertNativeLib(long matAddrInput, long matAddrResult);
+    public native int convertNativeLib(long matAddrInput, long matAddrResult, int iCamera); // iCamera: 0 = 후면, 1 = 전면
     public native int PushbackAccel(float fValue);
     public native int SetSettings(int type, double value);
 
@@ -141,10 +145,39 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 // 세팅 읽기
                 SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
                 mOpenCvCameraView.setMaxFrameSize(VideoSize[settings.getInt("resolution", 1)][0], VideoSize[settings.getInt("resolution", 1)][1]);
+                mOpenCvCameraView2.setMaxFrameSize(VideoSize[settings.getInt("resolution", 1)][0], VideoSize[settings.getInt("resolution", 1)][1]);
+
+                frontCamera = settings.getBoolean("frontcamera", false);
+                backCamera = settings.getBoolean("backcamera", true);
+
+                switchCamera = 0;
+                // 전면 카메라만 설정되어 있는 경우 전면 카메라만 보여준다
+                if (frontCamera && !backCamera) {
+                    mOpenCvCameraView.disableView();
+                    switchCamera = 1;
+                    //mOpenCvCameraView2.setCameraIndex(switchCamera); // front-camera(1),  back-camera(0)
+                    mOpenCvCameraView2.enableView();
+                }
 
                 InitializeNativeLib(VideoSize[settings.getInt("resolution", 1)][0], VideoSize[settings.getInt("resolution", 1)][1]);
 
                 mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+                mOpenCvCameraView2.setVisibility(SurfaceView.VISIBLE);
+
+                // 전면 카메라만 설정되어 있는 경우 전면 카메라만 보여준다
+                if (frontCamera && backCamera) {
+                    final CameraSwitchTask cameraTask = new CameraSwitchTask(MainActivity.this);
+                    cameraTask.execute("");
+                }
+            }
+        });
+
+        // 동영상 녹화
+        Button button2 = (Button)findViewById(R.id.main_btn_capture);
+        button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
             }
         });
 
@@ -154,6 +187,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             @Override
             public void onClick(View v) {
                 mOpenCvCameraView.setVisibility(SurfaceView.INVISIBLE);
+                mOpenCvCameraView2.setVisibility(SurfaceView.INVISIBLE);
+                mOpenCvCameraView.disableView();
+                mOpenCvCameraView2.disableView();
+                switchCamera = -1; // 카메라 스위치 작업 종료
 
                 Intent intent = new Intent(getApplicationContext(), Setting.class);
                 startActivity(intent);
@@ -167,6 +204,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             public void onClick(View v) {
                 bStart = false;
                 mOpenCvCameraView.setVisibility(SurfaceView.INVISIBLE);
+                mOpenCvCameraView2.setVisibility(SurfaceView.INVISIBLE);
+                mOpenCvCameraView.disableView();
+                mOpenCvCameraView2.disableView();
+                switchCamera = -1; // 카메라 스위치 작업 종료
             }
         });
 
@@ -176,6 +217,11 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         mOpenCvCameraView.setVisibility(SurfaceView.INVISIBLE);
         mOpenCvCameraView.setCvCameraViewListener(this);
         mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
+
+        mOpenCvCameraView2 = (CameraBridgeViewBase)findViewById(R.id.activity_surface_view2);
+        mOpenCvCameraView2.setVisibility(SurfaceView.INVISIBLE);
+        mOpenCvCameraView2.setCvCameraViewListener(this);
+        mOpenCvCameraView2.setCameraIndex(1); // front-camera(1),  back-camera(0)
 
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
 
@@ -242,14 +288,19 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     }
 
+    //------------------------------------------------------------------------------------------------//
+    // 카메라 영상 처리
+    //------------------------------------------------------------------------------------------------//
     @Override
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
         img_input = inputFrame.rgba();
         img_result = new Mat();
 
+        changed = true;
+
         if (bStart)
         {
-            convertNativeLib(img_input.getNativeObjAddr(), img_result.getNativeObjAddr());
+            convertNativeLib(img_input.getNativeObjAddr(), img_result.getNativeObjAddr(), switchCamera);
         }
 
         return img_result;
@@ -260,8 +311,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     }
 
+    //------------------------------------------------------------------------------------------------//
     // 센서값 얻어오기
     // 출처: http://h5bak.tistory.com/271
+    //------------------------------------------------------------------------------------------------//
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
         float accelX, accelY, accelZ;
@@ -336,5 +389,82 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             // TODO Auto-generated method stub
 
         }
+    }
+
+
+
+    //------------------------------------------------------------------------------------------------//
+    // 카메라 스위치 비동기 작업   출처: http://webnautes.tistory.com/1085
+    //------------------------------------------------------------------------------------------------//
+    private class CameraSwitchTask extends AsyncTask<String, Integer, Integer> {
+        private Context context;
+
+        public CameraSwitchTask(Context context) {
+            this.context = context;
+        }
+
+        @Override protected void onCancelled() {
+            super.onCancelled();
+        }
+
+        // 시작하기 전
+        @Override
+        protected void onPreExecute() { //2
+            super.onPreExecute();
+
+        }
+
+        // 진행
+        @Override
+        protected Integer doInBackground(String ... str) { //3
+            int result = 0;
+            boolean allwaysTrue = true;
+
+            while (allwaysTrue) {
+                try {
+                    Thread.sleep(100);
+                    // 화면 끌 경우 해당 작업도 종료
+                    if (switchCamera == -1) {
+                        break;
+                    }
+                    publishProgress(0);
+                } catch (Exception e) {
+                    Log.e("Error: ", e.getMessage());
+                }
+            }
+
+            return result;
+        }
+
+
+        // 업데이트
+        @Override
+        protected void onProgressUpdate(Integer... update) { //4
+            super.onProgressUpdate(update[0]);
+
+            if (changed) {
+                if (switchCamera == 0) {
+                    mOpenCvCameraView.disableView();
+                    switchCamera = switchCamera ^ 1;
+                    //mOpenCvCameraView2.setCameraIndex(switchCamera); // front-camera(1),  back-camera(0)
+                    mOpenCvCameraView2.enableView();
+                }
+                else {
+                    mOpenCvCameraView2.disableView();
+                    switchCamera = switchCamera ^ 1;
+                    //mOpenCvCameraView.setCameraIndex(switchCamera); // front-camera(1),  back-camera(0)
+                    mOpenCvCameraView.enableView();
+                }
+                changed = false;
+            }
+        }
+
+        // 완료 후
+        @Override
+        protected void onPostExecute(Integer result) { //5
+            super.onPostExecute(result);
+
+        }
+
     }
 }

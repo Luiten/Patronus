@@ -39,6 +39,8 @@ public class RecordCrash extends Activity {
         Intent intent = getIntent();
         Logs = intent.getStringArrayExtra("Logs");
 
+        // *** https://github.com/brightec/ExampleMediaController 참조해서 MediaController 대신 커스텀 SeekBar로 만들기
+
         VideoView videoView = (VideoView)findViewById(R.id.recordcrash_videoView);
         MediaController mediaController = new MediaController(this);
 
@@ -50,7 +52,7 @@ public class RecordCrash extends Activity {
         File file = new File(dirPath);
 
         // 일치하는 파일이 없으면 오류 메시지 출력
-        if (!file.exists()) {
+        if (!file.exists() || Logs[4].equals("")) {
             Toast.makeText(getApplicationContext(), "동영상 파일이 존재하지 않습니다.", Toast.LENGTH_SHORT).show();
         }
         else {

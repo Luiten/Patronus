@@ -52,7 +52,7 @@ public class Setting extends AppCompatActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setTitle("설정");
-        setContentView(R.layout.setting);
+        setContentView(R.layout.setting_main);
 
         mContext = this;
 
@@ -180,8 +180,6 @@ public class Setting extends AppCompatActivity {
 
         }); //기준점 리스트뷰에서 액티비티 전환하는 함수
 
-
-
         recordlistview.setOnItemClickListener(new AdapterView.OnItemClickListener(){
 
             @Override
@@ -243,7 +241,7 @@ public class Setting extends AppCompatActivity {
         editor.putBoolean("backcamera", capture_lengthadapter.isChecked(1));
 
         editor.putInt("resolution", resolutionadapter.GetChecked()); // 데이터 저장
-        editor.commit(); // 완료한다.
+        editor.apply(); // 완료한다.
 
         // Manager 클래스에 적용
         SetSettings(1, alarmadapter.isChecked(0) ? 1 : 0); // Lane
