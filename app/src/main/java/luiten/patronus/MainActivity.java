@@ -16,6 +16,8 @@ import android.view.MotionEvent;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.*;
 import android.content.Context;
 import android.location.Location;
@@ -33,6 +35,9 @@ import org.opencv.core.Mat;
  */
 
 public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
+
+    private final long FINISH_INTERVAL_TIME = 2000;
+    private long backPressedTime = 0;
 
     private Mat img_input;
     private Mat img_result;
@@ -101,9 +106,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_main);
 
+        RelativeLayout warning_layout = (RelativeLayout)findViewById(R.id.main_layout_warning);
+        final Animation fade_warning = AnimationUtils.loadAnimation(this, R.anim.fade_in);
+        warning_layout.startAnimation(fade_warning);
+        warning_layout.setVisibility(View.INVISIBLE);
+        //애니메이션 fade-in-out 부분
+
         RelativeLayout main_layout = (RelativeLayout)findViewById(R.id.main_layout);
         final LinearLayout btn_layout = (LinearLayout)findViewById(R.id.main_layout_button);
-        final Handler mHandler = new Handler();
+        final Handler btn_Handler = new Handler();
 
         btn_layout.setVisibility(View.INVISIBLE);
 
@@ -116,7 +127,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                         if (bButtonShow == false) {
                             btn_layout.setVisibility(View.VISIBLE);
                             bButtonShow = true;
-                            mHandler.postDelayed(new Runnable() {
+                            btn_Handler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
                                     btn_layout.setVisibility(View.INVISIBLE);
@@ -126,7 +137,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                         }
                         // 버튼이 표시되고 있으면 핸들러 제거후 버튼 안보이게 하기
                         else {
-                            mHandler.removeMessages(0);
+                            btn_Handler.removeMessages(0);
                             btn_layout.setVisibility(View.INVISIBLE);
                             bButtonShow = false;
                         }
@@ -276,6 +287,21 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         if (mOpenCvCameraView != null)
             mOpenCvCameraView.disableView();
+    }
+
+    @Override
+    public void onBackPressed(){
+        long tempTime = System.currentTimeMillis();
+        long intervalTime = tempTime - backPressedTime;
+
+        if(0<=intervalTime&&FINISH_INTERVAL_TIME>=intervalTime){
+            super.onBackPressed();
+        }
+        else
+        {
+            backPressedTime = tempTime;
+            Toast.makeText(getApplicationContext(),"한 번더 누를시 종료 됩니다.",Toast.LENGTH_SHORT).show();
+        }
     }
 
     @Override

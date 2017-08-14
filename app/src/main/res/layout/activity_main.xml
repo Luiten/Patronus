@@ -24,6 +24,31 @@
 
     </LinearLayout>
 
+    <RelativeLayout
+        android:id="@+id/main_layout_warning"
+        android:layout_width="wrap_content"
+        android:layout_height="500dp"
+        android:layout_centerInParent="true">
+
+        <ImageView
+            android:id="@+id/main_image_warning"
+            android:layout_width="300dp"
+            android:layout_height="200dp"
+            android:layout_centerInParent="true"
+            android:background="@drawable/warning" />
+
+        <TextView
+            android:id="@+id/main_text_warning"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/main_image_warning"
+            android:textSize="30dp"
+            android:textColor="@color/colorAccent"
+            android:layout_centerInParent="true"
+            android:text="경고 입니다"/>
+
+    </RelativeLayout>
+
     <LinearLayout
         android:id="@+id/main_layout_button"
         android:layout_width="match_parent"
@@ -35,6 +60,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:background="#1A000000"
+                android:textColor="@color/colorAccent"
                 android:text="시작" />
 
 
@@ -43,6 +70,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:background="#1A000000"
+                android:textColor="@color/colorAccent"
                 android:text="수동녹화" />
 
             <Button
@@ -50,6 +79,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:background="#1A000000"
+                android:textColor="@color/colorAccent"
                 android:text="설정" />
 
              <Button
@@ -57,6 +88,8 @@
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                 android:background="#1A000000"
+                 android:textColor="@color/colorAccent"
                 android:text="종료" />
 
 
@@ -68,5 +101,6 @@
                 android:layout_height="wrap_content"
                 android:textColor="@color/colorAccent"
                 android:layout_marginTop="3dp"
+                android:textSize="25dp"
                 android:layout_alignParentRight="true" />
 </RelativeLayout>

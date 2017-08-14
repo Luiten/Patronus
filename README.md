@@ -20,6 +20,12 @@ set(pathProject "This Project Path")
 3. 너비나 크기를 dp로 설정시 글자 크기, 화면 크기에 따라 레이아웃 일부가 짤릴 수 있는 문제
 4. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제
 ---
+#### 0.88.1 (2017-08-15)
+1. MainActivity 버튼 투명도 조절 및 속도 텍스트 크기 조절
+2. MainActivity Warning faed-in-out 추가 
+3. MainActivity 두번 누를시 종료 추가
+4. res의 anim폴더 fade-in.xml 추가 및 activity_main.xml 레이아웃 수정
+---
 #### 0.88.0 (2017-08-14)
 1. MainActivity, native-lib.cpp, Manager.cpp: 듀얼 카메라 추가 * 
 1. RecordCrash, record_crash.xml: 동영상이 없을 경우 팝업창 크기 수정
