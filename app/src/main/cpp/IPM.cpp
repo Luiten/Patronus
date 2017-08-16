@@ -11,7 +11,7 @@ IPM::IPM( const cv::Size& _origSize, const cv::Size& _dstSize, const std::vector
 	m_H = getPerspectiveTransform( m_origPoints, m_dstPoints );
 	m_H_inv = m_H.inv();
 		
-	createMaps();	
+	//createMaps();
 }
 void IPM::drawPoints( const std::vector<cv::Point2f>& _points, cv::Mat& _img ) const
 {

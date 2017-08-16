@@ -28,6 +28,7 @@ private:
     Point ptCenter;
 
     int width, height;
+    int resizeWidth, resizeHeight;
     bool bInit = false;
 
     clock_t time_begin, time_end;
@@ -155,6 +156,9 @@ public:
         width = w;
         height = h;
 
+        resizeWidth = 640;
+        resizeHeight = 360;
+
         averageSat = 0;
         averageVal = 0;
         ptCenter = Point(width / 2, (height / 2) / 3);
@@ -166,31 +170,41 @@ public:
 
     void ExecuteDistance(Mat &matInput, Mat &matResult, vector<CarInfo>& listCar, float fLatitude, float fLongitude)
     {
-        Mat matGray, matResize, matBirdOutput;
+        Mat matGray, matResize;
         vector<Rect> vFound;
         vector<Rect> vFound2;
         vector<Rect> vFoundResult;
-
         Mat matHSV;
-        Mat matBirdView;
         Mat matBinTtack;
         Mat matCanny;
-
         vector<float> vecDist;
         int nDetect = 0;
+        static int statWidth = width;
+        static int statHeight = height;
 
-        //int averageHue = 0;
+        width = matInput.cols;
+        height = matInput.rows;
+        static Point ptCenter(width / 2, height / 2 / 3);
+
+        // 영상 크기가 달라진 경우 센터점 영상에 맞게 옮기기
+        if (matInput.cols != statWidth || matInput.rows != statHeight)
+        {
+            ptCenter.x *= (float) matInput.cols / statWidth;
+            ptCenter.y *= (float) matInput.rows / statHeight;
+            statWidth = matInput.cols;
+            statHeight = matInput.rows;
+        }
 
         listCar.clear();
 
-        resize(matInput, matResize, Size(width, height));
+        resize(matInput, matResize, Size(resizeWidth, resizeHeight));
         //matResize.copyTo(matOutput);
 
         //--------------------------------------------------------------------------//
-        // CamShift를 위한 HSV 및 이진화   출처: http://webnautes.tistory.com/945
+        // HSV 및 이진화   출처: http://webnautes.tistory.com/945
         //--------------------------------------------------------------------------//
         //HSV로 변환
-        cvtColor(matResize, matHSV, COLOR_BGR2HSV);
+        cvtColor(matInput, matHSV, COLOR_BGR2HSV);
 
         //지정한 HSV 범위를 이용하여 영상을 이진화
         inRange(matHSV, Scalar(0, 0, 120), Scalar(180, 255, 255), matBinTtack);
@@ -198,7 +212,7 @@ public:
         //--------------------------------------------------------------------------//
         // 도로 이진화   출처: http://vgg.fiit.stuba.sk/2016-06/car-detection-in-videos/
         //--------------------------------------------------------------------------//
-        Mat matRoadTarget = matHSV(Rect(width / 2 - 30, height - 100, 60, 10)).clone();
+        Mat matRoadTarget = matHSV(Rect(width / 2 - 30, height * 6 / 7, 60, 10)).clone();
         Mat matRoadBin = matHSV.clone();
 
         int sumHue = 0, sumSat = 0, sumVal = 0;
@@ -219,14 +233,15 @@ public:
 
         inRange(matRoadBin, Scalar(0, averageSat - 30, averageVal - 50), Scalar(180, averageSat + 30, averageVal + 50), matRoadBin);
 
-        rectangle(matResult, Rect(width / 2 - 30, height - 100, 60, 10), Scalar(0, 0, 255), 2);
+        rectangle(matResult, Rect(width / 2 - 30, height * 6 / 7, 60, 10), Scalar(0, 0, 255), 2);
 
         //--------------------------------------------------------------------------//
         // 차선 검출
         //--------------------------------------------------------------------------//
         //Rect Roi(Point(matResize.cols / 5, 65 * matResize.rows / 100), Point(4 * matResize.cols / 5, matResize.rows));
-        Rect Roi(Point(0, matResize.rows * 50 / 100), Point(matResize.cols, matResize.rows));
-        Mat matLaneROI = matResult(Roi);
+        Rect rectResizeROI(Point(0, matResize.rows / 2), Point(matResize.cols, matResize.rows));
+        //Mat matLaneROI = matOutput(Roi);
+        Mat matLaneROI = matResize(rectResizeROI);
 
         cvtColor(matLaneROI, matGray, CV_BGR2GRAY);
 
@@ -269,7 +284,7 @@ public:
         {
             for (j = 1; j < w; j++)
             {
-                index = w * i + j;
+                index = w*i + j;
                 maxima = true;
                 magni = grad.at<uchar>(i, j);
                 non_maxima.at<uchar>(i, j) = 0;
@@ -283,40 +298,35 @@ public:
                         {
                             if (slope < tan255)
                             {
-                                if (magni < sobel.at<uchar>(i, j - 1) ||
-                                    magni < sobel.at<uchar>(i, j + 1))
+                                if (magni < sobel.at<uchar>(i, j - 1) || magni < sobel.at<uchar>(i, j + 1))
                                     maxima = false;
                             }
                             else if (slope < tan675)
                             {
-                                if (magni < sobel.at<uchar>(i - 1, j + 1) ||
-                                    magni < sobel.at<uchar>(i - 1, j - 1))
+                                if (magni < sobel.at<uchar>(i - 1, j + 1) || magni < sobel.at<uchar>(i - 1, j - 1))
                                     maxima = false;
                             }
                             else //2
                             {
-                                if (magni < sobel.at<uchar>(i - 1, j) ||
-                                    magni < sobel.at<uchar>(i + 1, j))
+                                if (magni < sobel.at<uchar>(i - 1, j) || magni < sobel.at<uchar>(i + 1, j))
                                     maxima = false;
                             }
-                        } else
+                        }
+                        else
                         {
                             if (slope < -tan675)
                             {
-                                if (magni < sobel.at<uchar>(i + 1, j) ||
-                                    magni < sobel.at<uchar>(i - 1, j))
+                                if (magni < sobel.at<uchar>(i + 1, j) || magni < sobel.at<uchar>(i - 1, j))
                                     maxima = false;
                             }
                             else if (slope < -tan255)
                             {
-                                if (magni < sobel.at<uchar>(i - 1, j - 1) ||
-                                    magni < sobel.at<uchar>(i + 1, j + 1))
+                                if (magni < sobel.at<uchar>(i - 1, j - 1) || magni < sobel.at<uchar>(i + 1, j + 1))
                                     maxima = false;
                             }
                             else
                             {
-                                if (magni < sobel.at<uchar>(i, j - 1) ||
-                                    magni < sobel.at<uchar>(i, j + 1))
+                                if (magni < sobel.at<uchar>(i, j - 1) || magni < sobel.at<uchar>(i, j + 1))
                                     maxima = false;
                             }
                         }
@@ -345,7 +355,8 @@ public:
                         if (j + t < w)
                         {
                             right_border.at<uchar>(i, j + t) = 0;
-                        } else
+                        }
+                        else
                         {
                             right_border.at<uchar>(i, j) = 0;
                         }
@@ -373,7 +384,8 @@ public:
                         if (j - t > 0)
                         {
                             left_border.at<uchar>(i, j - t) = 0;
-                        } else
+                        }
+                        else
                         {
                             left_border.at<uchar>(i, j) = 0;
                         }
@@ -417,15 +429,24 @@ public:
         vector<Vec2f> vLines;
         for (int i = 0; i < right_lines.size(); i++)
         {
+            right_lines[i][0] = right_lines[i][0] * ((float)width / resizeWidth); // 해상도에 따른 거리 보정
             vLines.push_back(right_lines[i]);
         }
         for (int i = 0; i < left_lines.size(); i++)
         {
+            left_lines[i][0] = left_lines[i][0] * ((float)width / resizeWidth); // 해상도에 따른 거리 보정
             vLines.push_back(left_lines[i]);
         }
 
         // 소실점 검출
         vector<Point2f> vInterPoint;
+
+        w = width;
+        h = height / 2;
+        Rect rectLaneROI(Point(0, matInput.rows / 2), Point(matInput.cols, matInput.rows));
+        matLaneROI = matResult(rectLaneROI);
+
+        //drawLines(matLaneROI, vLines);
 
         // 교차점 구하기
         int num = vLines.size();
@@ -542,10 +563,10 @@ public:
         // IPM object
         ipm = new IPM(Size(width, height), Size(width, height), origPoints, dstPoints);
 
-        matBirdView = matResize.clone();
+        //matBirdView = matResize.clone();
 
         // Process
-        ipm->applyHomography(matBirdView, matBirdOutput);
+        //ipm->applyHomography(matBirdView, matBirdOutput);
 
         // 결과 화면에 Bird's Eye View 영역 보기
         ipm->drawPoints(origPoints, matResult);
@@ -560,8 +581,8 @@ public:
 
         if (!vFound.empty())
         {
-            vector<Rect>::const_iterator loc = vFound.begin();
-            vector<Rect>::const_iterator end = vFound.end();
+            vector< Rect >::const_iterator loc = vFound.begin();
+            vector< Rect >::const_iterator end = vFound.end();
 
             for (; loc != end; ++loc)
             {
@@ -570,12 +591,19 @@ public:
 
                 if (!vFound2.empty())
                 {
+                    Rect rectOrigLoc;
+                    rectOrigLoc = *loc;
+                    rectOrigLoc.x *= ((float)width / resizeWidth);
+                    rectOrigLoc.y *= ((float)height / resizeHeight);
+                    rectOrigLoc.width *= ((float)width / resizeWidth);
+                    rectOrigLoc.height *= ((float)height / resizeHeight);
+
                     //--------------------------------------------------------------------------//
                     // 자동차, 도로 검출
                     //--------------------------------------------------------------------------//
                     bool bCarFind = false;
 
-                    Mat matROIBin = matRoadBin(*loc);
+                    Mat matROIBin = matRoadBin(rectOrigLoc);
 
                     sumHue = 0;
                     for (int i = matROIBin.rows / 4 * 3; i < matROIBin.rows; i++)
@@ -593,8 +621,7 @@ public:
                         sumHue = 0;
                         for (int i = matROIBin.rows / 4 * 2; i < matROIBin.rows / 4 * 3; i++)
                         {
-                            for (int j = matROIBin.cols / 4 * 1;
-                                 j < matROIBin.cols / 4 * 3; j++)
+                            for (int j = matROIBin.cols / 4 * 1; j < matROIBin.cols / 4 * 3; j++)
                             {
                                 sumHue += matROIBin.at<uchar>(i, j);
                             }
@@ -614,6 +641,7 @@ public:
                     if (!bCarFind) continue;
 
                     nDetect++;
+                    vFoundResult.push_back(rectOrigLoc);
 
                     //--------------------------------------------------------------------------//
                     // 차선 뷰(Bird's Eye View) 관심영역에 드는지 검사
@@ -625,19 +653,19 @@ public:
                     Point2f temp;
                     // 뷰 왼쪽 선
                     if (GetIntersection(origPoints[0], origPoints[3],
-                                        Point2f((*loc).x, (*loc).y + (*loc).height), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x, rectOrigLoc.y + rectOrigLoc.height), Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
                     // 뷰 오른쪽 선
                     if (GetIntersection(origPoints[1], origPoints[2],
-                                        Point2f((*loc).x, (*loc).y + (*loc).height), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x, rectOrigLoc.y + rectOrigLoc.height), Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
                     // 뷰 중앙 위쪽 선
                     if (GetIntersection(origPoints[3], origPoints[2],
-                                        Point2f((*loc).x, (*loc).y + (*loc).height), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x, rectOrigLoc.y + rectOrigLoc.height), Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
@@ -646,18 +674,18 @@ public:
                     // 박스 왼쪽 선
                     //----------------------------------------------------//
                     if (GetIntersection(origPoints[0], origPoints[3],
-                                        Point2f((*loc).x, (*loc).y), Point2f((*loc).x, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x, rectOrigLoc.y), Point2f(rectOrigLoc.x, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
                     if (GetIntersection(origPoints[1], origPoints[2],
-                                        Point2f((*loc).x, (*loc).y), Point2f((*loc).x, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x, rectOrigLoc.y), Point2f(rectOrigLoc.x, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
                     // 뷰 중앙 위쪽 선
                     if (GetIntersection(origPoints[3], origPoints[2],
-                                        Point2f((*loc).x, (*loc).y), Point2f((*loc).x, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x, rectOrigLoc.y), Point2f(rectOrigLoc.x, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
@@ -666,18 +694,18 @@ public:
                     // 박스 오른쪽 선
                     //----------------------------------------------------//
                     if (GetIntersection(origPoints[0], origPoints[3],
-                                        Point2f((*loc).x + (*loc).width, (*loc).y), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y), Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
                     if (GetIntersection(origPoints[1], origPoints[2],
-                                        Point2f((*loc).x + (*loc).width, (*loc).y), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y), Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
                     // 뷰 중앙 위쪽 선
                     if (GetIntersection(origPoints[3], origPoints[2],
-                                        Point2f((*loc).x + (*loc).width, (*loc).y), Point2f((*loc).x + (*loc).width, (*loc).y + (*loc).height), temp))
+                                        Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y), Point2f(rectOrigLoc.x + rectOrigLoc.width, rectOrigLoc.y + rectOrigLoc.height), temp))
                     {
                         bCarFind = true;
                     }
@@ -687,15 +715,13 @@ public:
                     //--------------------------------------------------------------------------//
                     if (bCarFind)
                     {
-                        vFoundResult.push_back(*loc);
-
                         //--------------------------------------------------------------------------//
                         // 거리 계산
                         //--------------------------------------------------------------------------//
                         //----------------------------------------------------//
                         // 자동차 끝부분 검출
                         //----------------------------------------------------//
-                        matCanny = matResize(*loc).clone();
+                        matCanny = matInput(rectOrigLoc).clone();
                         cvtColor(matCanny, matCanny, COLOR_BGR2HSV);
 
                         //지정한 HSV 범위를 이용하여 영상을 이진화
@@ -709,7 +735,7 @@ public:
                         int threshold = 30; // r,θ 평면에서 몇개의 곡선이 한점에서 만났을 때 직선으로 판단할지에 대한 최소값
                         HoughLines(matCanny, lines, 1, CV_PI / 180, threshold);
 
-                        //matCanny = matResize(*loc);
+                        //matCanny = matResize(rectOrigLoc);
 
                         //----------------------------------------------------//
                         // 선 검출   출처: http://hongkwan.blogspot.kr/2013/01/opencv-7-2-example.html
@@ -747,12 +773,11 @@ public:
                             maxpt1.y = maxpt2.y = MIN(maxpt1.y, maxpt2.y) + (abs(maxpt1.y - maxpt2.y) / 2);
 
                             // 기존 영상 크기에 맞게 직선 위치 변환
-                            maxpt1.y = maxpt2.y = maxpt1.y + (*loc).y;
-                            maxpt1.x = 0;
-                            maxpt2.x = width;
+                            maxpt1.y = maxpt2.y = maxpt1.y + rectOrigLoc.y;
+                            maxpt1.x = 0; maxpt2.x = width;
 
                             // 마지막 열에서 해당 선의 교차점
-                            line(matResult, maxpt1, maxpt2, cv::Scalar(255, 0, 0), 1); // 빨간 선으로 그리기
+                            line(matResult, maxpt1, maxpt2, cv::Scalar(0, 0, 255), 1); // 빨간 선으로 그리기
 
                             // 해당 직선이 거리계산 관심영역(IPM)에 들면 IPM에 맞는 직선 변환
                             if (origPoints[0].y >= maxpt1.y && origPoints[3].y <= maxpt1.y)
@@ -760,11 +785,7 @@ public:
                                 maxpt1 = ipm->applyHomography(maxpt1);
                                 maxpt2 = ipm->applyHomography(maxpt2);
 
-                                // 마지막 열에서 해당 선의 교차점
-                                line(matBirdOutput, maxpt1, maxpt2, cv::Scalar(255, 0, 0), 2); // 빨간 선으로 그리기
-
-                                // 거리 계산
-                                float tempDist = 0.4 * (dstPoints[0].y - maxpt1.y);
+                                float tempDist = 0.2 * (dstPoints[0].y - maxpt1.y);
 
                                 vecDist.push_back(tempDist);
 
@@ -772,7 +793,7 @@ public:
                                 text << tempDist;
                                 text << "m";
 
-                                putText(matResult, text.str(), Point((*loc).x, (*loc).y), 2, 1.3, Scalar(255, 0, 0), 2);
+                                putText(matResult, text.str(), Point(rectOrigLoc.x, rectOrigLoc.y), 2, 0.7, Scalar(0, 0, 255));
                             }
                         }
                     }
@@ -785,7 +806,7 @@ public:
         delete ipm;
 
         time_end = clock();
-        SaveLog((time_end - time_begin) * 1000 / CLOCKS_PER_SEC, nDetect, vecDist, fLatitude, fLongitude);
+        //SaveLog((time_end - time_begin) * 1000 / CLOCKS_PER_SEC, nDetect, vecDist, fLatitude, fLongitude);
         time_begin = time_end;
     }
 };

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompatBase;
 import android.support.v7.app.ActionBarActivity;
@@ -18,8 +19,6 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +41,8 @@ public class Setting extends AppCompatActivity {
     private StandardAdapter standardadapter = null;
     private ListView recordlistview = null;
     private RecordAdapter recordadapter = null;
+
+    ArrayList<int[]> strResolution = new ArrayList<int[]>();
 
     public static Context mContext;
     SeekBar sb_sensi, sb_cap;
@@ -128,11 +129,28 @@ public class Setting extends AppCompatActivity {
         capture_lengthadapter.addItem("전면 카메라", settings.getBoolean("frontcamera", false));
         capture_lengthadapter.addItem("후면 카메라", settings.getBoolean("backcamera", true));
 
-        resolutionadapter.addItem("1920 × 1080");
+        // 지원 해상도 알아내기
+        Camera camera = Camera.open();
+        Camera.Parameters parameters = camera.getParameters();
+        List<Camera.Size> SupporetdSizes =  parameters.getSupportedPreviewSizes();
+
+        for(Camera.Size camSize : SupporetdSizes) {
+            float raito = (float) camSize.width / camSize.height;
+            // 비율(16:9 +-20%)과 일정 해상도(400)이상 만족시 표시
+            if (raito >= 1.77 * 0.8 && raito <= 1.77 * 1.2 && camSize.width > 400)
+            {
+                resolutionadapter.addItem(camSize.width + "×" + camSize.height);
+                int temp[] = { camSize.width, camSize.height };
+                strResolution.add(temp);
+            }
+        }
+
+        /*resolutionadapter.addItem("1920 × 1080");
         resolutionadapter.addItem("1280 × 720");
         resolutionadapter.addItem("800 × 600");
-        resolutionadapter.addItem("640 × 480");
-        resolutionadapter.SetSelectNumber(settings.getInt("resolution", 1));
+        resolutionadapter.addItem("640 × 480");*/
+        //resolutionadapter.SetSelectNumber(settings.getInt("resolution", 1));
+        resolutionadapter.SetSelectNumber(settings.getInt("resolution", 0));
 
         sensitivityadapter.addItem("테스트 하기");
 
@@ -172,7 +190,8 @@ public class Setting extends AppCompatActivity {
                         break;
                     case 1 :
                         intent = new Intent(getApplicationContext(), PointActivity.class);
-                        intent.putExtra("resolution", resolutionadapter.GetChecked());
+                        intent.putExtra("resolutionwidth", strResolution.get(resolutionadapter.GetChecked())[0]);
+                        intent.putExtra("resolutionheight", strResolution.get(resolutionadapter.GetChecked())[1]);
                         startActivity(intent);
                         break;
                 }
@@ -241,6 +260,8 @@ public class Setting extends AppCompatActivity {
         editor.putBoolean("backcamera", capture_lengthadapter.isChecked(1));
 
         editor.putInt("resolution", resolutionadapter.GetChecked()); // 데이터 저장
+        editor.putInt("resolutionwidth", strResolution.get(resolutionadapter.GetChecked())[0]);
+        editor.putInt("resolutionheight", strResolution.get(resolutionadapter.GetChecked())[1]);
         editor.apply(); // 완료한다.
 
         // Manager 클래스에 적용
@@ -251,6 +272,8 @@ public class Setting extends AppCompatActivity {
         SetSettings(5, alarmadapter.isChecked(4) ? 1 : 0); // Sign
         SetSettings(6, sb_sensi.getProgress());
         SetSettings(7, resolutionadapter.GetChecked()); // Video Size
+        SetSettings(8, strResolution.get(resolutionadapter.GetChecked())[0]); // Video Width
+        SetSettings(9, strResolution.get(resolutionadapter.GetChecked())[1]); // Video Height
 
         super.onDestroy();
     }

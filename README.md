@@ -1,8 +1,6 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.88.0 (2017-08-14)
+Version: 0.89.0 (2017-08-16)
 
----
-<br>
 <br>
 
 ### Change "CMakeLists.txt"
@@ -15,16 +13,20 @@ set(pathProject "This Project Path")
 ---
 #### Problem
 1. StandardActivity: [다시 찍기] 터치시 설정 해상도가 적용이 안되는 문제
-2. MainActivity: 800x600 해상도 실행시 팅기는 문제
-3. RecordCrash: 동영상이 없을 경우 화면이 너무 커지는 문제
-3. 너비나 크기를 dp로 설정시 글자 크기, 화면 크기에 따라 레이아웃 일부가 짤릴 수 있는 문제
-4. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제
+2. 너비나 크기를 dp로 설정시 글자 크기, 화면 크기에 따라 레이아웃 일부가 짤릴 수 있는 문제
+3. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제
+---
+#### 0.89.0 (2017-08-16)
+1. MainActivity: 속도, 종료 Toast 텍스트 변경
+2. distance.cpp: 영상처리(저해상도 사용, IPM) 최적화
+3. MainActivity, Setting, PointActivity, Manager.cpp: 기기가 지원하는 해상도로 변경
+4. activity_main.xml: 전면 카메라 위치 변경
 ---
 #### 0.88.1 (2017-08-15)
-1. MainActivity 버튼 투명도 조절 및 속도 텍스트 크기 조절
-2. MainActivity Warning faed-in-out 추가 
-3. MainActivity 두번 누를시 종료 추가
-4. res의 anim폴더 fade-in.xml 추가 및 activity_main.xml 레이아웃 수정
+1. MainActivity: 버튼 투명도 조절 및 속도 텍스트 크기 조절
+2. MainActivity: Warning faed-in-out 추가 
+3. MainActivity: 두번 누를시 종료 추가
+4. res/anim: fade-in.xml 추가 및 activity_main.xml 레이아웃 수정
 ---
 #### 0.88.0 (2017-08-14)
 1. MainActivity, native-lib.cpp, Manager.cpp: 듀얼 카메라 추가 * 

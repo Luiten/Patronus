@@ -139,7 +139,9 @@ public class SplashActivity extends AppCompatActivity {
         SetSettings(4, settings.getBoolean("sleep", true) ? 1 : 0);
         SetSettings(5, settings.getBoolean("sign", true) ? 1 : 0);
         SetSettings(6, settings.getInt("sensitivity", 4));
-        SetSettings(7, settings.getInt("resolution", 1)); // Video Size
+        //SetSettings(7, settings.getInt("resolution", 1)); // Video Size
+        SetSettings(8, settings.getInt("resolutionwidth", 0)); // Video Width
+        SetSettings(9, settings.getInt("resolutionheight", 0)); // Video Height
 
         // 파일이 하나라도 없으면 다운로드
         for (int i = 0; i < strFileLists.length; i++)

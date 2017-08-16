@@ -29,11 +29,11 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
     private static final String TAG = "opencv";
     private CameraBridgeViewBase mOpenCvCameraView;
 
-    private int VideoSize[][] = {
+/*    private int VideoSize[][] = {
             { 1920, 1080 },
             { 1280, 720 },
             { 800, 600 },
-            { 640, 480 } };
+            { 640, 480 } };*/
 
     public native int InitializeNativeLib(int w, int h);
     public native int convertNativeLib(long matAddrInput, long matAddrResult, int iCamera);
@@ -87,9 +87,14 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
         mOpenCvCameraView.setCameraIndex(0); // front-camera(1),  back-camera(0)
 
         Intent intent = getIntent();
-        mOpenCvCameraView.setMaxFrameSize(VideoSize[intent.getIntExtra("resolution", 1)][0], VideoSize[intent.getIntExtra("resolution", 1)][1]);
+        int savedWidth = intent.getIntExtra("resolutionwidth", 0);
+        int savedHeight = intent.getIntExtra("resolutionheight", 0);
 
-        InitializeNativeLib(VideoSize[intent.getIntExtra("resolution", 1)][0], VideoSize[intent.getIntExtra("resolution", 1)][1]);
+        mOpenCvCameraView.setMinimumWidth(savedWidth);
+        mOpenCvCameraView.setMinimumHeight(savedHeight);
+        mOpenCvCameraView.setMaxFrameSize(savedWidth, savedHeight);
+
+        InitializeNativeLib(savedWidth, savedHeight);
 
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
     }

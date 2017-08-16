@@ -221,8 +221,19 @@ public:
 
             // 동영상 크기
             case 7:
-                width = VideoSize[(int)value][0];
-                height = VideoSize[(int)value][1];
+                // 아래 두 크기 직접 입력으로 사용하지 않음
+                //width = VideoSize[(int)value][0];
+                //height = VideoSize[(int)value][1];
+                break;
+
+            // 동영상 너비
+            case 8:
+                width = value;
+                break;
+
+            // 동영상 높이
+            case 9:
+                height = value;
                 break;
 
             // GPS 위도 값
