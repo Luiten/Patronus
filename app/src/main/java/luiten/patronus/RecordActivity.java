@@ -70,6 +70,7 @@ public class RecordActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setTitle("로그");
         setContentView(R.layout.record_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         log_listview = (ExpandableListView)findViewById(R.id.record_exlistview);
         setArrayData();

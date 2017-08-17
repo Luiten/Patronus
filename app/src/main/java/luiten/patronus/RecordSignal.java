@@ -3,6 +3,7 @@ package luiten.patronus;
 import android.app.Activity;
 import android.app.FragmentManager;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.view.Window;
 import android.widget.TextView;
@@ -31,6 +32,7 @@ public class RecordSignal extends Activity implements OnMapReadyCallback{
         setContentView(R.layout.record_signal);
         Intent intent = getIntent();
         Logs = intent.getStringArrayExtra("Logs");
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         FragmentManager fragmentManager = getFragmentManager();
         MapFragment mapFragment = (MapFragment)fragmentManager.findFragmentById(R.id.recordsignal_map);

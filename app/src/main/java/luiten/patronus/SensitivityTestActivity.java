@@ -33,6 +33,7 @@ public class SensitivityTestActivity extends Activity implements SensorEventList
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.sensitivity_test);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         // 가속도 초기화
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.hardware.Camera;
 import android.os.Bundle;
 import android.support.v4.app.NotificationCompatBase;
@@ -54,6 +55,7 @@ public class Setting extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setTitle("설정");
         setContentView(R.layout.setting_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         mContext = this;
 

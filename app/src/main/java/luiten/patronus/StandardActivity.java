@@ -47,6 +47,7 @@ public class StandardActivity extends Activity {
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         setContentView(R.layout.standard_main);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         this.imageView = (ImageView)this.findViewById(R.id.standard_image_camera);
         Button photoButton = (Button)this.findViewById(R.id.standard_btn_test);

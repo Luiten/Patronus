@@ -153,69 +153,74 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         });
 
         // Start
-        Button button1 = (Button)findViewById(R.id.main_btn_start);
+        final Button button1 = (Button)findViewById(R.id.main_btn_start);
         button1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 bStart = true;
 
-                // 세팅 읽기
-                SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
-                int value = settings.getInt("resolution", 0);
-                int savedWidth = settings.getInt("resolutionwidth", 0);
-                int savedHeight = settings.getInt("resolutionheight", 0);
+                    // 세팅 읽기
+                    SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
+                    int value = settings.getInt("resolution", 0);
+                    int savedWidth = settings.getInt("resolutionwidth", 0);
+                    int savedHeight = settings.getInt("resolutionheight", 0);
 
-                // 만약 saved 값이 0이면 최대값으로 초기화
-                if (savedWidth <= 0 || savedHeight <= 0) {
-                    // 지원 해상도 알아내기
-                    Camera camera = Camera.open();
-                    Camera.Parameters parameters = camera.getParameters();
-                    List<Camera.Size> SupporetdSizes =  parameters.getSupportedPreviewSizes();
+                    // 만약 saved 값이 0이면 최대값으로 초기화
+                    if (savedWidth <= 0 || savedHeight <= 0) {
+                        // 지원 해상도 알아내기
+                        Camera camera = Camera.open();
+                        Camera.Parameters parameters = camera.getParameters();
+                        List<Camera.Size> SupporetdSizes =  parameters.getSupportedPreviewSizes();
 
-                    for(Camera.Size camSize : SupporetdSizes) {
-                        float raito = (float) camSize.width / camSize.height;
-                        // 비율(16:9 +-20%)과 일정 해상도(400)이상 만족시 표시
-                        if (raito >= 1.77 * 0.8 && raito <= 1.77 * 1.2 && camSize.width > 400)
-                        {
-                            int temp[] = { camSize.width, camSize.height };
-                            savedWidth = camSize.width;
-                            savedHeight = camSize.height;
-                            break;
+                        for(Camera.Size camSize : SupporetdSizes) {
+                            float raito = (float) camSize.width / camSize.height;
+                            // 비율(16:9 +-20%)과 일정 해상도(400)이상 만족시 표시
+                            if (raito >= 1.77 * 0.8 && raito <= 1.77 * 1.2 && camSize.width > 400)
+                            {
+                                int temp[] = { camSize.width, camSize.height };
+                                savedWidth = camSize.width;
+                                savedHeight = camSize.height;
+                                break;
+                            }
                         }
                     }
-                }
 
-                mOpenCvCameraView.setMinimumWidth(savedWidth);
-                mOpenCvCameraView.setMinimumHeight(savedHeight);
-                mOpenCvCameraView.setMaxFrameSize(savedWidth, savedHeight);
-                mOpenCvCameraView2.setMinimumWidth(savedWidth);
-                mOpenCvCameraView2.setMinimumHeight(savedHeight);
-                mOpenCvCameraView2.setMaxFrameSize(savedWidth, savedHeight);
+                    mOpenCvCameraView.setMinimumWidth(savedWidth);
+                    mOpenCvCameraView.setMinimumHeight(savedHeight);
+                    mOpenCvCameraView.setMaxFrameSize(savedWidth, savedHeight);
+                    mOpenCvCameraView2.setMinimumWidth(savedWidth);
+                    mOpenCvCameraView2.setMinimumHeight(savedHeight);
+                    mOpenCvCameraView2.setMaxFrameSize(savedWidth, savedHeight);
 
-                frontCamera = settings.getBoolean("frontcamera", false);
-                backCamera = settings.getBoolean("backcamera", true);
+                    frontCamera = settings.getBoolean("frontcamera", false);
+                    backCamera = settings.getBoolean("backcamera", true);
 
-                switchCamera = 0;
-                // 전면 카메라만 설정되어 있는 경우 전면 카메라만 보여준다
-                if (frontCamera && !backCamera) {
-                    mOpenCvCameraView.disableView();
-                    switchCamera = 1;
-                    //mOpenCvCameraView2.setCameraIndex(switchCamera); // front-camera(1),  back-camera(0)
-                    mOpenCvCameraView2.enableView();
-                }
+                    switchCamera = 0;
+                    // 전면 카메라만 설정되어 있는 경우 전면 카메라만 보여준다
+                    if (frontCamera && !backCamera) {
+                        mOpenCvCameraView.disableView();
+                        switchCamera = 1;
+                        //mOpenCvCameraView2.setCameraIndex(switchCamera); // front-camera(1),  back-camera(0)
+                        mOpenCvCameraView2.enableView();
+                    }
 
-                InitializeNativeLib(savedWidth, savedHeight);
+                    InitializeNativeLib(savedWidth, savedHeight);
 
-                mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-                mOpenCvCameraView2.setVisibility(SurfaceView.VISIBLE);
+                    mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+                    mOpenCvCameraView2.setVisibility(SurfaceView.VISIBLE);
 
-                // 전면 카메라와 후면 카메라 모두 설정되어 있으면 듀얼 카메라이므로 주기적으로 교체
-                if (frontCamera && backCamera) {
-                    final CameraSwitchTask cameraTask = new CameraSwitchTask(MainActivity.this);
-                    cameraTask.execute("");
-                }
+                    // 전면 카메라와 후면 카메라 모두 설정되어 있으면 듀얼 카메라이므로 주기적으로 교체
+                    if (frontCamera && backCamera) {
+                        final CameraSwitchTask cameraTask = new CameraSwitchTask(MainActivity.this);
+                        cameraTask.execute("");
+                    }
+
+
             }
         });
+
+
+
 
         // 동영상 녹화
         Button button2 = (Button)findViewById(R.id.main_btn_capture);

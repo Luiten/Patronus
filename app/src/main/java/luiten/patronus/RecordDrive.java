@@ -48,6 +48,7 @@ public class RecordDrive extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         getSupportActionBar().setTitle("운전 점수");
         setContentView(R.layout.record_drive);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         tot_score = 100-(crash*30+signal*10+line*10+sleep*10+sign+5+attention*5);// 토탈값을 구한후 밑에 barchart에 삽입
 
@@ -72,6 +73,10 @@ public class RecordDrive extends AppCompatActivity {
         mDate.add("6.13");
         mDate.add("6.14");
         mDate.add("6.15");
+        mDate.add("6.16");
+        mDate.add("6.17");
+        mDate.add("6.18");
+
 
         valueSet.add(new BarEntry(25,0));
         valueSet.add(new BarEntry(79,1));
@@ -79,6 +84,10 @@ public class RecordDrive extends AppCompatActivity {
         valueSet.add(new BarEntry(21,3));
         valueSet.add(new BarEntry(30,4));
         valueSet.add(new BarEntry(45,5));
+        valueSet.add(new BarEntry(25,6));
+        valueSet.add(new BarEntry(79,7));
+        valueSet.add(new BarEntry(21,8));
+
 
         BarDataSet barDataSet = new BarDataSet(valueSet,"최근 운전 점수");
 
@@ -91,6 +100,7 @@ public class RecordDrive extends AppCompatActivity {
         YAxis yAxisRight = drive_chart.getAxisRight();
         yAxisRight.setEnabled(false);
 
+
         XAxis xAxis = drive_chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
@@ -100,22 +110,24 @@ public class RecordDrive extends AppCompatActivity {
         Legend legend = drive_chart.getLegend();
         legend.setEnabled(false);
 
-        drive_chart.setExtraOffsets(0, 0, 0, 20);
+//        drive_chart.setExtraOffsets(0, 0, 0, 20);
+        drive_chart.setVisibleXRangeMaximum(7);
         drive_chart.setData(data);
-        drive_chart.setScaleXEnabled(false);
-        drive_chart.setScaleYEnabled(false);
+        drive_chart.setScaleXEnabled(true);
+        drive_chart.setScaleYEnabled(true);
         drive_chart.setDescription("");
         drive_chart.animateXY(2000,2000);
         drive_chart.invalidate();
+        drive_chart.setDragEnabled(true);
         drive_chart.setDrawBorders(false);
 
         drive_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
-@Override
-public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
-    if(e==null)
-        return;
+        @Override
+        public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
+            if(e==null)
+            return;
 
-    switch (e.getXIndex()){
+            switch (e.getXIndex()){
         case 0 :
             crash_score.setText("aaaa");
             break;

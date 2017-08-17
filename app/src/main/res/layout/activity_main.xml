@@ -53,7 +53,7 @@
                 android:layout_weight="1"
                 android:background="#1A000000"
                 android:textColor="@color/colorAccent"
-                android:text="시작" />
+                android:text="시작"/>
 
 
             <Button
