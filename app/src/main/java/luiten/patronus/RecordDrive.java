@@ -113,8 +113,8 @@ public class RecordDrive extends AppCompatActivity {
 //        drive_chart.setExtraOffsets(0, 0, 0, 20);
         drive_chart.setVisibleXRangeMaximum(7);
         drive_chart.setData(data);
-        drive_chart.setScaleXEnabled(true);
-        drive_chart.setScaleYEnabled(true);
+        drive_chart.setScaleXEnabled(false);
+        drive_chart.setScaleYEnabled(false);
         drive_chart.setDescription("");
         drive_chart.animateXY(2000,2000);
         drive_chart.invalidate();

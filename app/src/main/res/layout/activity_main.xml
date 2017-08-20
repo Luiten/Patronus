@@ -74,14 +74,14 @@
                 android:textColor="@color/colorAccent"
                 android:text="설정" />
 
-             <Button
-                android:id="@+id/main_btn_exit"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                 android:background="#1A000000"
-                 android:textColor="@color/colorAccent"
-                android:text="종료" />
+             <!--<Button-->
+                <!--android:id="@+id/main_btn_exit"-->
+                <!--android:layout_width="wrap_content"-->
+                <!--android:layout_height="match_parent"-->
+                <!--android:layout_weight="1"-->
+                 <!--android:background="#1A000000"-->
+                 <!--android:textColor="@color/colorAccent"-->
+                <!--android:text="종료" />-->
 
 
     </LinearLayout>
