@@ -220,8 +220,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                         button1.setText("시작");
                         mOpenCvCameraView.setVisibility(SurfaceView.INVISIBLE);
                         mOpenCvCameraView2.setVisibility(SurfaceView.INVISIBLE);
-                        mOpenCvCameraView.disableView();
-                        mOpenCvCameraView2.disableView();
+//                        mOpenCvCameraView.disableView();
+//                        mOpenCvCameraView2.disableView();
                         switchCamera = -1;
                     }
             }
@@ -246,8 +246,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             public void onClick(View v) {
                 mOpenCvCameraView.setVisibility(SurfaceView.INVISIBLE);
                 mOpenCvCameraView2.setVisibility(SurfaceView.INVISIBLE);
-                mOpenCvCameraView.disableView();
-                mOpenCvCameraView2.disableView();
+//                mOpenCvCameraView.disableView();
+//                mOpenCvCameraView2.disableView();
                 switchCamera = -1; // 카메라 스위치 작업 종료
                 button1.setText("시작");
                 bStart = false;
