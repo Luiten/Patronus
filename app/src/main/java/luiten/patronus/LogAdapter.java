@@ -4,13 +4,10 @@ import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.WindowManager;
 import android.widget.BaseExpandableListAdapter;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Created by LG on 2017-07-20.
@@ -20,16 +17,17 @@ import java.util.HashMap;
 public class LogAdapter extends BaseExpandableListAdapter{
 
     private ArrayList<String> groupList = null;
-    private ArrayList<ArrayList<String>> childList = null;
+    private ArrayList<ArrayList<String>> childTime = null;
+    private ArrayList<ArrayList<String>> childDesc = null;
     private LayoutInflater inflater = null;
     private ViewHolder viewHolder = null;
 
-    public LogAdapter(Context c, ArrayList<String> groupList,
-                                 ArrayList<ArrayList<String>> childList){
+    public LogAdapter(Context c, ArrayList<String> groupList, ArrayList<ArrayList<String>> childTime, ArrayList<ArrayList<String>> childDesc){
         super();
         this.inflater = LayoutInflater.from(c);
         this.groupList = groupList;
-        this.childList = childList;
+        this.childTime = childTime;
+        this.childDesc = childDesc;
     }
 
     // 그룹 포지션을 반환한다.
@@ -52,8 +50,7 @@ public class LogAdapter extends BaseExpandableListAdapter{
 
     // 그룹뷰 각각의 ROW
     @Override
-    public View getGroupView(int groupPosition, boolean isExpanded,
-                             View convertView, ViewGroup parent) {
+    public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
 
         View v = convertView;
 
@@ -71,16 +68,17 @@ public class LogAdapter extends BaseExpandableListAdapter{
         return v;
     }
 
-    // 차일드뷰를 반환한다.
+
+    // 차일드뷰 중 childDesc를 반환한다.  ** 사용하지 않음
     @Override
     public String getChild(int groupPosition, int childPosition) {
-        return childList.get(groupPosition).get(childPosition);
+        return childDesc.get(groupPosition).get(childPosition);
     }
 
-    // 차일드뷰 사이즈를 반환한다.
+    // 차일드뷰 childDesc 사이즈를 반환한다.
     @Override
     public int getChildrenCount(int groupPosition) {
-        return childList.get(groupPosition).size();
+        return childDesc.get(groupPosition).size();
     }
 
     // 차일드뷰 ID를 반환한다.
@@ -91,21 +89,22 @@ public class LogAdapter extends BaseExpandableListAdapter{
 
     // 차일드뷰 각각의 ROW
     @Override
-    public View getChildView(int groupPosition, int childPosition,
-                             boolean isLastChild, View convertView, ViewGroup parent) {
+    public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
 
         View v = convertView;
 
         if(v == null){
             viewHolder = new ViewHolder();
             v = inflater.inflate(R.layout.record_log_content, null);
-            viewHolder.tv_childName = (TextView) v.findViewById(R.id.record_log_content);
+            viewHolder.tv_childTime = (TextView) v.findViewById(R.id.record_log_time);
+            viewHolder.tv_childDesc = (TextView) v.findViewById(R.id.record_log_content);
             v.setTag(viewHolder);
         }else{
             viewHolder = (ViewHolder)v.getTag();
         }
 
-        viewHolder.tv_childName.setText(getChild(groupPosition, childPosition));
+        viewHolder.tv_childTime.setText(childTime.get(groupPosition).get(childPosition));
+        viewHolder.tv_childDesc.setText(childDesc.get(groupPosition).get(childPosition));
 
         return v;
     }
@@ -118,7 +117,8 @@ public class LogAdapter extends BaseExpandableListAdapter{
 
     class ViewHolder {
         public TextView tv_groupName;
-        public TextView tv_childName;
+        public TextView tv_childTime;
+        public TextView tv_childDesc;
     }
 
 }

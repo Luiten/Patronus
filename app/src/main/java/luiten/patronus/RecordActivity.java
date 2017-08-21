@@ -55,15 +55,13 @@ public class RecordActivity extends AppCompatActivity {
     private ExpandableListView log_listview;
     private ArrayList<String> log_date = new ArrayList<String>();
     private ArrayList<ArrayList<Integer>> arrIndex = new ArrayList<ArrayList<Integer>>();
-    private ArrayList<ArrayList<String>> mChildList =  new ArrayList<ArrayList<String>>();
+    private ArrayList<ArrayList<String>> mChildTime =  new ArrayList<ArrayList<String>>();
+    private ArrayList<ArrayList<String>> mChildDesc =  new ArrayList<ArrayList<String>>();
     //private HashMap<String, ArrayList<String>> log_content = new HashMap<String, ArrayList<String>>();
-    private LogAdapter logadapter;
     private String LogType[] = { "자동차간 거리", "끼어들기", "차선 침범", "신호 위반", "신호 주시 안함",
             "표지판", "졸음 운전", "충돌", "운전 점수" };
 
     List<String[]> csvLogs;
-
-    ExpandableListAdapter listAdapter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -75,7 +73,7 @@ public class RecordActivity extends AppCompatActivity {
         log_listview = (ExpandableListView)findViewById(R.id.record_exlistview);
         setArrayData();
 
-        log_listview.setAdapter(new LogAdapter(this, log_date, mChildList));
+        log_listview.setAdapter(new LogAdapter(this, log_date, mChildTime, mChildDesc));
 
         // Listview Group click listener
         log_listview.setOnGroupClickListener(new OnGroupClickListener() {
@@ -167,7 +165,8 @@ public class RecordActivity extends AppCompatActivity {
     }
 
     private void setArrayData() {
-        ArrayList<String> arrChildList = new ArrayList<String>();
+        ArrayList<String> arrChildTime = new ArrayList<String>();
+        ArrayList<String> arrChildDesc = new ArrayList<String>();
 
         // 경로 설정
         String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
@@ -201,19 +200,23 @@ public class RecordActivity extends AppCompatActivity {
                 // 날짜가 달라지면 새로운 확장 리스트 추가
                 if (!strTemp.equals(strCSV[0])) {
                     log_date.add(strTemp);
-                    mChildList.add(arrChildList);
+                    mChildTime.add(arrChildTime);
+                    mChildDesc.add(arrChildDesc);
                     arrIndex.add(arrTemp);
-                    arrChildList = new ArrayList<String>();
+                    arrChildTime = new ArrayList<String>();
+                    arrChildDesc = new ArrayList<String>();
                     arrTemp = new ArrayList<Integer>();
                     strTemp = strCSV[0];
                 }
 
                 arrTemp.add(idx++);
-                arrChildList.add(strCSV[2]);
+                arrChildTime.add(strCSV[1]);
+                arrChildDesc.add(strCSV[2]);
             }
 
             log_date.add(strTemp);
-            mChildList.add(arrChildList);
+            mChildTime.add(arrChildTime);
+            mChildDesc.add(arrChildDesc);
             arrIndex.add(arrTemp);
         }
         catch (IOException e) {

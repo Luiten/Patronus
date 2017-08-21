@@ -92,7 +92,7 @@
         android:layout_height="wrap_content"
         android:textColor="@color/colorAccent"
         android:layout_marginTop="3dp"
-        android:textSize="25dp"
+        android:textSize="30dp"
         android:layout_alignParentRight="true" />
 
 </RelativeLayout>

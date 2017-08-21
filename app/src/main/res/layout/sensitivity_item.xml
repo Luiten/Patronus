@@ -8,7 +8,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Title"
-        android:textSize="20dp"
+        android:textSize="18dp"
         android:textColor="@color/colorTextDark"
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
@@ -23,6 +23,6 @@
         android:layout_marginTop="15dp"
         android:layout_marginBottom="15dp"
         android:paddingRight="30dp"
-        android:textSize="20dp"/>
+        android:textSize="18dp"/>
 
 </RelativeLayout>

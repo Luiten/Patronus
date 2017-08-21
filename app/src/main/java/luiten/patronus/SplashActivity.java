@@ -43,7 +43,8 @@ public class SplashActivity extends AppCompatActivity {
     String[] PERMISSIONS  = {"android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE",
             "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE", "android.permission.READ_PHONE_STATE",
             "android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION", "android.permission.VIBRATE",
-            "android.permission.WAKE_LOCK" };
+            "android.permission.WAKE_LOCK", "com.samsung.android.provider.filterprovider.permission.READ_FILTER",
+            "com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY" };
 
     String[] strFileLists = {"cars.xml", "checkcas.xml" };
     ArrayList<String> strDownloadLists = new ArrayList<String>();
@@ -154,11 +155,13 @@ public class SplashActivity extends AppCompatActivity {
             }
         }
 
-        Handler handler = new Handler()
+        final Handler handler = new Handler()
         {
             @Override
             public void handleMessage(Message msg)
             {
+                this.removeMessages(0);
+
                 // 다운로드를 받아야할 게 하나라도 있으면 다운로드 팝업창 띄우기
                 if (strDownloadLists.size() > 0)
                 {
@@ -209,6 +212,16 @@ public class SplashActivity extends AppCompatActivity {
         handler.sendEmptyMessageDelayed(0, 1000);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        strDownloadLists.clear();
+
+        if (progressBar != null)
+            progressBar.dismiss();
+    }
+
     private void StartNextActivity()
     {
         // 처음 실행 확인: point.png 파일 유무 확인
@@ -229,8 +242,6 @@ public class SplashActivity extends AppCompatActivity {
 
         finish();
     }
-
-
 
     // 다운로드 작업   출처: http://webnautes.tistory.com/1085
     private class DownloadFilesTask extends AsyncTask<ArrayList<String>, String, String> {

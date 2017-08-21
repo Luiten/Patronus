@@ -57,7 +57,6 @@ public class AlarmAdapter extends BaseAdapter {
             holder.alarmCheck = (CheckBox)convertView.findViewById(R.id.alarm_chk_item);
 
             //홀더에 저장되있는 것들을 이제 view에 뿌려준다
-
             convertView.setTag(holder);
         } else {
             holder = (AlarmViewHolder)convertView.getTag();

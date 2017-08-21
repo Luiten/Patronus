@@ -8,17 +8,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="30dp"
-        android:layout_weight="0.3"
+        android:layout_marginRight="30dp"
+        android:layout_weight="0.5"
         android:text="7:30:28"
-        android:textSize="20dp"/>
+        android:textSize="15dp"/>
 
     <TextView
         android:id="@+id/record_log_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginLeft="30dp"
-        android:layout_weight="0.4"
+        android:layout_marginRight="30dp"
+        android:layout_weight="0.3"
         android:textAlignment="center"
-        android:textSize="20dp" />
+        android:textSize="15dp" />
 
 </LinearLayout>

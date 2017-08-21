@@ -122,10 +122,10 @@ public class Setting extends AppCompatActivity {
         recordadapter = new RecordAdapter(this);
         recordlistview.setAdapter(recordadapter);
 
-        alarmadapter.addItem("차선", "주행 중 차선을 5초이상 밟고있을 경우 알려줍니다.", settings.getBoolean("lane" , true));
+        alarmadapter.addItem("차선", "주행 중 차선을 5초 이상 밟고 있을 경우 알려줍니다.", settings.getBoolean("lane" , true));
         alarmadapter.addItem("앞차간 거리", "앞차와의 거리가 속도에 비해 너무 가까울 경우 알려줍니다.", settings.getBoolean("distance", true));
         alarmadapter.addItem("신호 위반", "신호 위반을 한 경우 경고합니다.", settings.getBoolean("signal", true));
-        alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하는 등 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true));
+        alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true));
         alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true));
 
         capture_lengthadapter.addItem("전면 카메라", settings.getBoolean("frontcamera", false));
@@ -146,6 +146,7 @@ public class Setting extends AppCompatActivity {
                 strResolution.add(temp);
             }
         }
+        camera.release();
 
         /*resolutionadapter.addItem("1920 × 1080");
         resolutionadapter.addItem("1280 × 720");
