@@ -28,10 +28,11 @@ private:
     Point ptCenter;
 
     int width, height;
-    int resizeWidth, resizeHeight;
+    int resizeWidth, resizeHeight; // 최적화할 영상 크기
+    int statWidth, statHeight; // 이전 영상 크기
     bool bInit = false;
 
-    clock_t time_begin, time_end;
+    //clock_t time_begin, time_end;
 
 //------------------------------------------------------------------------------------------------//
 // 검출된 자동차 상자 그리기
@@ -49,7 +50,7 @@ private:
         }
     }
 
-    void SaveLog(int ps, int detect, vector<float> vecDist, float fLatitude, float fLongitude)
+    void SaveLog(int ps, int detect, vector<float> vecDist, double dLatitude, double dLongitude)
     {
         static ofstream offile;
         time_t now = time(0); //현재 시간을 time_t 타입으로 저장
@@ -80,7 +81,7 @@ private:
 
         strftime(buf, sizeof(buf), "%H:%M:%S", &tstruct); // YYYY-MM-DD.HH:mm:ss 형태의 스트링
 
-        offile << buf << "," << ps << "," << detect << "," << fLatitude << "," << fLongitude;
+        offile << buf << "," << ps << "," << detect << "," << dLatitude << "," << dLongitude;
         for (int i = 0; i < vecDist.size(); i++)
         {
             offile << "," << vecDist[i];
@@ -155,6 +156,8 @@ public:
 
         width = w;
         height = h;
+        statWidth = width;
+        statHeight = height;
 
         resizeWidth = 640;
         resizeHeight = 360;
@@ -163,12 +166,12 @@ public:
         averageVal = 0;
         ptCenter = Point(width / 2, (height / 2) / 3);
 
-        vector<float> vecDist;
-        SaveLog(-1, 0, vecDist, 0, 0);
-        time_begin = clock();
+        //vector<float> vecDist;
+        //SaveLog(-1, 0, vecDist, 0, 0);
+        //time_begin = clock();
     }
 
-    void ExecuteDistance(Mat &matInput, Mat &matResult, vector<CarInfo>& listCar, float fLatitude, float fLongitude)
+    void ExecuteDistance(Mat &matInput, Mat &matResult, vector<CarInfo>& listCar, double dLatitude, double dLongitude)
     {
         Mat matGray, matResize;
         vector<Rect> vFound;
@@ -179,12 +182,26 @@ public:
         Mat matCanny;
         vector<float> vecDist;
         int nDetect = 0;
-        static int statWidth = width;
-        static int statHeight = height;
+        Mat matRoadTarget, matRoadBin;
+        Mat matLaneROI;
+
+        // Generate grad_x and grad_y
+        Mat grad_x, grad_y;
+        Mat sobel_dx, sobel_dy;
+        Mat non_maxima;
+        Mat sobel;
+        Mat right_border;
+        //Mat left_border;
+
+        vector<Point2f> origPoints;
+        vector<Point2f> dstPoints;
+        IPM *ipm;
+
+        Mat roi;
+        Mat matROIBin;
 
         width = matInput.cols;
         height = matInput.rows;
-        static Point ptCenter(width / 2, height / 2 / 3);
 
         // 영상 크기가 달라진 경우 센터점 영상에 맞게 옮기기
         if (matInput.cols != statWidth || matInput.rows != statHeight)
@@ -212,8 +229,8 @@ public:
         //--------------------------------------------------------------------------//
         // 도로 이진화   출처: http://vgg.fiit.stuba.sk/2016-06/car-detection-in-videos/
         //--------------------------------------------------------------------------//
-        Mat matRoadTarget = matHSV(Rect(width / 2 - 30, height * 6 / 7, 60, 10)).clone();
-        Mat matRoadBin = matHSV.clone();
+        matRoadTarget = matHSV(Rect(width / 2 - 30, height * 6 / 7, 60, 10)).clone();
+        matRoadBin = matHSV.clone();
 
         int sumHue = 0, sumSat = 0, sumVal = 0;
 
@@ -241,7 +258,7 @@ public:
         //Rect Roi(Point(matResize.cols / 5, 65 * matResize.rows / 100), Point(4 * matResize.cols / 5, matResize.rows));
         Rect rectResizeROI(Point(0, matResize.rows / 2), Point(matResize.cols, matResize.rows));
         //Mat matLaneROI = matOutput(Roi);
-        Mat matLaneROI = matResize(rectResizeROI);
+        matLaneROI = matResize(rectResizeROI);
 
         cvtColor(matLaneROI, matGray, CV_BGR2GRAY);
 
@@ -251,10 +268,6 @@ public:
         int scale = 1;
         int delta = 0;
         int ddepth = CV_16S;
-
-        // Generate grad_x and grad_y
-        Mat grad_x, grad_y;
-        Mat sobel_dx, sobel_dy;
 
         // Gradient X
         Sobel(matGray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT);
@@ -267,9 +280,7 @@ public:
         // Total Gradient (approximate)
         cv::addWeighted(sobel_dx, 2, sobel_dy, 2, 0, grad);
 
-        Mat non_maxima = matGray.clone();
-
-        Mat sobel;
+        non_maxima = matGray.clone();
 
         grad.copyTo(sobel);
 
@@ -340,8 +351,6 @@ public:
 
         threshold(non_maxima, non_maxima, 200, 255, 0);
 
-        Mat right_border;
-
         non_maxima.copyTo(right_border);
 
         for (int i = 1; i < h - 1; i++)
@@ -369,9 +378,7 @@ public:
             }
         }
 
-        Mat left_border;
-
-        non_maxima.copyTo(left_border);
+/*        non_maxima.copyTo(left_border);
 
         for (int i = 1; i < h - 1; i++)
         {
@@ -396,7 +403,7 @@ public:
                         j = 4;
                 }
             }
-        }
+        }*/
 
         vector<Vec2f> s_lines;
         vector<Vec2f> left_lines;
@@ -538,9 +545,6 @@ public:
         //--------------------------------------------------------------------------//
         Point2f Bird1(0, height);
         Point2f Bird2(width, height);
-        vector<Point2f> origPoints;
-        vector<Point2f> dstPoints;
-        IPM *ipm;
 
         // The 4-points at the input image
         origPoints.push_back(Bird1); // *** 운전학원 카메라
@@ -586,10 +590,10 @@ public:
 
             for (; loc != end; ++loc)
             {
-                Mat roi = matGray(*loc);
-                classifier2.detectMultiScale(roi, vFound2, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30)); // checkcas.xml
+                roi = matGray(*loc);
+                //classifier2.detectMultiScale(roi, vFound2, 1.1, 2, 0 | CASCADE_SCALE_IMAGE, Size(30, 30)); // checkcas.xml
 
-                if (!vFound2.empty())
+                //if (!vFound2.empty())
                 {
                     Rect rectOrigLoc;
                     rectOrigLoc = *loc;
@@ -603,7 +607,7 @@ public:
                     //--------------------------------------------------------------------------//
                     bool bCarFind = false;
 
-                    Mat matROIBin = matRoadBin(rectOrigLoc);
+                    matROIBin = matRoadBin(rectOrigLoc);
 
                     sumHue = 0;
                     for (int i = matROIBin.rows / 4 * 3; i < matROIBin.rows; i++)
@@ -777,7 +781,7 @@ public:
                             maxpt1.x = 0; maxpt2.x = width;
 
                             // 마지막 열에서 해당 선의 교차점
-                            line(matResult, maxpt1, maxpt2, cv::Scalar(0, 0, 255), 1); // 빨간 선으로 그리기
+                            line(matResult, maxpt1, maxpt2, cv::Scalar(255, 0, 0), 2); // 빨간 선으로 그리기
 
                             // 해당 직선이 거리계산 관심영역(IPM)에 들면 IPM에 맞는 직선 변환
                             if (origPoints[0].y >= maxpt1.y && origPoints[3].y <= maxpt1.y)
@@ -793,7 +797,7 @@ public:
                                 text << tempDist;
                                 text << "m";
 
-                                putText(matResult, text.str(), Point(rectOrigLoc.x, rectOrigLoc.y), 2, 0.7, Scalar(0, 0, 255));
+                                putText(matResult, text.str(), Point(rectOrigLoc.x, rectOrigLoc.y), 2, 1.7, Scalar(255, 0, 0), 2);
                             }
                         }
                     }
@@ -805,8 +809,32 @@ public:
 
         delete ipm;
 
-        time_end = clock();
+        matGray.release();
+        matResize.release();
+        matHSV.release();
+        matBinTtack.release();
+        matCanny.release();
+        matRoadTarget.release();
+        matRoadBin.release();
+        matLaneROI.release();
+        grad_x.release();
+        grad_y.release();
+        sobel_dx.release();
+        sobel_dy.release();
+        non_maxima.release();
+        sobel.release();
+        right_border.release();
+        roi.release();
+        matROIBin.release();
+        vFound.clear();
+        vFound2.clear();
+        vFoundResult.clear();
+        origPoints.clear();
+        dstPoints.clear();
+        vecDist.clear();
+
+        //time_end = clock();
         //SaveLog((time_end - time_begin) * 1000 / CLOCKS_PER_SEC, nDetect, vecDist, fLatitude, fLongitude);
-        time_begin = time_end;
+        //time_begin = time_end;
     }
 };

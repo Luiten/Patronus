@@ -1,5 +1,5 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.89.3 (2017-08-21)
+Version: 0.89.4 (2017-08-23)
 
 <br>
 
@@ -16,6 +16,10 @@ set(pathProject "This Project Path")
 2. 너비나 크기를 dp로 설정시 글자 크기, 화면 크기에 따라 레이아웃 일부가 짤릴 수 있는 문제
 3. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제(스냅드래곤 800대 AP는 듀얼카메라 지원)
 4. 메모리 누수
+---
+#### 0.89.4 (2017-08-23)
+1. MainActivity: 메모리 누수(matResult) 해결
+2. MainActivity: onPause(), onResume() 시 화면이 안나오는 문제 수정
 ---
 #### 0.89.3 (2017-08-21)
 1. MainActivity: 시작, 종료 통합

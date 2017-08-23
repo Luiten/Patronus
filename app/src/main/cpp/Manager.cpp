@@ -50,7 +50,7 @@ public:
             //------------------------------------------------------------//
             if (m_bDistance)
             {
-                m_Detectcars.ExecuteDistance(input, img_result, m_listCar, m_fLatitude, m_fLongitude);
+                m_Detectcars.ExecuteDistance(input, img_result, m_listCar, m_dLatitude, m_dLongitude);
             }
 
             //------------------------------------------------------------//
@@ -100,11 +100,11 @@ public:
                 if (m_listLane[i].type == 1)
                 {
                     line(img_result, m_listLane[i].start, m_listLane[i].end, Scalar(255, 0, 0), 5);
-                    m_Log.Write(PATRONUS_LOG_TYPE_LANE, "중앙선", "", m_fLatitude, m_fLongitude);
+                    m_Log.Write(PATRONUS_LOG_TYPE_LANE, "중앙선", "", m_dLatitude, m_dLongitude);
                 } else
                 {
                     line(img_result, m_listLane[i].start, m_listLane[i].end, Scalar(255, 255, 0), 5);
-                    m_Log.Write(PATRONUS_LOG_TYPE_LANE, "흰색 실선", "", m_fLatitude, m_fLongitude);
+                    m_Log.Write(PATRONUS_LOG_TYPE_LANE, "흰색 실선", "", m_dLatitude, m_dLongitude);
                 }
             }
         }
@@ -141,17 +141,17 @@ public:
             if (m_listLight[i].type == PATRONUS_LIGHT_TYPE_RED)
             {
                 circle(img_result, m_listLight[i].center, 5, Scalar(255, 0, 0), -1, 8, 0);
-                //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "빨간불", "", m_fLatitude, m_fLongitude);
+                //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "빨간불", "", m_dLatitude, m_dLongitude);
             }
             else if (m_listLight[i].type == PATRONUS_LIGHT_TYPE_YELLOW)
             {
                 circle(img_result, m_listLight[i].center, 5, Scalar(255, 255, 0), -1, 8, 0);
-                //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "노란불", "", m_fLatitude, m_fLongitude);
+                //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "노란불", "", m_dLatitude, m_dLongitude);
             }
             else if (m_listLight[i].type == PATRONUS_LIGHT_TYPE_GREEN)
             {
                 circle(img_result, m_listLight[i].center, 5, Scalar(0, 255, 0), -1, 8, 0);
-                //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "초록불", "", m_fLatitude, m_fLongitude);
+                //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "초록불", "", m_dLatitude, m_dLongitude);
             }
         }
 
@@ -163,19 +163,23 @@ public:
     //-----------------------------------------------------------------------------------------------//
     bool CalculateCollision()
     {
-        list<float>::iterator it;
-        for (it = m_listCollision.begin(); it != m_listCollision.end(); it++)
+        list<float>::iterator it = m_listCollision.begin();
+        list<float>::iterator it_end = m_listCollision.end();
+        while (it != it_end)
         {
             // 임시로 충돌 값 설정
             // 나중에 퍼센트에 따른 경고 추가
             if (*it >= m_fCollision)
             {
                 putText(img_result, "Collision", cvPoint(100, 200), FONT_HERSHEY_SIMPLEX, 1.3, Scalar(255, 0, 0), 3);
-                m_Log.Write(PATRONUS_LOG_TYPE_COLLISION, tostr(*it), "", m_fLatitude, m_fLongitude);
+                m_Log.Write(PATRONUS_LOG_TYPE_COLLISION, tostr(*it), "", m_dLatitude, m_dLongitude);
             }
+
+            it++;
+            m_listCollision.pop_front();
         }
 
-        m_listCollision.clear();
+        //m_listCollision.clear();
         return true;
     }
 
@@ -238,12 +242,12 @@ public:
 
             // GPS 위도 값
             case 100:
-                m_fLatitude = value;
+                m_dLatitude = value;
                 break;
 
             // GPS 경도 값
             case 101:
-                m_fLongitude = value;
+                m_dLongitude = value;
                 break;
         }
     }
@@ -254,7 +258,7 @@ public:
     }
 
 private:
-    Distance m_Detectcars;                      //creating a object
+    Distance m_Detectcars;
     Lane m_Lane;
     Light m_Light;
     Log m_Log;
@@ -266,8 +270,8 @@ private:
     float m_fCollision;
     int height;
     int width;
-    double m_fLatitude; // 위도
-    double m_fLongitude; // 경도
+    double m_dLatitude; // 위도
+    double m_dLongitude; // 경도
     Mat img_input;
     Mat img_result;
     vector <LaneInfo> m_listLane;
