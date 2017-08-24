@@ -1,21 +1,30 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.89.4 (2017-08-23)
+Version: 0.90.0 (2017-08-24)
 
 <br>
 
-### Change "CMakeLists.txt"
+### How to build
+#### 1. Change "Patronus/app/CMakeLists.txt"<br>
 set(pathOpenCv "Your OpenCV 3.1 Android SDK Path")<br>
 set(pathProject "This Project Path")
-
 <br>
+#### 2. Build it!
 <br>
 
 ---
 #### Problem
-1. StandardActivity: [다시 찍기] 터치시 설정 해상도가 적용이 안되는 문제
-2. 너비나 크기를 dp로 설정시 글자 크기, 화면 크기에 따라 레이아웃 일부가 짤릴 수 있는 문제
-3. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제(스냅드래곤 800대 AP는 듀얼카메라 지원)
-4. 메모리 누수
+1. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제(스냅드래곤 800대 AP는 듀얼카메라 지원)
+---
+#### 0.90.0 (2017-08-24)
+1. Lane.cpp: 소실점 검출 처리
+2. Distance.cpp: Lane 클래스로부터 연산된 소실점으로 Bird's Eye View 변환
+3. standard_main.xml: [다시 찍기], [닫기] 버튼 제거
+4. StandardActivity: 기준점 파일이 없을 경우 Toast 메시지 추가
+5. PointActivity: 메모리 누수(matResult) 해결
+6. PointActivity: 기준점 촬영시 파일이 저장되지 않는 문제 수정
+7. Setting: 지원하는 영상 크기가 끝자리가 0이 아닌 크기 제외
+8. AlarmAdapter: 레이아웃이 짤리는 문제 해결
+9. colors.xml: 메인 색상 변경(#FFC000 -> #FF8040)
 ---
 #### 0.89.4 (2017-08-23)
 1. MainActivity: 메모리 누수(matResult) 해결
@@ -37,8 +46,8 @@ set(pathProject "This Project Path")
 ---
 #### 0.89.0 (2017-08-16)
 1. MainActivity: 속도, 종료 Toast 텍스트 변경
-2. distance.cpp: 영상처리(저해상도 사용, IPM) 최적화
-3. MainActivity, Setting, PointActivity, Manager.cpp: 기기가 지원하는 해상도로 변경
+2. distance.cpp: 영상처리(낮은 영상 크기 사용, IPM) 최적화
+3. MainActivity, Setting, PointActivity, Manager.cpp: 기기가 지원하는 영상 크기로 변경
 4. activity_main.xml: 전면 카메라 위치 변경
 ---
 #### 0.88.1 (2017-08-15)

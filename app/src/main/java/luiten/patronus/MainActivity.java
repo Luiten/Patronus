@@ -191,6 +191,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             public void onClick(View v) {
                 button1.setText("시작");
                 StopProcessing();
+                bStart = false;
 
                 Intent intent = new Intent(getApplicationContext(), Setting.class);
                 startActivity(intent);
@@ -527,8 +528,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
             for (Camera.Size camSize : SupporetdSizes) {
                 float raito = (float) camSize.width / camSize.height;
-                // 비율(16:9 +-20%)과 일정 해상도(400)이상 만족시 표시
-                if (raito >= 1.77 * 0.8 && raito <= 1.77 * 1.2 && camSize.width > 400) {
+                // 비율(16:9 +-20%)과 일정 해상도(400)이상 만족시 표시 + 끝자리가 0일 경우 표시
+                if (raito >= 1.77 * 0.8 && raito <= 1.77 * 1.2 && camSize.width > 400 && camSize.width % 10 == 0) {
                     int temp[] = {camSize.width, camSize.height};
                     savedWidth = camSize.width;
                     savedHeight = camSize.height;

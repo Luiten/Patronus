@@ -19,6 +19,7 @@ import org.opencv.android.Utils;
 import org.opencv.imgproc.*;
 import org.opencv.core.*;
 import android.graphics.*;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,8 +34,6 @@ import java.io.IOException;
 
 public class StandardActivity extends Activity {
     private ImageView imageView;
-    private Mat img_result;
-    public static Context mContext;
 
     static {
         System.loadLibrary("opencv_java3");
@@ -50,69 +49,23 @@ public class StandardActivity extends Activity {
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
         this.imageView = (ImageView)this.findViewById(R.id.standard_image_camera);
-        Button photoButton = (Button)this.findViewById(R.id.standard_btn_test);
-        photoButton.setOnClickListener(new View.OnClickListener(){
-
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(getApplicationContext(), PointActivity.class);
-                startActivity(intent);
-            }
-        });
-
-        // 취소
-        Button button2 = (Button)findViewById(R.id.standard_btn_cancel);
-        button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
-
-        img_result = new Mat();
-        mContext = this;
 
         String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
-        File file = new File(dirPath);
+        File file = new File(dirPath + "point.png");
 
-        // 일치하는 폴더가 없으면 생성
+        // 일치하는 파일이 없으면 Toast
         if (!file.exists()) {
-            file.mkdirs();
+            Toast.makeText(getApplicationContext(),"기준점 파일이 존재하지 않습니다.",Toast.LENGTH_SHORT).show();
         }
-
-        // Load png image
-        Bitmap img_bmp = BitmapFactory.decodeFile(dirPath + "point.png");
-        imageView.setImageBitmap(img_bmp);
+        else {
+            // Load png image
+            Bitmap img_bmp = BitmapFactory.decodeFile(dirPath + "point.png");
+            imageView.setImageBitmap(img_bmp);
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-    }
-
-    public void SetImage(Mat result)
-    {
-        result.copyTo(img_result);
-
-        Bitmap img_bmp = Bitmap.createBitmap(img_result.cols(), img_result.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(img_result, img_bmp);
-        imageView.setImageBitmap(img_bmp);
-
-        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
-        File file = new File(dirPath);
-
-        // 일치하는 폴더가 없으면 생성
-        if (!file.exists()) {
-            file.mkdirs();
-        }
-
-        // Save png image
-        try {
-            OutputStream stream = new FileOutputStream(dirPath + "point.png");
-            img_bmp.compress(Bitmap.CompressFormat.PNG, 80, stream);
-            stream.close();
-        }
-        catch (IOException e) {
-        }
     }
 }

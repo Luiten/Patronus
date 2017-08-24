@@ -43,8 +43,7 @@ public class SplashActivity extends AppCompatActivity {
     String[] PERMISSIONS  = {"android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE",
             "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE", "android.permission.READ_PHONE_STATE",
             "android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION", "android.permission.VIBRATE",
-            "android.permission.WAKE_LOCK", "com.samsung.android.provider.filterprovider.permission.READ_FILTER",
-            "com.samsung.android.providers.context.permission.WRITE_USE_APP_FEATURE_SURVEY" };
+            "android.permission.WAKE_LOCK", };
 
     String[] strFileLists = {"cars.xml", "checkcas.xml" };
     ArrayList<String> strDownloadLists = new ArrayList<String>();
@@ -295,7 +294,8 @@ public class SplashActivity extends AppCompatActivity {
                     //URL 주소로부터 파일다운로드하기 위한 input stream
                     input = connection.getInputStream();
 
-                    path = new File("/sdcard/Patronus/");
+                    String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
+                    path = new File(dirPath);
                     outputFile = new File(path, strDownloadLists[0].get(i)); //파일명까지 포함함 경로의 File 객체 생성
 
                     // SD카드에 저장하기 위한 Output stream

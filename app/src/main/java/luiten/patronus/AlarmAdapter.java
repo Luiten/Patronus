@@ -1,11 +1,16 @@
 package luiten.patronus;
 
 import android.content.Context;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -55,6 +60,22 @@ public class AlarmAdapter extends BaseAdapter {
             holder.alarmText = (TextView)convertView.findViewById(R.id.alarm_text_item);
             holder.alarmTextDesc = (TextView)convertView.findViewById(R.id.alarm_text_itemdesc);
             holder.alarmCheck = (CheckBox)convertView.findViewById(R.id.alarm_chk_item);
+
+            //----------------------------------------------------//
+            // 텍스트 너비 화면에 맞게 재설정
+            // 출처: http://developer88.tistory.com/71
+            //----------------------------------------------------//
+            // dpi와 density 구하는 방법
+            DisplayMetrics outMetrics = new DisplayMetrics();
+            ((Setting)mContext).getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+
+            // 변경하고 싶은 레이아웃의 파라미터 값을 가져 옴
+            LinearLayout.LayoutParams TextDescParams = (LinearLayout.LayoutParams) holder.alarmTextDesc.getLayoutParams();
+
+            TextDescParams.width = outMetrics.widthPixels * 2 / 3;
+
+            // 변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅
+            holder.alarmTextDesc.setLayoutParams(TextDescParams);
 
             //홀더에 저장되있는 것들을 이제 view에 뿌려준다
             convertView.setTag(holder);

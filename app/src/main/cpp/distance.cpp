@@ -25,18 +25,16 @@ private:
 
     int averageSat = 0;
     int averageVal = 0;
-    Point ptCenter;
 
     int width, height;
     int resizeWidth, resizeHeight; // 최적화할 영상 크기
-    int statWidth, statHeight; // 이전 영상 크기
     bool bInit = false;
 
     //clock_t time_begin, time_end;
 
-//------------------------------------------------------------------------------------------------//
-// 검출된 자동차 상자 그리기
-//------------------------------------------------------------------------------------------------//
+    //------------------------------------------------------------------------------------------------//
+    // 검출된 자동차 상자 그리기
+    //------------------------------------------------------------------------------------------------//
     void draw_locations(Mat &img, const vector<Rect> &locations, const Scalar &color)
     {
         if (!locations.empty())
@@ -50,6 +48,9 @@ private:
         }
     }
 
+    //------------------------------------------------------------------------------------------------//
+    // 로그
+    //------------------------------------------------------------------------------------------------//
     void SaveLog(int ps, int detect, vector<float> vecDist, double dLatitude, double dLongitude)
     {
         static ofstream offile;
@@ -90,10 +91,10 @@ private:
         //offile.close();
     }
 
-//------------------------------------------------------------------------------------------------//
-// 두 선분의 교차 검사
-// 출처: http://neoplanetz.tistory.com/entry/OpenCV-2개의-라인에서-교점-찾기Calculate-Intersection-between-Lines
-//------------------------------------------------------------------------------------------------//
+    //------------------------------------------------------------------------------------------------//
+    // 두 선분의 교차 검사
+    // 출처: http://neoplanetz.tistory.com/entry/OpenCV-2개의-라인에서-교점-찾기Calculate-Intersection-between-Lines
+    //------------------------------------------------------------------------------------------------//
     bool GetIntersection(const Point2f AP1, const Point2f AP2, const Point2f BP1, const Point2f BP2, Point2f &result)
     {
         double t;
@@ -116,34 +117,6 @@ private:
         return true;
     }
 
-    void eliminateOutLiers(vector<Vec2f> &aLines)
-    {
-        int num = aLines.size();
-        if (num == 0 || num == 1 || num == 2)
-            return;
-
-        for (int i = 0; i < aLines.size(); i++)
-        {
-            float i_theta = aLines[i][1];
-            float i_degree = i_theta * 180 / CV_PI;
-
-            for (int j = i + 1; j < aLines.size();)
-            {
-                float j_theta = aLines[j][1];
-                float j_degree = j_theta * 180 / CV_PI;
-
-                if (abs(i_degree - j_degree) < 5)
-                {
-                    aLines.erase(aLines.begin() + j);
-                }
-                else
-                {
-                    j++;
-                }
-            }
-        }
-    }
-
 public:
     void Initialize(int w, int h)
     {
@@ -156,22 +129,19 @@ public:
 
         width = w;
         height = h;
-        statWidth = width;
-        statHeight = height;
 
         resizeWidth = 640;
         resizeHeight = 360;
 
         averageSat = 0;
         averageVal = 0;
-        ptCenter = Point(width / 2, (height / 2) / 3);
 
         //vector<float> vecDist;
         //SaveLog(-1, 0, vecDist, 0, 0);
         //time_begin = clock();
     }
 
-    void ExecuteDistance(Mat &matInput, Mat &matResult, vector<CarInfo>& listCar, double dLatitude, double dLongitude)
+    void ExecuteDistance(Mat &matInput, Mat &matResult, vector<CarInfo>& listCar, double dLatitude, double dLongitude, Point ptCenter)
     {
         Mat matGray, matResize;
         vector<Rect> vFound;
@@ -183,15 +153,6 @@ public:
         vector<float> vecDist;
         int nDetect = 0;
         Mat matRoadTarget, matRoadBin;
-        Mat matLaneROI;
-
-        // Generate grad_x and grad_y
-        Mat grad_x, grad_y;
-        Mat sobel_dx, sobel_dy;
-        Mat non_maxima;
-        Mat sobel;
-        Mat right_border;
-        //Mat left_border;
 
         vector<Point2f> origPoints;
         vector<Point2f> dstPoints;
@@ -202,15 +163,6 @@ public:
 
         width = matInput.cols;
         height = matInput.rows;
-
-        // 영상 크기가 달라진 경우 센터점 영상에 맞게 옮기기
-        if (matInput.cols != statWidth || matInput.rows != statHeight)
-        {
-            ptCenter.x *= (float) matInput.cols / statWidth;
-            ptCenter.y *= (float) matInput.rows / statHeight;
-            statWidth = matInput.cols;
-            statHeight = matInput.rows;
-        }
 
         listCar.clear();
 
@@ -253,304 +205,20 @@ public:
         rectangle(matResult, Rect(width / 2 - 30, height * 6 / 7, 60, 10), Scalar(0, 0, 255), 2);
 
         //--------------------------------------------------------------------------//
-        // 차선 검출
-        //--------------------------------------------------------------------------//
-        //Rect Roi(Point(matResize.cols / 5, 65 * matResize.rows / 100), Point(4 * matResize.cols / 5, matResize.rows));
-        Rect rectResizeROI(Point(0, matResize.rows / 2), Point(matResize.cols, matResize.rows));
-        //Mat matLaneROI = matOutput(Roi);
-        matLaneROI = matResize(rectResizeROI);
-
-        cvtColor(matLaneROI, matGray, CV_BGR2GRAY);
-
-        GaussianBlur(matGray, matGray, Size(3, 3), 1.5, 1.5);
-
-        cv::Mat grad;
-        int scale = 1;
-        int delta = 0;
-        int ddepth = CV_16S;
-
-        // Gradient X
-        Sobel(matGray, grad_x, ddepth, 1, 0, 3, scale, delta, BORDER_DEFAULT);
-        convertScaleAbs(grad_x, sobel_dx);
-
-        // Gradient Y
-        Sobel(matGray, grad_y, ddepth, 0, 1, 3, scale, delta, BORDER_DEFAULT);
-        convertScaleAbs(grad_y, sobel_dy);
-
-        // Total Gradient (approximate)
-        cv::addWeighted(sobel_dx, 2, sobel_dy, 2, 0, grad);
-
-        non_maxima = matGray.clone();
-
-        grad.copyTo(sobel);
-
-        int i, j, h, w, tan255, tan675, index, magni;
-        float slope;
-        bool maxima;
-        tan255 = 424;
-        tan675 = 2472;
-        h = grad.rows;
-        w = grad.cols;
-        for (i = 1; i < h; i++)
-        {
-            for (j = 1; j < w; j++)
-            {
-                index = w*i + j;
-                maxima = true;
-                magni = grad.at<uchar>(i, j);
-                non_maxima.at<uchar>(i, j) = 0;
-                if (magni > 30)
-                {
-                    if (sobel_dx.at<uchar>(i, j) != 0)
-                    {
-
-                        slope = (sobel_dy.at<uchar>(i, j) << 10) / sobel_dx.at<uchar>(i, j);
-                        if (slope > 0)
-                        {
-                            if (slope < tan255)
-                            {
-                                if (magni < sobel.at<uchar>(i, j - 1) || magni < sobel.at<uchar>(i, j + 1))
-                                    maxima = false;
-                            }
-                            else if (slope < tan675)
-                            {
-                                if (magni < sobel.at<uchar>(i - 1, j + 1) || magni < sobel.at<uchar>(i - 1, j - 1))
-                                    maxima = false;
-                            }
-                            else //2
-                            {
-                                if (magni < sobel.at<uchar>(i - 1, j) || magni < sobel.at<uchar>(i + 1, j))
-                                    maxima = false;
-                            }
-                        }
-                        else
-                        {
-                            if (slope < -tan675)
-                            {
-                                if (magni < sobel.at<uchar>(i + 1, j) || magni < sobel.at<uchar>(i - 1, j))
-                                    maxima = false;
-                            }
-                            else if (slope < -tan255)
-                            {
-                                if (magni < sobel.at<uchar>(i - 1, j - 1) || magni < sobel.at<uchar>(i + 1, j + 1))
-                                    maxima = false;
-                            }
-                            else
-                            {
-                                if (magni < sobel.at<uchar>(i, j - 1) || magni < sobel.at<uchar>(i, j + 1))
-                                    maxima = false;
-                            }
-                        }
-                        if (maxima)
-                            non_maxima.at<uchar>(i, j) = sobel.at<uchar>(i, j);
-
-                    }
-                }
-            }
-        }
-
-        threshold(non_maxima, non_maxima, 200, 255, 0);
-
-        non_maxima.copyTo(right_border);
-
-        for (int i = 1; i < h - 1; i++)
-        {
-            for (int j = 1; j < w - 5; j++)
-            {
-                if (right_border.at<uchar>(i, j) == 255)
-                {
-                    for (int t = 4; t <= 50; t++)
-                    {
-                        if (j + t < w)
-                        {
-                            right_border.at<uchar>(i, j + t) = 0;
-                        }
-                        else
-                        {
-                            right_border.at<uchar>(i, j) = 0;
-                        }
-                    }
-                    if (j + 50 < w)
-                        j = j + 50;
-                    else
-                        j = w - 1;
-                }
-            }
-        }
-
-/*        non_maxima.copyTo(left_border);
-
-        for (int i = 1; i < h - 1; i++)
-        {
-            for (int j = w - 1; j > 3; j--)
-            {
-                if (left_border.at<uchar>(i, j) == 255)
-                {
-                    for (int t = 4; t <= 50; t++)
-                    {
-                        if (j - t > 0)
-                        {
-                            left_border.at<uchar>(i, j - t) = 0;
-                        }
-                        else
-                        {
-                            left_border.at<uchar>(i, j) = 0;
-                        }
-                    }
-                    if (j - 50 > 0)
-                        j = j - 50;
-                    else
-                        j = 4;
-                }
-            }
-        }*/
-
-        vector<Vec2f> s_lines;
-        vector<Vec2f> left_lines;
-        vector<Vec2f> right_lines;
-        int hough_threshold = w / 15;
-
-        HoughLines(right_border, s_lines, 1, CV_PI / 180, hough_threshold, 0, 0);
-
-        for (int i = 0; i < s_lines.size(); i++)
-        {
-            float r = s_lines[i][0], theta = s_lines[i][1];
-            float degree = theta * 180 / CV_PI;
-
-            if (90 < degree && degree < 170) // lane on leftside
-            {
-                right_lines.push_back(s_lines[i]);
-            }
-            if (10 < degree && degree < 90) // lane on leftside
-            {
-                left_lines.push_back(s_lines[i]);
-            }
-        }
-
-        eliminateOutLiers(right_lines);
-        eliminateOutLiers(left_lines);
-
-        //drawLines(matLaneROI, right_lines);
-        //drawLines(matLaneROI, left_lines);
-
-        vector<Vec2f> vLines;
-        for (int i = 0; i < right_lines.size(); i++)
-        {
-            right_lines[i][0] = right_lines[i][0] * ((float)width / resizeWidth); // 해상도에 따른 거리 보정
-            vLines.push_back(right_lines[i]);
-        }
-        for (int i = 0; i < left_lines.size(); i++)
-        {
-            left_lines[i][0] = left_lines[i][0] * ((float)width / resizeWidth); // 해상도에 따른 거리 보정
-            vLines.push_back(left_lines[i]);
-        }
-
-        // 소실점 검출
-        vector<Point2f> vInterPoint;
-
-        w = width;
-        h = height / 2;
-        Rect rectLaneROI(Point(0, matInput.rows / 2), Point(matInput.cols, matInput.rows));
-        matLaneROI = matResult(rectLaneROI);
-
-        //drawLines(matLaneROI, vLines);
-
-        // 교차점 구하기
-        int num = vLines.size();
-        for (int i = 0; i < num - 1; i++)
-        {
-            float rho = vLines[i][0];   // 첫 번째 요소는 rho 거리
-            float theta = vLines[i][1]; // 두 번째 요소는 델타 각도
-
-            Point pt1(rho / cos(theta), 0); // 첫 행에서 해당 선의 교차점
-            Point pt2((rho - h * sin(theta)) / cos(theta), h);
-
-            for (int j = i + 1; j < num; j++)
-            {
-                float rho = vLines[j][0];   // 첫 번째 요소는 rho 거리
-                float theta = vLines[j][1]; // 두 번째 요소는 델타 각도
-
-                Point pt3(rho / cos(theta), 0); // 첫 행에서 해당 선의 교차점
-                Point pt4((rho - h * sin(theta)) / cos(theta), h);
-
-                Point2f result;
-
-                if (GetIntersection(pt1, pt2, pt3, pt4, result))
-                {
-                    vInterPoint.push_back(result);
-                    //circle(matLaneROI, result, 3, Scalar(255, 0, 0), CV_FILLED, CV_AA);
-                }
-            }
-        }
-
-        // 중심으로부터 가장 가까운 점 찾기
-        float minDis, raito;
-        minDis = raito = sqrt(pow(w, 2) + pow(h, 2)) * 0.07;
-        Point2f minPt;
-        for (i = 0; i < vInterPoint.size(); i++)
-        {
-            if (minDis > sqrt(pow(ptCenter.x - vInterPoint[i].x, 2) + pow(ptCenter.y - vInterPoint[i].y, 2)))
-            {
-                minPt = vInterPoint[i];
-                minDis = sqrt(pow(ptCenter.x - vInterPoint[i].x, 2) + pow(ptCenter.y - vInterPoint[i].y, 2));
-            }
-        }
-
-        vector<Point2f> vResultPoint;
-        // 만약 중심과 일정 범위 내 가까운 점을 찾았다면
-        if (minDis < raito)
-        {
-            // 그 근처 점들을 모으기
-            for (i = 0; i < vInterPoint.size(); i++)
-            {
-                if (raito > sqrt(pow(minPt.x - vInterPoint[i].x, 2) + pow(minPt.y - vInterPoint[i].y, 2)))
-                {
-                    vResultPoint.push_back(vInterPoint[i]);
-                }
-
-            }
-        }
-
-        //circle(matLaneROI, minPt, 10, Scalar(0, 0, 255), CV_FILLED, CV_AA);
-
-        if (!vResultPoint.empty())
-        {
-            // 점들 평균 구하기
-            Point2f avgPt;
-            for (i = 0; i < vResultPoint.size(); i++)
-            {
-                avgPt.x += vResultPoint[i].x;
-                avgPt.y += vResultPoint[i].y;
-            }
-
-            avgPt.x = avgPt.x / vResultPoint.size();
-            avgPt.y = avgPt.y / vResultPoint.size();
-
-            //for (i = 0; i < vResultPoint.size(); i++)
-            //{
-            //	circle(matLaneROI, vResultPoint[i], 3, Scalar(0, 0, 255), CV_FILLED, CV_AA);
-            //}
-
-            //circle(matLaneROI, avgPt, raito, Scalar(0, 0, 255), 3, CV_AA);
-
-            // 비율로 센터 점 옮기기
-            ptCenter.x = (ptCenter.x * 9 + avgPt.x) / 10;
-            ptCenter.y = (ptCenter.y * 9 + avgPt.y) / 10;
-        }
-
-        circle(matLaneROI, ptCenter, 10, Scalar(255, 0, 0), CV_FILLED, CV_AA);
-
-        //--------------------------------------------------------------------------//
         // Bird's Eye View   출처: https://marcosnietoblog.wordpress.com/2014/02/22/source-code-inverse-perspective-mapping-c-opencv/
         //--------------------------------------------------------------------------//
+        int w = width;
+        int h = height / 2;
+        Rect rectLaneROI(Point(0, matInput.rows / 2), Point(matInput.cols, matInput.rows));
+
         Point2f Bird1(0, height);
         Point2f Bird2(width, height);
 
         // The 4-points at the input image
         origPoints.push_back(Bird1); // *** 운전학원 카메라
         origPoints.push_back(Bird2);
-        origPoints.push_back(Point(width, ptCenter.y + (height - h)));
-        origPoints.push_back(Point(0, ptCenter.y + (height - h)));
+        origPoints.push_back(Point(width, ptCenter.y));
+        origPoints.push_back(Point(0, ptCenter.y));
 
         // 변환할 BEV 영역의 높이
         int nViewHeight = h + ptCenter.y;
@@ -816,14 +484,6 @@ public:
         matCanny.release();
         matRoadTarget.release();
         matRoadBin.release();
-        matLaneROI.release();
-        grad_x.release();
-        grad_y.release();
-        sobel_dx.release();
-        sobel_dy.release();
-        non_maxima.release();
-        sobel.release();
-        right_border.release();
         roi.release();
         matROIBin.release();
         vFound.clear();
