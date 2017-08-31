@@ -27,10 +27,10 @@ add_library( # Sets the name of the library.
              # Provides a relative path to your source file(s).
              src/main/cpp/native-lib.cpp
              src/main/cpp/Manager.cpp
-             src/main/cpp/distance.cpp
-             src/main/cpp/lane.cpp
-             src/main/cpp/light.cpp
-             src/main/cpp/log.cpp
+             src/main/cpp/Distance.cpp
+             src/main/cpp/Lane.cpp
+             src/main/cpp/Light.cpp
+             src/main/cpp/Log.cpp
              src/main/cpp/IPM.cpp
              src/main/cpp/IPM.h)
 

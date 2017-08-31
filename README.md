@@ -1,5 +1,5 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.90.0 (2017-08-24)
+Version: 0.90.1 (2017-08-31)
 
 <br>
 
@@ -14,6 +14,10 @@ set(pathProject "This Project Path")
 ---
 #### Problem
 1. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제(스냅드래곤 800대 AP는 듀얼카메라 지원)
+---
+
+#### 0.90.1 (2017-08-31)
+1. 재업로드
 ---
 #### 0.90.0 (2017-08-24)
 1. Lane.cpp: 소실점 검출 처리

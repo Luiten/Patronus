@@ -160,7 +160,7 @@ public class Setting extends AppCompatActivity {
         standardadapter.addItem("현재 기준점 보기");
         standardadapter.addItem("다시 기준점 찍기");
 
-        recordadapter.addItem("운전 결과");
+        recordadapter.addItem("운전 점수");
         recordadapter.addItem("로그");
 
         setListViewHeightBasedOnChildren(alarmlistview);
