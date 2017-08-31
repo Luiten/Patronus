@@ -3,12 +3,18 @@ package luiten.patronus;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.view.View;
 import android.view.Window;
+import android.widget.Button;
+import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 import android.widget.MediaController;
+import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.VideoView;
@@ -30,6 +36,15 @@ public class RecordCrash extends Activity {
 
     private String[] Logs;
 
+    VideoView videoView;
+    MediaController mediaController;
+    Button play, stop;
+    SeekBar playtime;
+    int pos;
+    boolean isPlaying = false;
+    boolean bstart = false;
+
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -41,15 +56,45 @@ public class RecordCrash extends Activity {
         Logs = intent.getStringArrayExtra("Logs");
 
         // *** https://github.com/brightec/ExampleMediaController 참조해서 MediaController 대신 커스텀 SeekBar로 만들기
+        videoView = (VideoView)findViewById(R.id.recordcrash_videoView);
+        play = (Button)findViewById(R.id.button_play);
+        stop = (Button)findViewById(R.id.button_stop);
+        playtime = (SeekBar)findViewById(R.id.video_seekbar);
 
-        VideoView videoView = (VideoView)findViewById(R.id.recordcrash_videoView);
-        MediaController mediaController = new MediaController(this);
+        videoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                playtime.setMax(videoView.getDuration());
+                playtime.postDelayed(onEverySecond, 1000);
+            }
+        });
 
-        mediaController.setAnchorView(videoView);
+        playtime.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    videoView.seekTo(progress);
+                }
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+                isPlaying = false;
+                videoView.pause();
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+                isPlaying = true;
+                int user_stop = seekBar.getProgress();
+                videoView.seekTo(user_stop);
+                videoView.start();
+            }
+        });
 
         // 경로 설정
-        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/video/";
-        dirPath += Logs[4];
+        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/video/동영상.wmv";
+//        dirPath += Logs[4];
         File file = new File(dirPath);
 
         // 일치하는 파일이 없으면 오류 메시지 출력
@@ -58,16 +103,54 @@ public class RecordCrash extends Activity {
         }
         else {
             Uri video = Uri.parse(dirPath);
-
-            videoView.setMediaController(mediaController);
             videoView.setVideoURI(video);
             videoView.requestFocus();
         }
 
-        //videoView.start();
+        play.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                videoView.start();
+                stop.setText("stop");
+                bstart = false;
+            }
+        });
+
+        stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                bstart = !bstart;
+                if(bstart){
+                    pos = videoView.getCurrentPosition();
+                    videoView.pause();
+                    isPlaying = false;
+                    stop.setText("replay");
+                }
+                else{
+                    videoView.seekTo(pos);
+                    videoView.start();
+                    isPlaying = true;
+                    stop.setText("stop");
+                }
+            }
+        });
+
 
         final TextView tvContent = (TextView)findViewById(R.id.recordcrash_text_content);
         tvContent.setText("날짜: " + Logs[0] + "\n시간: " + Logs[1] + "\n종류: " + LogType[Integer.valueOf(Logs[2]) - 1] + "\n영상: " +
                 Logs[4] + "\n\n" + Logs[3] + LogDescType[Integer.valueOf(Logs[2]) - 1]);
     }
+
+    private Runnable onEverySecond = new Runnable() {
+        @Override
+        public void run() {
+            if(playtime != null){
+                playtime.setProgress(videoView.getCurrentPosition());
+            }
+
+            if(videoView.isPlaying()){
+                playtime.postDelayed(onEverySecond, 1000);
+            }
+        }
+    };
 }
