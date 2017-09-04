@@ -10,8 +10,10 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.RequiresApi;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -75,6 +77,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     Sensor accSensor = null;
     long checkStartTime = 0, checkEndTime = 0;
     double accelSpeed = 0.0;
+    double speed = 0;
     double nowSpeed = 0.0;
 
     // 버튼 보여주기 상태
@@ -245,6 +248,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         mSensorManager.unregisterListener(accL);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onResume()
     {
@@ -263,7 +267,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 StartProcessing();
         }
 
-        mSensorManager.registerListener(accL, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
+        mSensorManager.registerListener(accL, accSensor, 1000000, 1000001);
 
 //        // 속도 초기화
 //        if (lm == null) {
@@ -287,38 +291,41 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     }
 
-//    @Override
-//    public void onDestroy() {
-//        super.onDestroy();
-//
-//        if (mOpenCvCameraView != null)
-//            mOpenCvCameraView.disableView();
-//
-//        if (mOpenCvCameraView2 != null)
-//            mOpenCvCameraView2.disableView();
-//
-//        if (mSensorManager != null)
-//            mSensorManager.unregisterListener(this);
-//
-//        if (accSensor != null)
-//            accSensor = null;
-//
-//        if (lm != null)
-//            lm.removeUpdates(ll);
-//    }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        if (mOpenCvCameraView != null)
+            mOpenCvCameraView.disableView();
+
+        if (mOpenCvCameraView2 != null)
+            mOpenCvCameraView2.disableView();
+
+        if (mSensorManager != null)
+            mSensorManager.unregisterListener(this);
+
+        if (accSensor != null)
+            accSensor = null;
+
+        if (lm != null)
+            lm.removeUpdates(ll);
+    }
 
     private class accListener implements SensorEventListener {
 
         @Override
         public void onSensorChanged(SensorEvent event) {
-            double accel;
-            double speed = 0;
-            accel  = event.values[0] - 9.7;
+            double accel, accel2, accel3;
+
+            accel  = event.values[0] - 9.8;
+            accel2 = event.values[1];
+            accel3 = event.values[2];
+            accelSpeed = (Math.sqrt(Math.pow(accel, 2) + Math.pow(accel2, 2) + Math.pow(accel3, 2)) - 9.81);
             speed += accel;
             if(speed < 0){
                 speed = 0;
             }
-            tv.setText(Double.toString(speed));
+            tv.setText(Double.toString(Math.floor(speed)));
         }
 
         @Override
