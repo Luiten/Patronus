@@ -70,6 +70,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     // 가속도
     SensorManager mSensorManager = null;
+    SensorEventListener accL;
+    TextView tv;
     Sensor accSensor = null;
     long checkStartTime = 0, checkEndTime = 0;
     double accelSpeed = 0.0;
@@ -107,7 +109,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON, WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         setContentView(R.layout.activity_main);
@@ -211,14 +213,17 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         // 성공적으로 연결되면 콜백 전달
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
 
-        // 속도 초기화
-        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        ll = new SpeedActionListener();
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
+//        // 속도 초기화
+//        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//        ll = new SpeedActionListener();
+//        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
 
         // 가속도 초기화
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        accL = new accListener();
+        tv = (TextView)findViewById(R.id.main_text_speed);
+
     }
 
     @Override
@@ -236,6 +241,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         if (lm != null)
             lm.removeUpdates(ll);
+
+        mSensorManager.unregisterListener(accL);
     }
 
     @Override
@@ -256,46 +263,68 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 StartProcessing();
         }
 
-        // 속도 초기화
-        if (lm == null) {
-            lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-            ll = new SpeedActionListener();
-            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
-        }
+        mSensorManager.registerListener(accL, accSensor, SensorManager.SENSOR_DELAY_NORMAL);
 
-        // 가속도 초기화
-        if (mSensorManager == null)
-            mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-        if (accSensor == null)
-            accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-
-        // 주기 설명
-        // SENSOR_DELAY_UI 갱신에 필요한 정도 주기
-        // SENSOR_DELAY_NORMAL 화면 방향 전환 등의 일상적인  주기
-        // SENSOR_DELAY_GAME 게임에 적합한 주기
-        if (mSensorManager != null)
-            mSensorManager.registerListener(this, accSensor, mSensorManager.SENSOR_DELAY_NORMAL);
+//        // 속도 초기화
+//        if (lm == null) {
+//            lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+//            ll = new SpeedActionListener();
+//            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
+//        }
+//
+//        // 가속도 초기화
+//        if (mSensorManager == null)
+//            mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+//        if (accSensor == null)
+//            accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+//
+//        // 주기 설명
+//        // SENSOR_DELAY_UI 갱신에 필요한 정도 주기
+//        // SENSOR_DELAY_NORMAL 화면 방향 전환 등의 일상적인  주기
+//        // SENSOR_DELAY_GAME 게임에 적합한 주기
+//        if (mSensorManager != null)
+//            mSensorManager.registerListener(this, accSensor, mSensorManager.SENSOR_DELAY_NORMAL);
 
     }
 
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
+//    @Override
+//    public void onDestroy() {
+//        super.onDestroy();
+//
+//        if (mOpenCvCameraView != null)
+//            mOpenCvCameraView.disableView();
+//
+//        if (mOpenCvCameraView2 != null)
+//            mOpenCvCameraView2.disableView();
+//
+//        if (mSensorManager != null)
+//            mSensorManager.unregisterListener(this);
+//
+//        if (accSensor != null)
+//            accSensor = null;
+//
+//        if (lm != null)
+//            lm.removeUpdates(ll);
+//    }
 
-        if (mOpenCvCameraView != null)
-            mOpenCvCameraView.disableView();
+    private class accListener implements SensorEventListener {
 
-        if (mOpenCvCameraView2 != null)
-            mOpenCvCameraView2.disableView();
+        @Override
+        public void onSensorChanged(SensorEvent event) {
+            double accel;
+            double speed = 0;
+            accel  = event.values[0] - 9.7;
+            speed += accel;
+            if(speed < 0){
+                speed = 0;
+            }
+            tv.setText(Double.toString(speed));
+        }
 
-        if (mSensorManager != null)
-            mSensorManager.unregisterListener(this);
+        @Override
+        public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
-        if (accSensor != null)
-            accSensor = null;
-
-        if (lm != null)
-            lm.removeUpdates(ll);
+        }
     }
 
     @Override
@@ -388,7 +417,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             }
         }
 
-        TextView tv = (TextView)findViewById(R.id.main_text_speed);
+        tv = (TextView)findViewById(R.id.main_text_speed);
         String strSpeed = (int)mySpeed + " km/h";
         tv.setText(strSpeed);
         //tv.setText("Speed: " + mySpeed + " km/h\n" + "nowSpeed: " + nowSpeed + "km/h");

@@ -93,8 +93,8 @@ public class RecordCrash extends Activity {
         });
 
         // 경로 설정
-        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/video/";
-        dirPath += Logs[4];
+        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/video/동영상.wmv";
+//        dirPath += Logs[4];
         File file = new File(dirPath);
 
         // 일치하는 파일이 없으면 오류 메시지 출력
@@ -110,6 +110,7 @@ public class RecordCrash extends Activity {
         play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                playtime.setProgress(0);
                 videoView.start();
                 stop.setText("stop");
                 bstart = false;
@@ -149,7 +150,7 @@ public class RecordCrash extends Activity {
             }
 
             if(videoView.isPlaying()){
-                playtime.postDelayed(onEverySecond, 1000);
+                playtime.postDelayed(onEverySecond, 500);
             }
         }
     };

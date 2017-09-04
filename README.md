@@ -30,6 +30,10 @@ set(pathProject "This Project Path")
 8. AlarmAdapter: 레이아웃이 짤리는 문제 해결
 9. colors.xml: 메인 색상 변경(#FFC000 -> #FF8040)
 ---
+#### 0.89.5 (2017-09-04)
+1. 차량 속도 개선
+2. record_crash 동영상 미디어 컨트롤러 play,stop버튼 추가(seekbar 문제 고쳐야 함)
+---
 #### 0.89.4 (2017-08-23)
 1. MainActivity: 메모리 누수(matResult) 해결
 2. MainActivity: onPause(), onResume() 시 화면이 안나오는 문제 수정

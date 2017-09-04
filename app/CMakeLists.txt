@@ -3,8 +3,8 @@
 
 # Sets the minimum version of CMake required to build the native library.
 
-set(pathOpenCv D:/Programming/OpenCV/OpenCV-android-sdk)
-set(pathProject D:/Programming/Android/Patronus)
+set(pathOpenCv D:/OpenCV-android-sdk)
+set(pathProject D:/Patronus/Patronus-true)
 
 cmake_minimum_required(VERSION 3.4.1)
 
