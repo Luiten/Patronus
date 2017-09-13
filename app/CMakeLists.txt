@@ -3,8 +3,8 @@
 
 # Sets the minimum version of CMake required to build the native library.
 
-set(pathOpenCv D:/OpenCV-android-sdk)
-set(pathProject D:/Patronus/Patronus-true)
+set(pathOpenCv D:/Programming/OpenCV/OpenCV-android-sdk)
+set(pathProject D:/Programming/Android/Patronus)
 
 cmake_minimum_required(VERSION 3.4.1)
 
@@ -31,8 +31,11 @@ add_library( # Sets the name of the library.
              src/main/cpp/Lane.cpp
              src/main/cpp/Light.cpp
              src/main/cpp/Log.cpp
-             src/main/cpp/IPM.cpp
-             src/main/cpp/IPM.h)
+             src/main/cpp/lib/IPM.cpp
+             src/main/cpp/lib/IPM.h
+             src/main/cpp/lib/cbloblabelingrobit.cpp
+             src/main/cpp/lib/cbloblabelingrobit.h
+             src/main/cpp/lib/cvblob.h)
 
 add_library( lib_opencv SHARED IMPORTED )
 

@@ -83,4 +83,11 @@ Java_luiten_patronus_Setting_SetSettings(JNIEnv *, jobject, jint type, jdouble v
     mgr.SetSettings(type, value);
     return 0;
 }
+
+// 값 읽어오기
+JNIEXPORT jdouble JNICALL
+Java_luiten_patronus_MainActivity_GetValue(JNIEnv *, jobject, jint type)
+{
+    return mgr.GetValue(type);
+}
 }

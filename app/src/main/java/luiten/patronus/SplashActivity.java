@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
@@ -83,7 +84,7 @@ public class SplashActivity extends AppCompatActivity {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         if (!camreaAccepted)
                         {
-                            showDialogforPermission("앱을 실행하려면 퍼미션을 허가하셔야 합니다.");
+                            showDialogforPermission("앱을 실행하려면 퍼미션 허가가 필요합니다.");
                             return;
                         }else
                         {
@@ -124,7 +125,7 @@ public class SplashActivity extends AppCompatActivity {
         //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
         if (!hasPermissions(PERMISSIONS)) { //퍼미션 허가를 했었는지 여부를 확인
-            requestNecessaryPermissions(PERMISSIONS);//퍼미션 허가안되어 있다면 사용자에게 요청
+            requestNecessaryPermissions(PERMISSIONS); //퍼미션 허가안되어 있다면 사용자에게 요청
         } else {
             //이미 사용자에게 퍼미션 허가를 받음.
         }
@@ -279,6 +280,14 @@ public class SplashActivity extends AppCompatActivity {
             File path; //디렉토리경로
             String filename = "";
 
+            String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
+            File file = new File(dirPath);
+
+            // 일치하는 폴더가 없으면 생성
+            if (!file.exists()) {
+                file.mkdirs();
+            }
+
             for (int i = 0; i < strDownloadLists[0].size(); i++) {
                 try {
                     URL url = new URL(strServerURL + strDownloadLists[0].get(i));
@@ -294,7 +303,6 @@ public class SplashActivity extends AppCompatActivity {
                     //URL 주소로부터 파일다운로드하기 위한 input stream
                     input = connection.getInputStream();
 
-                    String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
                     path = new File(dirPath);
                     outputFile = new File(path, strDownloadLists[0].get(i)); //파일명까지 포함함 경로의 File 객체 생성
 

@@ -6,9 +6,12 @@
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/objdetect.hpp>
+#include "lib/cbloblabelingrobit.h"
+#include "lib/cvblob.h"
+
 using namespace std;
 using namespace cv;
+using namespace cvb;
 
 
 struct LightInfo
@@ -26,267 +29,258 @@ class Light
 public:
     void ExecuteLight(Mat &img_input, Mat &img_result, vector<LightInfo> &listLight)
     {
-        Mat HSV;
-        Mat filterR, filterG;
-        Mat Red, Green;
+        Mat frame, frame1, gray;
+        Mat matOutput;
 
-        listLight.clear();
-        cvtColor(img_input, HSV, COLOR_RGB2HSV);
+        frame1 = img_input.clone();
 
-        img_input.copyTo(Red);
-        //int r = 0;
-        //putText(frame, "rows : " + r, Point(10, 10), 5, 3, Scalar(0, 255, 0), 2);
+        //resize(frame1, frame1, Size(400, 300));
 
+        Rect Roi(Point(frame1.cols / 6, 0), Point(5 * frame1.cols / 6, frame1.rows / 2));
+        frame = frame1(Roi);
+        matOutput = img_result(Roi);
 
-        Mat Red_Img, Green_Img, Yellow_Img;
+        cvtColor(frame, gray, CV_BGR2GRAY);
+        Mat HSV(Roi.size(), CV_8U);
+        cvtColor(frame, HSV, CV_BGR2HSV);
 
-        Mat HSV_Roi = HSV(Rect(1 * Red.cols / 6, 0, 5 * Red.cols / 6, 1 * Red.rows / 2));
+        Mat red, red1, red2, yellow, green, bin, bin_erode, bin_dilate, black, afterBlack;
 
-        Mat Roi = img_input(Rect(1 * Red.cols / 6, 0, 5 * Red.cols / 6, 1 * Red.rows / 2));
+        //Morph operation 모폴로지 연산
+        inRange(HSV, Scalar(0, 0, 80), Scalar(180, 255, 255), bin);
+        Mat RectKernel = getStructuringElement(MORPH_RECT, Size(3, 3));
 
+        erode(bin, bin_erode, RectKernel, Point(-1, -1), 1);
+        dilate(bin, bin_dilate, RectKernel, Point(-1, -1), 1);
 
-        Mat red;
-        Mat red1(Roi.size(), Roi.type());
-        Mat red2(Roi.size(), Roi.type());
-        Mat green(Roi.size(), Roi.type());
-        Mat yellow(Roi.size(), Roi.type());
+        inRange(HSV, Scalar(0, 0, 0), Scalar(180, 255, 40), black);
+
+        black.copyTo(afterBlack);
+        afterBlack = Scalar(0);
+
+        Mat rectKernel = getStructuringElement(MORPH_RECT, Size(3, 3));
+
+        morphologyEx(black, black, MORPH_CLOSE, rectKernel, Point(-1, -1), 2);
+
+        //블랍 레이블링
+        CvBlob blobBlack; // Blob Lebeling
+        CBlobLabelingRobit imgLabelingBlack(black, 20, afterBlack.cols / 5, afterBlack.rows / 8);
+
+        imgLabelingBlack.doLabeling();
+
+        for (int i = 0; i < imgLabelingBlack.m_nBlobs; i++)
+        {
+            rectangle(afterBlack, imgLabelingBlack.m_recBlobs[i], Scalar(255), 1);
+        }
+        afterBlack.copyTo(afterBlack);
 
         //red
-        cv::inRange(HSV_Roi, cv::Scalar(0, 80, 80, 0), cv::Scalar(20, 255, 160, 0), red1);
-        cv::inRange(HSV_Roi, cv::Scalar(150, 80, 80, 0), cv::Scalar(180, 255, 160, 0), red2);
+        inRange(HSV, Scalar(0, 100, 50), Scalar(14, 255, 255), red1);
+        inRange(HSV, Scalar(162, 100, 50), Scalar(180, 255, 255), red2);
         red = red1 | red2;
 
         //yellow
-        cv::inRange(HSV_Roi, cv::Scalar(90, 110, 100, 0), cv::Scalar(120, 255, 180, 0), yellow);
+        inRange(HSV, Scalar(20, 150, 120, 0), Scalar(28, 255, 255, 0), yellow);
 
         //green
-        cv::inRange(HSV_Roi, cv::Scalar(33, 80, 80, 0), cv::Scalar(96, 255, 160, 0), green);
+        inRange(HSV, Scalar(70, 50, 50, 0), Scalar(98, 255, 255, 0), green);
 
+        //black
+        //inRange(HSV, Scalar(0, 0, 50), Scalar(180, 255, 255), trafficLight);
 
-        Mat red_canny, green_canny, yellow_canny;
+        Mat YCrCb;
+        Mat Y_red = HSV, Y_yellow = HSV, Y_green = HSV;
 
-        blur(green, green_canny, Size(3, 3));
-        Canny(green_canny, green_canny, 125, 125 * 3, 3);
+        cvtColor(frame, YCrCb, CV_RGB2YCrCb);
 
+        //red
+        inRange(YCrCb, Scalar(0, 70, 170), Scalar(190, 150, 240), Y_red);
 
-        GaussianBlur(green, green, Size(3, 3), 2, 2);
-        Mat mask = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3), cv::Point(1, 1));
-        morphologyEx(green, green, cv::MorphTypes::MORPH_CLOSE, mask);
-        vector<Vec3f> circles_g;
-        vector<Vec3f> circles_g1;
-        HoughCircles(green_canny, circles_g, CV_HOUGH_GRADIENT, 2, img_input.rows / 4, 20, 10,
-                     img_input.rows / 150, img_input.rows / 20);
-        HoughCircles(green, circles_g1, CV_HOUGH_GRADIENT, 2, img_input.rows / 4, 20, 10,
-                     img_input.rows / 150, img_input.rows / 20);
+        //yellow
+        inRange(YCrCb, Scalar(0, 69, 180), Scalar(170, 145, 250), Y_yellow);
 
+        //green
+        inRange(YCrCb, Scalar(120, 100, 50), Scalar(255, 160, 180), Y_green);
 
-        for (int i = 0; i < circles_g.size(); i++) {
-            Point center(cvRound(circles_g[i][0]), cvRound(circles_g[i][1]));
-            int radius = cvRound(circles_g[i][2]);
-            bool isTrafficLight = false;
-            double color = 0.0;
-            for (int w = 0; w < radius * 4; w++) {
-                for (int h = 0; h < radius * 1.2; h++) {
-                    int x, y;
-                    if (center.x - radius - w <= 0) {
-                        x = 0;
-                    } else {
-                        x = center.x - radius - w;
-                    }
-                    if (center.y - 0.6 * radius + h <= 0) {
-                        y = 0;
-                    } else if (center.y - 0.6 * radius + h >= HSV.rows) {
-                        y = HSV_Roi.rows;
-                    } else {
-                        y = center.y - 0.6 * radius + h;
-                    }
-                    if (HSV_Roi.at<Vec3b>(y, x)[2] < 80 && HSV_Roi.at<Vec3b>(y, x)[1] < 80)
-                        color++;
+        Mat AndRed, AndYellow, AndGreen;
+
+        AndRed = red & Y_red;
+        AndYellow = yellow & Y_yellow;
+        AndGreen = green & Y_green;
+
+        Mat R, G, set;
+        Mat filterR, filterG;
+        frame.copyTo(R);
+        frame.copyTo(G);
+        frame.copyTo(set);
+
+        vector<Vec3b> rgb;
+        //split(set, rgb);
+        //set.setTo(rgb[0] - rgb[1] + rgb[0] - rgb[2] - (rgb[1] - rgb[2]));
+
+        for (int i = 0; i < frame.cols; i++)
+        {
+            for (int j = 0; j < frame.rows; j++)
+            {
+                int r = frame.at<Vec3b>(j, i)[2];
+                int g = frame.at<Vec3b>(j, i)[1];
+                int b = frame.at<Vec3b>(j, i)[0];
+
+                if (r - g + r - b - abs(g - b) <= 0)
+                {
+                    R.at<Vec3b>(j, i)[2] = 0;
                 }
-            }
-            if (color / double(radius * radius * 4.8) > 0.7) {
-                isTrafficLight = true;
-                circle(Roi, center, 3, Scalar(0, 255, 0), -1, 8, 0);
-                circle(Roi, center, radius, Scalar(0, 255, 0), 3, 8, 0);
-
-                listLight.push_back( { { center.x + (Red.cols / 6), center.y }, PATRONUS_LIGHT_TYPE_GREEN } );
-            }
-            rectangle(Roi, Point(center.x - 2 * radius, center.y - 0.6 * radius),
-                      Point(center.x - 2 * radius - radius * 4, center.y + 1.2 * radius),
-                      Scalar(0, 0, 0), 3);
-            //circle(Roi, center, radius, Scalar(0, 0, 0), 3, 8, 0);
-
-        }
-        for (int i = 0; i < circles_g1.size(); i++) {
-            Point center(cvRound(circles_g1[i][0]), cvRound(circles_g1[i][1]));
-            int radius = cvRound(circles_g1[i][2]);
-            bool isTrafficLight = false;
-            double color = 0.0;
-            for (int w = 0; w < radius * 4; w++) {
-                for (int h = 0; h < 1.2 * radius; h++) {
-                    int x, y;
-                    if (center.x - 2 * radius - w <= 1) {
-                        x = 1;
-                    } else {
-                        x = center.x - 2 * radius - w;
-                    }
-                    if (center.y - 0.6 * radius + h <= 1) {
-                        y = 1;
-                    } else if (center.y - 0.6 * radius + h >= HSV.rows) {
-                        y = HSV_Roi.rows - 1;
-                    } else {
-                        y = center.y - 0.6 * radius + h;
-                    }
-                    if (HSV_Roi.at<Vec3b>(y, x)[2] < 80 && HSV_Roi.at<Vec3b>(y, x)[1] < 80)
-                        color++;
+                else if (r - g + r - b - abs(g - b) >= 255)
+                {
+                    R.at<Vec3b>(j, i)[2] = 255;
                 }
-            }
-            rectangle(Roi, Point(center.x - 2 * radius, center.y - 0.6 * radius),
-                      Point(center.x - 2 * radius - radius * 4, center.y + 1.2 * radius),
-                      Scalar(0, 255, 0), 3);
-            if (color / double(radius * radius * 4.8) > 0.7) {
-                isTrafficLight = true;
-                //circle(Roi, center, 3, Scalar(0, 255, 0), -1, 8, 0);
-                circle(Roi, center, radius, Scalar(0, 255, 0), 3, 8, 0);
-                listLight.push_back( { { center.x + (Red.cols / 6), center.y },  PATRONUS_LIGHT_TYPE_GREEN } );
-            }
-            //circle(Roi, center, radius, Scalar(0, 255, 0), 3, 8, 0);
-        }
-        blur(red, red_canny, Size(3, 3));
-        Canny(red_canny, red_canny, 125, 125 * 3, 3);
-        vector<Vec3f> circles_r;
-        vector<Vec3f> circles_r1;
-        HoughCircles(red_canny, circles_r, CV_HOUGH_GRADIENT, 2, img_input.rows / 4, 20, 10,
-                     img_input.rows / 150, img_input.rows / 20);
-        HoughCircles(red, circles_r1, CV_HOUGH_GRADIENT, 2, img_input.rows / 4, 20, 10,
-                     img_input.rows / 150, img_input.rows / 20);
-        for (int i = 0; i < circles_r.size(); i++) {
-            Point center(cvRound(circles_r[i][0]), cvRound(circles_r[i][1]));
-            int radius = cvRound(circles_r[i][2]);
-            bool isTrafficLight = false;
-            double color = 0.0;
-            for (int w = 0; w < radius * 4; w++) {
-                for (int h = 0; h < radius * 1.4; h++) {
-                    int x, y;
-                    if (center.x + 2 * radius + w >= HSV.cols) {
-                        x = HSV_Roi.cols - 1;
-                    } else {
-                        x = center.x + 2 * radius + w;
-                    }
-                    if (center.y - 0.7 * radius + h <= 1) {
-                        y = 1;
-                    } else if (center.y - 0.7 * radius + h >= HSV.rows) {
-                        y = HSV_Roi.rows - 1;
-                    } else {
-                        y = center.y - 0.7 * radius + h;
-                    }
-                    if (HSV_Roi.at<Vec3b>(y, x)[2] < 80 && HSV_Roi.at<Vec3b>(y, x)[1] < 80)
-                        color++;
+                else
+                {
+                    R.at<Vec3b>(j, i)[2] = r - g + r - b - abs(g - b);
                 }
+                R.at<Vec3b>(j, i)[1] = 0;
+                R.at<Vec3b>(j, i)[0] = 0;
             }
-            if (color / double(radius * radius * 6) > 0.7) {
-                isTrafficLight = true;
-                circle(Roi, center, 3, Scalar(255, 0, 0), -1, 8, 0);
-                circle(Roi, center, radius, Scalar(255, 0, 0), 3, 8, 0);
-                listLight.push_back( { { center.x + (Red.cols / 6), center.y },  PATRONUS_LIGHT_TYPE_RED } );
-            }
-            rectangle(Roi, Point(center.x + 2 * radius, center.y - 0.7 * radius),
-                      Point(center.x + 6 * radius, center.y + 0.7 * radius), Scalar(0, 0, 0), 3);
-
-
-        }
-        for (int i = 0; i < circles_r1.size(); i++) {
-            Point center(cvRound(circles_r1[i][0]), cvRound(circles_r1[i][1]));
-            int radius = cvRound(circles_r1[i][2]);
-            bool isTrafficLight = false;
-            double color = 0.0;
-            for (int w = 0; w < radius * 4; w++) {
-                for (int h = 0; h < radius * 1.4; h++) {
-                    int x, y;
-                    if (center.x + 2 * radius + w >= HSV.cols) {
-                        x = HSV_Roi.cols - 1;
-                    } else {
-                        x = center.x + 2 * radius + w;
-                    }
-                    if (center.y - 0.7 * radius + h <= 1) {
-                        y = 1;
-                    } else if (center.y - 0.7 * radius + h >= HSV.rows) {
-                        y = HSV_Roi.rows - 1;
-                    } else {
-                        y = center.y - 0.7 * radius + h;
-                    }
-                    if (HSV_Roi.at<Vec3b>(y, x)[2] < 80 && HSV_Roi.at<Vec3b>(y, x)[1] < 80)
-                        color++;
-                }
-            }
-            if (color / double(radius * radius * 6) > 0.7) {
-                isTrafficLight = true;
-                circle(Roi, center, 3, Scalar(255, 0, 0), -1, 8, 0);
-                circle(Roi, center, radius, Scalar(255, 0, 0), 3, 8, 0);
-
-                listLight.push_back( { { center.x + (Red.cols / 6), center.y },  PATRONUS_LIGHT_TYPE_RED } );
-            }
-            rectangle(Roi, Point(center.x + 2 * radius, center.y - 0.7 * radius),
-                      Point(center.x + 6 * radius, center.y + 0.7 * radius), Scalar(255, 0, 0), 3);
         }
 
-        blur(yellow, yellow_canny, Size(3, 3));
-        Canny(yellow_canny, yellow_canny, 125, 125 * 3, 3);
-        vector<Vec3f> circles_y;
-        vector<Vec3f> circles_y1;
-        HoughCircles(yellow_canny, circles_r, CV_HOUGH_GRADIENT, 2, red_canny.rows / 4, 20, 10,
-                     red_canny.rows / 60, red_canny.rows / 20);
-        HoughCircles(yellow, circles_r1, CV_HOUGH_GRADIENT, 2, red_canny.rows / 4, 20, 10,
-                     red_canny.rows / 60, red_canny.rows / 20);
-        for (int i = 0; i < circles_y.size(); i++) {
-            Point center(cvRound(circles_y[i][0]), cvRound(circles_y[i][1]));
-            int radius = cvRound(circles_y[i][2]);
-            bool isTrafficLight = false;
-            double color = 0.0;
-            for (int w = 0; w < radius * 2; w++) {
-                for (int h = 0; h < radius * 1.4; h++) {
-                    if (HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x + radius + w)[2] < 80 &&
-                        HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x + radius + w)[1] < 80)
-                        color++;
-                    if (HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x - radius - w)[2] < 80 &&
-                        HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x - radius - w)[1] < 80)
-                        color++;
+        for (int i = 0; i < frame.cols; i++)
+        {
+            for (int j = 0; j < frame.rows; j++)
+            {
+                int r = frame.at<Vec3b>(j, i)[2];
+                int g = frame.at<Vec3b>(j, i)[1];
+                int b = frame.at<Vec3b>(j, i)[0];
+                if (r < 200 && g > 200 && b > 200)
+                {
+                    b = 150;
                 }
-            }
-            if (color / double(radius * radius * 6) > 0.8) {
-                isTrafficLight = true;
-                //circle(image, center, 3, Scalar(0, 255, 255), -1, 8, 0);
-                circle(Roi, center, radius, Scalar(0, 255, 255), 3, 8, 0);
 
-                listLight.push_back( { { center.x + (Red.cols / 6), center.y }, PATRONUS_LIGHT_TYPE_YELLOW } );
-            }
-            //circle(Roi, center, radius, Scalar(0, 255, 255), 3, 8, 0);
-        }
-        for (int i = 0; i < circles_y1.size(); i++) {
-            Point center(cvRound(circles_y1[i][0]), cvRound(circles_y1[i][1]));
-            int radius = cvRound(circles_y1[i][2]);
-            bool isTrafficLight = false;
-            double color = 0.0;
-            for (int w = 0; w < radius * 2; w++) {
-                for (int h = 0; h < radius * 1.4; h++) {
-                    if (HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x + radius + w)[2] < 80 &&
-                        HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x + radius + w)[1] < 80)
-                        color++;
-                    if (HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x - radius - w)[2] < 80 &&
-                        HSV.at<Vec3b>(center.y - 0.7 * radius + h, center.x - radius - w)[1] < 80)
-                        color++;
+                if ((g - r + (g - b) - abs(r - b)) <= 0)
+                {
+                    G.at<Vec3b>(j, i)[1] = 0;
                 }
+                else if ((g - r + (g - b) - abs(r - b)) >= 255)
+                {
+                    G.at<Vec3b>(j, i)[1] = 255;
+                }
+                else
+                {
+                    G.at<Vec3b>(j, i)[1] = (g - r + (g - b) - abs(r - b));
+                }
+                G.at<Vec3b>(j, i)[2] = 0;
+                G.at<Vec3b>(j, i)[0] = 0;
             }
-            if (color / double(radius * radius * 6) > 0.8) {
-                isTrafficLight = true;
-                //circle(image, center, 3, Scalar(0, 255, 255), -1, 8, 0);
-                circle(Roi, center, radius, Scalar(0, 255, 255), 3, 8, 0);
-
-                listLight.push_back( { { center.x + (Red.cols / 6), center.y }, PATRONUS_LIGHT_TYPE_YELLOW } );
-            }
-            //circle(Roi, center, radius, Scalar(0, 255, 255), 3, 8, 0);
         }
 
-        //img_input.copyTo(img_result);
+        inRange(R, Scalar(0, 0, 120), Scalar(1, 1, 255), filterR);
+        inRange(G, Scalar(0, 20, 0), Scalar(1, 255, 1), filterG);
+
+        filterR = filterR & AndRed;
+        filterG = filterG & AndGreen;
+
+        Mat beforeErosion_R, beforeErosion_G;
+        Mat ellipseKernel = getStructuringElement(MORPH_ELLIPSE, Size(3, 3));
+
+        filterR.copyTo(beforeErosion_R);
+        filterG.copyTo(beforeErosion_G);
+
+        dilate(filterR, filterR, ellipseKernel, Point(-1, -1), 3);
+        dilate(filterG, filterG, ellipseKernel, Point(-1, -1), 3);
+
+        CvBlob blobR; // Blob Lebeling
+        CBlobLabelingRobit imgLabelingR(filterR, 20, frame.cols, frame.rows);
+
+        imgLabelingR.doLabeling();
+
+        for (int i = 0; i<imgLabelingR.m_nBlobs; i++)
+        {
+            int width, height;
+            width = imgLabelingR.m_recBlobs[i].width;
+            height = imgLabelingR.m_recBlobs[i].height;
+            float light_avg = 0, range_avg = 0, black_avg = 0;
+
+            if (width < frame.cols / 5 && height < frame.rows < 8) {
+                if (imgLabelingR.m_recBlobs[i].x - 5 > 0 && imgLabelingR.m_recBlobs[i].x + 6 * width < frame.cols && imgLabelingR.m_recBlobs[i].y - 5 > 0 &&
+                        imgLabelingR.m_recBlobs[i].y < frame.rows)
+                {
+                    rectangle(matOutput, imgLabelingR.m_recBlobs[i], Scalar(0, 255, 255), 2);
+                    for (int j = imgLabelingR.m_recBlobs[i].x; j < imgLabelingR.m_recBlobs[i].x + width; j++)
+                    {
+                        for (int k = imgLabelingR.m_recBlobs[i].y; k < imgLabelingR.m_recBlobs[i].y + height; k++)
+                        {
+                            light_avg += bin_dilate.at<uchar>(k, j);
+                        }
+                    }
+                    light_avg = light_avg / (float)(width * height);
+
+                    for (int j = imgLabelingR.m_recBlobs[i].x + width; j < imgLabelingR.m_recBlobs[i].x + 4 * width; j++)
+                    {
+                        for (int k = imgLabelingR.m_recBlobs[i].y; k < imgLabelingR.m_recBlobs[i].y + height; k++)
+                        {
+                            range_avg += bin_erode.at<uchar>(k, j);
+                            //black_avg += black.at<uchar>(k, j);
+                        }
+                    }
+                    range_avg = range_avg / (float)((height - 4)* 2 * width);
+                    black_avg = black_avg / (float)((height - 4)* 2 * width);
+
+                }
+            }
+            if (light_avg > 0.9 * 255 && range_avg < 0.15 * 255)
+            {
+                rectangle(matOutput, Rect(imgLabelingR.m_recBlobs[i].x - 5, imgLabelingR.m_recBlobs[i].y - 5, height * 4.5, height + 10), Scalar(0, 0, 255), 2);
+            }
+        }
+
+
+
+        CBlobLabelingRobit imgLabelingG(filterG, 20, frame.cols, frame.rows);
+
+        imgLabelingG.doLabeling();
+
+        for (int i = 0; i<imgLabelingG.m_nBlobs; i++)
+        {
+            float width, height;
+            width = imgLabelingG.m_recBlobs[i].width;
+            height = imgLabelingG.m_recBlobs[i].height;
+
+            float light_avg = 0, range_avg = 0, black_avg = 0;
+
+            if (width < frame.cols / 5 && height < frame.rows / 8)
+            {
+                if (imgLabelingG.m_recBlobs[i].x - width * 3.5 > 0 && imgLabelingG.m_recBlobs[i].y - 5 > 0 &&
+                        imgLabelingG.m_recBlobs[i].x + 2.5 * width < frame.cols && imgLabelingG.m_recBlobs[i].y + height + 5 < frame.rows)
+                {
+                    rectangle(matOutput, imgLabelingG.m_recBlobs[i], Scalar(0, 255, 255), 2);
+                    for (int j = imgLabelingG.m_recBlobs[i].x; j < imgLabelingG.m_recBlobs[i].x + width; j++)
+                    {
+                        for (int k = imgLabelingG.m_recBlobs[i].y; k < imgLabelingG.m_recBlobs[i].y + height; k++)
+                        {
+                            light_avg += bin_dilate.at<uchar>(k, j);
+                        }
+                    }
+
+                    light_avg = light_avg / (float)(width * height);
+
+                    for (int j = imgLabelingG.m_recBlobs[i].x - 2 * width; j < imgLabelingG.m_recBlobs[i].x; j++)
+                    {
+                        for (int k = imgLabelingG.m_recBlobs[i].y; k < imgLabelingG.m_recBlobs[i].y + height; k++)
+                        {
+                            range_avg += bin_erode.at<uchar>(k, j);
+                            black_avg += black.at<uchar>(k, j);
+                        }
+                    }
+
+                    range_avg = range_avg / (float)((height) * width * 2);
+                    black_avg = black_avg / (float)((height) * width * 2);
+                }
+            }
+
+            if (light_avg > 0.75 * 255 && range_avg < 0.1 * 255)
+            {
+                rectangle(matOutput, Rect(imgLabelingG.m_recBlobs[i].x - height * 3, imgLabelingG.m_recBlobs[i].y - 5, height * 4.5, height + 10), Scalar(0, 255, 0), 2);
+            }
+        }
+
     }
 };

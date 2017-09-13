@@ -89,6 +89,9 @@ public class AlarmAdapter extends BaseAdapter {
             public void onClick(View v) {
                 AlarmData mData = mAlarmData.get(position);
                 mData.mChecked = holder.alarmCheck.isChecked();
+                holder.alarmText.setEnabled(mData.mEnabled);
+                holder.alarmTextDesc.setEnabled(mData.mEnabled);
+                holder.alarmCheck.setEnabled(mData.mEnabled);
             }
         });
 
@@ -98,19 +101,27 @@ public class AlarmAdapter extends BaseAdapter {
         holder.alarmTextDesc.setText(mData.mDesc);
         holder.alarmCheck.setVisibility(View.VISIBLE);
         holder.alarmCheck.setChecked(mData.mChecked);
+        holder.alarmText.setEnabled(mData.mEnabled);
+        holder.alarmTextDesc.setEnabled(mData.mEnabled);
+        holder.alarmCheck.setEnabled(mData.mEnabled);
 
         return convertView;
     }
 
-    public void addItem(String minfo, String desc, boolean checked) {
+    public void addItem(String minfo, String desc, boolean checked, boolean enable) {
         AlarmData addInfo = null;
         addInfo = new AlarmData();
 
         addInfo.minfo = minfo;
         addInfo.mDesc = desc;
         addInfo.mChecked = checked;
+        addInfo.mEnabled = enable;
 
         mAlarmData.add(addInfo);
+    }
+
+    public void setEnable(int position, boolean enable) {
+        mAlarmData.get(position).mEnabled = enable;
     }
 
     private class AlarmViewHolder {
@@ -124,5 +135,6 @@ public class AlarmAdapter extends BaseAdapter {
         public String minfo; // 체크박스 이름
         public String mDesc; // 체크박스 설명
         public boolean mChecked; // 체크 여부
+        public boolean mEnabled; // 사용 여부
     }
 }

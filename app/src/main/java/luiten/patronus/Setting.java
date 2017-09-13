@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.support.v4.app.NotificationCompatBase;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -20,6 +21,7 @@ import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +35,7 @@ public class Setting extends AppCompatActivity {
     private ListView alarmlistview = null;
     private AlarmAdapter alarmadapter = null;
     private ListView capture_lengthview = null;
-    private Capture_lengthAdapter capture_lengthadapter = null;
+    private AlarmAdapter capture_lengthadapter = null;
     private ListView resolutionlistview = null;
     private ResolutionAdapter resolutionadapter = null;
     private ListView sensitivitylistview = null;
@@ -103,7 +105,7 @@ public class Setting extends AppCompatActivity {
         alarmlistview.setAdapter(alarmadapter);
 
         capture_lengthview = (ListView)findViewById(R.id.set_listview_caplength);
-        capture_lengthadapter = new Capture_lengthAdapter(this);
+        capture_lengthadapter = new AlarmAdapter(this);
         capture_lengthview.setAdapter(capture_lengthadapter);
 
         resolutionlistview = (ListView)findViewById(R.id.set_listview_resolution);
@@ -122,14 +124,35 @@ public class Setting extends AppCompatActivity {
         recordadapter = new RecordAdapter(this);
         recordlistview.setAdapter(recordadapter);
 
-        alarmadapter.addItem("차선", "주행 중 차선을 5초 이상 밟고 있을 경우 알려줍니다.", settings.getBoolean("lane" , true));
-        alarmadapter.addItem("앞차간 거리", "앞차와의 거리가 속도에 비해 너무 가까울 경우 알려줍니다.", settings.getBoolean("distance", true));
-        alarmadapter.addItem("신호 위반", "신호 위반을 한 경우 경고합니다.", settings.getBoolean("signal", true));
-        alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true));
-        alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true));
+        alarmadapter.addItem("차선", "주행 중 차선을 5초 이상 밟고 있을 경우 알려줍니다.", settings.getBoolean("lane" , true), true);
+        alarmadapter.addItem("앞차간 거리", "앞차와의 거리가 속도에 비해 너무 가까울 경우 알려줍니다.", settings.getBoolean("distance", true), true);
+        alarmadapter.addItem("신호 위반", "신호 위반을 한 경우 경고합니다.", settings.getBoolean("signal", true), true);
+        alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true), true);
+        alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true), true);
 
-        capture_lengthadapter.addItem("전면 카메라", settings.getBoolean("frontcamera", false));
-        capture_lengthadapter.addItem("후면 카메라", settings.getBoolean("backcamera", true));
+        //--------------------------------------------------------------------------//
+        // 듀얼 카메라 지원 확인
+        //--------------------------------------------------------------------------//
+        SharedPreferences.Editor editor = settings.edit();
+
+        Camera mBackCamera = getCameraInstance(0);
+        Camera mFrontCamera = getCameraInstance(1);
+
+        if (mBackCamera == null || mFrontCamera == null)
+        {
+            //Toast.makeText(getApplicationContext(), "듀얼 카메라를 지원하지 않습니다.", Toast.LENGTH_LONG).show();
+
+            editor.putBoolean("dualcamera", false);
+            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.\n듀얼 카메라를 지원하지 않아 기능을 사용할 수 없습니다.", false, false);
+        } else {
+            editor.putBoolean("dualcamera", true);
+            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.", settings.getBoolean("frontcamera", false), true);
+        }
+
+        if (mBackCamera != null) mBackCamera.release();
+        if (mFrontCamera != null) mFrontCamera.release();
+
+        capture_lengthadapter.addItem("후면 카메라", "도로 방향의 카메라를 동작시킵니다.", settings.getBoolean("backcamera", true), true);
 
         // 지원 해상도 알아내기
         Camera camera = Camera.open();
@@ -279,5 +302,17 @@ public class Setting extends AppCompatActivity {
         SetSettings(9, strResolution.get(resolutionadapter.GetChecked())[1]); // Video Height
 
         super.onDestroy();
+    }
+
+    public static Camera getCameraInstance(int cameraId) {
+        Camera c = null;
+        try {
+            c = Camera.open(cameraId); // attempt to get a Camera instance
+            Log.d("Splash", "Got camera " + cameraId);
+        } catch (Exception e) {
+            // Camera is not available (in use or does not exist)
+            Log.e("Splash", "Camera " + cameraId + " not available! " + e.toString());
+        }
+        return c; // returns null if camera is unavailable
     }
 }

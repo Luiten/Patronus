@@ -49,6 +49,7 @@
             android:theme="@style/AppTheme.Dialog"/>
         <activity android:name=".RecordDrive"/>
         <activity android:name=".Setting"/>
+        <activity android:name=".Warning"/>
 
         <activity android:name=".SplashActivity"
             android:theme="@style/SplashTheme"
@@ -60,5 +61,4 @@
             </intent-filter>
         </activity>
     </application>
-
 </manifest>

@@ -4,7 +4,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/opencv.hpp>
 #include <fstream>
-#include "IPM.h"
+#include "lib/IPM.h"
 
 using namespace cv;
 using namespace std;
@@ -150,7 +150,7 @@ public:
         Mat matHSV;
         Mat matBinTtack;
         Mat matCanny;
-        vector<float> vecDist;
+        //vector<float> vecDist;
         int nDetect = 0;
         Mat matRoadTarget, matRoadBin;
 
@@ -459,7 +459,8 @@ public:
 
                                 float tempDist = 0.2 * (dstPoints[0].y - maxpt1.y);
 
-                                vecDist.push_back(tempDist);
+                                //vecDist.push_back(tempDist);
+                                listCar.push_back( {Point(), Point(), tempDist} );
 
                                 stringstream text;
                                 text << tempDist;
@@ -491,7 +492,7 @@ public:
         vFoundResult.clear();
         origPoints.clear();
         dstPoints.clear();
-        vecDist.clear();
+        //vecDist.clear();
 
         //time_end = clock();
         //SaveLog((time_end - time_begin) * 1000 / CLOCKS_PER_SEC, nDetect, vecDist, fLatitude, fLongitude);

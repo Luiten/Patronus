@@ -146,7 +146,7 @@ public class RecordActivity extends AppCompatActivity {
                         startActivity(intent);
                         break;
 
-                    // 운전 점수
+                    // 운전 점수 - 현재는 운전 끝을 의미
                     case 9:
                         intent = new Intent(getApplicationContext(), RecordDrive.class);
                         startActivity(intent);
@@ -164,6 +164,9 @@ public class RecordActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
+    //------------------------------------------------------------------------------------------------//
+    // 로그를 읽어서 뷰에 표시
+    //------------------------------------------------------------------------------------------------//
     private void setArrayData() {
         ArrayList<String> arrChildTime = new ArrayList<String>();
         ArrayList<String> arrChildDesc = new ArrayList<String>();

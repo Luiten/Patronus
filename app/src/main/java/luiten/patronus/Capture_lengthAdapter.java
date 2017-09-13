@@ -46,7 +46,7 @@ public class Capture_lengthAdapter extends BaseAdapter {
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
         final Cap_lengthViewHolder holder;
-        if(convertView == null){
+        if(convertView == null) {
             holder = new Cap_lengthViewHolder();
 
             LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -68,6 +68,8 @@ public class Capture_lengthAdapter extends BaseAdapter {
             public void onClick(View v) {
                 Cap_lengthData mData = mCap_length.get(position);
                 mData.mChecked = holder.captureCheck.isChecked();
+                holder.captureText.setEnabled(mData.mEnabled);
+                holder.captureCheck.setEnabled(mData.mEnabled);
             }
         });
 
@@ -75,18 +77,25 @@ public class Capture_lengthAdapter extends BaseAdapter {
 
         holder.captureText.setText(mData.minfo);
         holder.captureCheck.setVisibility(View.VISIBLE);
+        holder.captureText.setEnabled(mData.mEnabled);
+        holder.captureCheck.setEnabled(mData.mEnabled);
         holder.captureCheck.setChecked(mData.mChecked);
 
         return convertView;
     }
 
-    public void addItem(String minfo, boolean checked) {
+    public void addItem(String minfo, boolean checked, boolean enable) {
         Cap_lengthData addInfo = null;
         addInfo = new Cap_lengthData();
         addInfo.minfo = minfo;
         addInfo.mChecked = checked;
+        addInfo.mEnabled = enable;
 
         mCap_length.add(addInfo);
+    }
+
+    public void setEnable(int position, boolean enable) {
+        mCap_length.get(position).mEnabled = enable;
     }
 
     private class Cap_lengthViewHolder {
@@ -98,5 +107,6 @@ public class Capture_lengthAdapter extends BaseAdapter {
 
         public String minfo; // 체크박스 이름
         public boolean mChecked; // 체크 여부
+        public boolean mEnabled; // 사용 여부
     }
 }
