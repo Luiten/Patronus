@@ -46,7 +46,7 @@ public class AlarmAdapter extends BaseAdapter {
 
     public boolean isChecked(int position) {
         return mAlarmData.get(position).mChecked;
-    } //리스트뷰 포지션의 개수가 배열의 수만큼 나오게한다
+    }
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {

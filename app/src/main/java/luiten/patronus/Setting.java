@@ -34,6 +34,8 @@ public class Setting extends AppCompatActivity {
 
     private ListView alarmlistview = null;
     private AlarmAdapter alarmadapter = null;
+    private ListView warninglistview = null;
+    private WarningAdapter warningadapter = null;
     private ListView capture_lengthview = null;
     private AlarmAdapter capture_lengthadapter = null;
     private ListView resolutionlistview = null;
@@ -104,6 +106,10 @@ public class Setting extends AppCompatActivity {
         alarmadapter = new AlarmAdapter(this);
         alarmlistview.setAdapter(alarmadapter);
 
+        warninglistview = (ListView)findViewById(R.id.set_listview_warning);
+        warningadapter = new WarningAdapter(this);
+        warninglistview.setAdapter(warningadapter);
+
         capture_lengthview = (ListView)findViewById(R.id.set_listview_caplength);
         capture_lengthadapter = new AlarmAdapter(this);
         capture_lengthview.setAdapter(capture_lengthadapter);
@@ -129,6 +135,10 @@ public class Setting extends AppCompatActivity {
         alarmadapter.addItem("신호 위반", "신호 위반을 한 경우 경고합니다.", settings.getBoolean("signal", true), true);
         alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true), true);
         alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true), true);
+
+        warningadapter.addItem("tts", "음성 메세지 경고 입니다.");
+        warningadapter.addItem("진동", "위반 했을 시 진동 입니다.");
+        warningadapter.addItem("무음", "무음 입니다.");
 
         //--------------------------------------------------------------------------//
         // 듀얼 카메라 지원 확인
@@ -187,6 +197,7 @@ public class Setting extends AppCompatActivity {
         recordadapter.addItem("로그");
 
         setListViewHeightBasedOnChildren(alarmlistview);
+        setListViewHeightBasedOnChildren(warninglistview);
         setListViewHeightBasedOnChildren(capture_lengthview);
         setListViewHeightBasedOnChildren(resolutionlistview);
         setListViewHeightBasedOnChildren(sensitivitylistview);

@@ -42,10 +42,33 @@
                 android:textSize="10dp"/>
 
             <TextView
-                android:id="@+id/set_text_caplength"
+                android:id="@+id/set_text_warning"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_below="@+id/margin01"
+                android:text="경고"
+                android:gravity="center"
+                android:textSize="20dp" />
+
+            <ListView
+                android:id="@+id/set_listview_warning"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorBackground"
+                android:layout_below="@+id/set_text_warning" />
+
+            <TextView
+                android:id = "@+id/margin02"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/set_listview_warning"
+                android:textSize="10dp"/>
+
+            <TextView
+                android:id="@+id/set_text_caplength"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:layout_below="@+id/margin02"
                 android:text="녹화"
                 android:gravity="center"
                 android:textSize="20dp" />
@@ -104,7 +127,7 @@
                 android:layout_below="@+id/set_layout_capseek" />
 
             <TextView
-                android:id = "@+id/margin02"
+                android:id = "@+id/margin03"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/set_listview_caplength"
@@ -114,7 +137,7 @@
                 android:id="@+id/set_text_resolution"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_below="@+id/margin02"
+                android:layout_below="@+id/margin03"
                 android:text="동영상 크기"
                 android:gravity="center"
                 android:textSize="20dp" />
@@ -127,10 +150,17 @@
                 android:layout_below="@+id/set_text_resolution" />
 
             <TextView
+                android:id = "@+id/margin04"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/set_listview_resolution"
+                android:textSize="10dp"/>
+
+            <TextView
                 android:id="@+id/set_text_sensitivity"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_below="@+id/margin03"
+                android:layout_below="@+id/margin04"
                 android:text="충격 민감도"
                 android:gravity="center"
                 android:textSize="20dp" />
@@ -189,17 +219,17 @@
                 android:layout_below="@+id/set_layout_sensiseek" />
 
             <TextView
-                android:id = "@+id/margin03"
+                android:id = "@+id/margin05"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/set_listview_resolution"
+                android:layout_below="@+id/set_listview_sensitivity"
                 android:textSize="10dp"/>
 
             <TextView
                 android:id="@+id/set_text_standard"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_below="@+id/margin04"
+                android:layout_below="@+id/margin05"
                 android:text="기준점"
                 android:gravity="center"
                 android:textSize="20dp" />
@@ -212,14 +242,7 @@
                 android:layout_below="@+id/set_text_standard" />
 
             <TextView
-                android:id = "@+id/margin04"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/set_listview_sensitivity"
-                android:textSize="10dp"/>
-
-            <TextView
-                android:id = "@+id/margin05"
+                android:id = "@+id/margin06"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_below="@+id/set_listview_standard"
@@ -229,7 +252,7 @@
                 android:id="@+id/set_text_record"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:layout_below="@+id/margin05"
+                android:layout_below="@+id/margin06"
                 android:text="기록"
                 android:gravity="center"
                 android:textSize="20dp" />

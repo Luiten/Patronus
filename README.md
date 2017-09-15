@@ -15,7 +15,10 @@ set(pathProject "This Project Path")
 #### Problem
 1. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제(스냅드래곤 800대 AP는 듀얼카메라 지원)
 ---
-
+#### 0.92.1 (2017-09-16)
+1. setting.java 파일에 WarningAdapter와 Warning 리스트뷰 추가
+2. warning_item.xml 추가 및 setting.xml에 warning 리스트뷰 추가
+---
 #### 0.92.0 (2017-09-13)
 1. 신호등 인식 추가
 2. TTS 경고 추가
