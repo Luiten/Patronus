@@ -1,11 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorAccent" >
 
-<item android:drawable="@android:color/holo_blue_bright" />
+    <ImageView
+        android:id="@+id/setting_splashimg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:src="@drawable/logo"/>
 
-<item>
-    <bitmap android:src="@mipmap/ic_launcher_round"
-        android:gravity="center" />
-</item>
+</RelativeLayout>
 
-</layer-list>
+<!--<?xml version="1.0" encoding="utf-8"?>
+    <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item android:drawable="@color/colorAccent" />
+
+    <item>
+        <bitmap android:src="@drawable/logo"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:gravity="center" />
+    </item>
+
+</layer-list>-->
+

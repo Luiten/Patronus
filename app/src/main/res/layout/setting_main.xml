@@ -22,7 +22,7 @@
                 android:id="@+id/set_text_alarm"
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
-                android:text="알림"
+                android:text="경고"
                 android:gravity="center"
                 android:textSize="20dp" />
 
@@ -46,7 +46,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_below="@+id/margin01"
-                android:text="경고"
+                android:text="알림"
                 android:gravity="center"
                 android:textSize="20dp" />
 
@@ -111,7 +111,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="0.7"
                     android:textSize="15dp"
-                    android:textColor="@color/colorAccent"
+                    android:textColor="@color/colorPrimary"
                     android:textAlignment="gravity"
                     android:gravity="right"
                     android:layout_marginTop="20dp"
@@ -202,7 +202,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.7"
-                    android:textColor="@color/colorAccent"
+                    android:textColor="@color/colorPrimary"
                     android:textSize="15dp"
                     android:textAlignment="gravity"
                     android:gravity="right"
@@ -261,7 +261,6 @@
                 android:id="@+id/set_listview_record"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
                 android:background="@color/colorBackground"
                 android:layout_below="@+id/set_text_record" />
         </RelativeLayout>

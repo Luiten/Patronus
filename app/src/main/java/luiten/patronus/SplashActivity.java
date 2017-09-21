@@ -7,6 +7,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.BitmapDrawable;
 import android.hardware.Camera;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -17,8 +18,13 @@ import android.os.Message;
 import android.os.PowerManager;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import java.io.*;
@@ -124,6 +130,26 @@ public class SplashActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         //setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 
+        setContentView(R.drawable.splash);
+
+        //--------------------------------------------------------------------------//
+        // 스플래시 이미지
+        //--------------------------------------------------------------------------//
+        final ImageView imageView = (ImageView) findViewById(R.id.setting_splashimg);
+        // dpi와 density 구하는 방법
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        this.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+
+        // 변경하고 싶은 레이아웃의 파라미터 값을 가져 옴
+        RelativeLayout.LayoutParams ImageParams = (RelativeLayout.LayoutParams) imageView.getLayoutParams();
+
+        ImageParams.width = outMetrics.widthPixels / 5;
+        ImageParams.height = outMetrics.heightPixels / 5;
+
+        // 변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅
+        imageView.setLayoutParams(ImageParams);
+
+
         if (!hasPermissions(PERMISSIONS)) { //퍼미션 허가를 했었는지 여부를 확인
             requestNecessaryPermissions(PERMISSIONS); //퍼미션 허가안되어 있다면 사용자에게 요청
         } else {
@@ -220,6 +246,10 @@ public class SplashActivity extends AppCompatActivity {
 
         if (progressBar != null)
             progressBar.dismiss();
+
+        final ImageView imageView = (ImageView) findViewById(R.id.setting_splashimg);
+        //((BitmapDrawable)imageView.getDrawable()).getBitmap().recycle();
+        imageView.setImageDrawable(null);
     }
 
     private void StartNextActivity()
@@ -234,6 +264,7 @@ public class SplashActivity extends AppCompatActivity {
         }
         // 없으면 세팅 액티비티
         else {
+            Toast.makeText(getApplicationContext(),"기준점 파일이 존재하지 않습니다.\n기준점을 촬영해 주세요.",Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
             intent = new Intent(getApplicationContext(), Setting.class);

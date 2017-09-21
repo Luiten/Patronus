@@ -2,7 +2,15 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/colorBackgroundDark"
     android:id="@+id/main_layout">
+
+    <ImageView
+        android:id="@+id/main_image_background"
+        android:layout_centerInParent="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/logo"/>
 
     <org.opencv.android.JavaCameraView
         android:layout_width="100dp"
@@ -23,7 +31,7 @@
 
         <ImageView
             android:id="@+id/main_image_warning"
-            android:layout_width="300dp"
+            android:layout_width="400dp"
             android:layout_height="200dp"
             android:layout_centerInParent="true"
             android:background="@drawable/warning" />
@@ -44,34 +52,31 @@
         android:id="@+id/main_layout_button"
         android:layout_width="match_parent"
         android:layout_height="100dp"
+        android:gravity="center"
         android:layout_alignParentBottom="true">
 
             <Button
                 android:id="@+id/main_btn_start"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="#1A000000"
-                android:textColor="@color/colorAccent"
-                android:text="시작"/>
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:background="@drawable/drivestart"
+                android:textColor="@color/colorPrimary"/>
 
             <Button
                 android:id="@+id/main_btn_capture"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="#1A000000"
-                android:textColor="@color/colorAccent"
-                android:text="수동녹화" />
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:layout_marginLeft="100dp"
+                android:layout_marginRight="100dp"
+                android:background="@drawable/recordstart"
+                android:textColor="@color/colorPrimary" />
 
             <Button
                 android:id="@+id/main_btn_setting"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:background="#1A000000"
-                android:textColor="@color/colorAccent"
-                android:text="설정" />
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:background="@drawable/settings"
+                android:textColor="@color/colorPrimary" />
 
     </LinearLayout>
 
@@ -79,7 +84,7 @@
         android:id="@+id/main_text_speed"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textColor="@color/colorAccent"
+        android:textColor="@color/colorPrimary"
         android:layout_marginTop="3dp"
         android:textSize="30dp"
         android:layout_alignParentRight="true" />

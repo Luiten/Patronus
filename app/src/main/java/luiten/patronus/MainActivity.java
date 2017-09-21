@@ -9,12 +9,14 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.media.Image;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.RequiresApi;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.SurfaceView;
@@ -64,7 +66,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private boolean backCamera = false;
 
     private int switchCamera = 0;
-    private boolean changed = false;
+
+    private int nWarningMode = 0; // 경고 알림 모드
 
 /*    private int VideoSize[][] = {
             { 1920, 1080 },
@@ -130,6 +133,25 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         mContext = this;
 
+        //--------------------------------------------------------------------------//
+        // 스플래시 이미지
+        //--------------------------------------------------------------------------//
+        final ImageView imageView = (ImageView) findViewById(R.id.main_image_background);
+        // dpi와 density 구하는 방법
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        this.getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+
+        // 변경하고 싶은 레이아웃의 파라미터 값을 가져 옴
+        RelativeLayout.LayoutParams ImageParams = (RelativeLayout.LayoutParams) imageView.getLayoutParams();
+
+        ImageParams.width = outMetrics.widthPixels / 5;
+        ImageParams.height = outMetrics.heightPixels / 5;
+
+        // 변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅
+        imageView.setLayoutParams(ImageParams);
+
+
+
         RelativeLayout warning_layout = (RelativeLayout)findViewById(R.id.main_layout_warning);
         warning_layout.setVisibility(View.INVISIBLE);
 
@@ -173,29 +195,45 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             @Override
             public void onClick(View v) {
                 if(!bStart) {
-                    button1.setText("종료");
+                    //button1.setText("종료");
+                    button1.setBackgroundResource(R.drawable.drivestop);
 
                     // 영상처리 시작
                     InitializeResolution();
                     StartProcessing();
                     bStart = true;
+
+                    final ImageView imgBackground = (ImageView) findViewById(R.id.main_image_background);
+                    imgBackground.setVisibility(View.INVISIBLE);
                 }
                 else {
-                    button1.setText("시작");
+                    //button1.setText("시작");
+                    button1.setBackgroundResource(R.drawable.drivestart);
 
                     // 영상처리 중지
                     StopProcessing();
                     bStart = false;
+
+                    final ImageView imgBackground = (ImageView) findViewById(R.id.main_image_background);
+                    imgBackground.setVisibility(View.VISIBLE);
                 }
             }
         });
 
         // 동영상 녹화
-        Button button2 = (Button)findViewById(R.id.main_btn_capture);
+        final Button button2 = (Button)findViewById(R.id.main_btn_capture);
         button2.setOnClickListener(new View.OnClickListener() {
+            boolean bRecord = false;
+
             @Override
             public void onClick(View v) {
+                if (bRecord) {
+                    button2.setBackgroundResource(R.drawable.recordstart);
+                } else {
+                    button2.setBackgroundResource(R.drawable.recordstop);
+                }
 
+                bRecord = !bRecord;
             }
         });
 
@@ -204,7 +242,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         button3.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                button1.setText("시작");
+                button1.setBackgroundResource(R.drawable.drivestart);
+
                 StopProcessing();
                 bStart = false;
 
@@ -243,7 +282,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         tv = (TextView)findViewById(R.id.main_text_speed);
 
         // 경고 클래스 초기화   출처: http://victor8481.tistory.com/72
-        classWarning = new Warning();
+        classWarning = new Warning(this);
     }
 
     @Override
@@ -341,6 +380,11 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             if(speed < 0){
                 speed = 0;
             }
+
+            if (bStart) {
+                PushbackAccel((float)accelSpeed);
+            }
+
             tv.setText(Double.toString(Math.floor(speed)));
         }
 
@@ -355,13 +399,13 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         long tempTime = System.currentTimeMillis();
         long intervalTime = tempTime - backPressedTime;
 
-        if(0<=intervalTime && FINISH_INTERVAL_TIME >= intervalTime) {
+        if(0 <= intervalTime && FINISH_INTERVAL_TIME >= intervalTime) {
             super.onBackPressed();
         }
         else
         {
             backPressedTime = tempTime;
-            Toast.makeText(getApplicationContext(),"한 번 더 누르면 종료됩니다.",Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(),"뒤로 버튼을 한 번 더 누르면 종료됩니다.",Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -388,8 +432,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         if (matResult != null) matResult.release();
         matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
 
-        changed = true;
-
         if (bStart)
         {
             convertNativeLib(matInput.getNativeObjAddr(), matResult.getNativeObjAddr(), switchCamera);
@@ -399,7 +441,13 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         // 경고가 있을 경우 진동이나 TTS와 이미지로 알림
         //--------------------------------------------------------------------------//
         this.handler.sendMessage(Message.obtain(handler, 1, (int) GetValue(1))); // 경고 이미지
-        this.handler.sendMessage(Message.obtain(handler, 2, (int) GetValue(1))); // TTS
+
+        if (nWarningMode == 0) {
+            this.handler.sendMessage(Message.obtain(handler, 2, (int) GetValue(1))); // TTS
+        } else if (nWarningMode == 1) {
+            this.handler.sendMessage(Message.obtain(handler, 3, (int) GetValue(1))); // TTS
+        }
+
         //ShowAlert((int) GetValue(1)); // 이미지 Fade in/out 경고
         //classWarning.TTS((int) GetValue(1), "");
         SetSettings(200, -1); // 최근 로그 값을 사용했으므로 초기화
@@ -537,6 +585,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         mOpenCvCameraView2.setMaxFrameSize(savedWidth, savedHeight);
 
         InitializeNativeLib(savedWidth, savedHeight);
+
+        // 경고 모드 읽기
+        nWarningMode = settings.getInt("sound", 0);
     }
 
     //------------------------------------------------------------------------------------------------//
@@ -550,7 +601,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         // 카메라 설정 읽기
         frontCamera = settings.getBoolean("frontcamera", false);
         backCamera = settings.getBoolean("backcamera", true);
-        boolean dualcamera = settings.getBoolean("dualcamera", false);
+        int dualcamera = settings.getInt("dualcamera", 0);
 
         switchCamera = 0;
 
@@ -560,7 +611,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         }
         // 전면 카메라 동작
         if (frontCamera) {
-            if (dualcamera || !mOpenCvCameraView.isEnabled()) {
+            if (dualcamera == 2 || !mOpenCvCameraView.isEnabled()) {
                 mOpenCvCameraView2.enableView();
             }
         }
@@ -608,6 +659,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 case 2: // TTS
                     classWarning.TTS(type, "");
                     break;
+
+                case 3: // 진동
+                    classWarning.Vibrate(type);
+                    break;
             }
         }
     };
@@ -624,10 +679,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         final Animation fade_warning = AnimationUtils.loadAnimation(MainActivity.mContext, R.anim.fade_in); // 애니메이션 fade-in-out 부분
 
         final TextView txtWarning = (TextView)findViewById(R.id.main_text_warning);
-        txtWarning.setText(WarningDesc[nType]);
+        txtWarning.setText(WarningDesc[nType - 1]);
 
-        warning_layout.startAnimation(fade_warning);
         warning_layout.setVisibility(View.VISIBLE);
+        warning_layout.startAnimation(fade_warning);
 
         warning_layout.startAnimation(fade_warning);
         warning_layout.setVisibility(View.INVISIBLE);

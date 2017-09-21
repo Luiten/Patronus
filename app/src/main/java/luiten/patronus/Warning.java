@@ -23,7 +23,7 @@ import java.util.Locale;
  * Created by power on 2017-06-12.
  */
 
-public class Warning extends Activity {
+public class Warning {
     //TODO : 추가 :: TTS, 진동
     TextToSpeech tts;
     Vibrator vibrator;
@@ -38,16 +38,9 @@ public class Warning extends Activity {
             " 신호를 확인하세요", "입니다", "졸음운전 중 경고입니다", "충돌이 감지됐습니다", "" };
 */
 
-    public static Context mContext;
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        mContext = this;
-
+    Warning(Context context) {
         //TODO : TTS
-        tts=new TextToSpeech(getApplicationContext(), new TextToSpeech.OnInitListener() {
+        tts = new TextToSpeech(context.getApplicationContext(), new TextToSpeech.OnInitListener() {
             @Override
             public void onInit(int status) {
                 if(status != TextToSpeech.ERROR) {
@@ -57,23 +50,7 @@ public class Warning extends Activity {
         });
 
         //TODO : 진동
-        vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
-    }
-
-    @Override
-    public void onPause()
-    {
-        super.onPause();
-    }
-
-    @Override
-    public void onResume()
-    {
-        super.onResume();
-    }
-
-    public void onDestroy() {
-        super.onDestroy();
+        vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
     }
 
     //TODO : TTS
@@ -86,15 +63,17 @@ public class Warning extends Activity {
     public void TTS(int nType, String strAddMsg)
     {
         if (nType >= 0) {
-            ttsGreater21(strAddMsg + WarningDesc[nType]);
+            ttsGreater21(strAddMsg + WarningDesc[nType - 1]);
         }
     }
 
     public void Vibrate(int nType)
     {
-        for (int i = 0; i < WarningPeroid[nType]; i++) {
-            // ms 단위
-            vibrator.vibrate(WarningTime[nType]);
+        if (nType >= 0) {
+            for (int i = 0; i < WarningPeroid[nType - 1]; i++) {
+                // ms 단위
+                vibrator.vibrate(WarningTime[nType - 1]);
+            }
         }
     }
 }

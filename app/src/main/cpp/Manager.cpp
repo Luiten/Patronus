@@ -144,7 +144,7 @@ public:
     }
 
     //------------------------------------------------------------------------------------------------//
-    // 신호등 계산
+    // 신호 위반 계산
     //------------------------------------------------------------------------------------------------//
     bool CalculateLight()
     {
@@ -153,17 +153,17 @@ public:
             // 임시로 신호등 표시
             if (m_listLight[i].type == PATRONUS_LIGHT_TYPE_RED)
             {
-                circle(img_result, m_listLight[i].center, 5, Scalar(255, 0, 0), -1, 8, 0);
+                rectangle(img_result, m_listLight[i].rect, Scalar(255, 0, 0), 3);
                 //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "빨간불", "", m_dLatitude, m_dLongitude);
             }
             else if (m_listLight[i].type == PATRONUS_LIGHT_TYPE_YELLOW)
             {
-                circle(img_result, m_listLight[i].center, 5, Scalar(255, 255, 0), -1, 8, 0);
+                rectangle(img_result, m_listLight[i].rect, Scalar(255, 255, 0), 3);
                 //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "노란불", "", m_dLatitude, m_dLongitude);
             }
             else if (m_listLight[i].type == PATRONUS_LIGHT_TYPE_GREEN)
             {
-                circle(img_result, m_listLight[i].center, 5, Scalar(0, 255, 0), -1, 8, 0);
+                rectangle(img_result, m_listLight[i].rect, Scalar(0, 255, 0), 3);
                 //m_Log.Write(PATRONUS_LOG_TYPE_LIGHT, "초록불", "", m_dLatitude, m_dLongitude);
             }
         }

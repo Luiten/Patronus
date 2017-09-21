@@ -307,13 +307,10 @@ public:
                         }
                     }
 
-                    rectangle(matROIBin, Rect(0, matROIBin.rows / 4 * 3, matROIBin.cols, matROIBin.rows / 4), Scalar(0), 2);
-                    rectangle(matROIBin, Rect(matROIBin.cols / 4, matROIBin.rows / 4 * 2, matROIBin.cols / 4 * 2, matROIBin.rows / 4), Scalar(0), 2);
+                    //rectangle(matROIBin, Rect(0, matROIBin.rows / 4 * 3, matROIBin.cols, matROIBin.rows / 4), Scalar(0), 2);
+                    //rectangle(matROIBin, Rect(matROIBin.cols / 4, matROIBin.rows / 4 * 2, matROIBin.cols / 4 * 2, matROIBin.rows / 4), Scalar(0), 2);
 
                     if (!bCarFind) continue;
-
-                    nDetect++;
-                    vFoundResult.push_back(rectOrigLoc);
 
                     //--------------------------------------------------------------------------//
                     // 차선 뷰(Bird's Eye View) 관심영역에 드는지 검사
@@ -441,6 +438,10 @@ public:
                         //----------------------------------------------------//
                         if (max > 0)
                         {
+                            // 자동차 발견 카운트 증가
+                            nDetect++;
+                            vFoundResult.push_back(rectOrigLoc);
+
                             // 해당 직선을 수평으로 맞추기
                             maxpt1.y = maxpt2.y = MIN(maxpt1.y, maxpt2.y) + (abs(maxpt1.y - maxpt2.y) / 2);
 
@@ -454,6 +455,7 @@ public:
                             // 해당 직선이 거리계산 관심영역(IPM)에 들면 IPM에 맞는 직선 변환
                             if (origPoints[0].y >= maxpt1.y && origPoints[3].y <= maxpt1.y)
                             {
+
                                 maxpt1 = ipm->applyHomography(maxpt1);
                                 maxpt2 = ipm->applyHomography(maxpt2);
 

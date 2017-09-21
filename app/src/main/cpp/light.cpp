@@ -16,7 +16,7 @@ using namespace cvb;
 
 struct LightInfo
 {
-    Point center;
+    Rect rect;
     int type;
 };
 
@@ -29,16 +29,21 @@ class Light
 public:
     void ExecuteLight(Mat &img_input, Mat &img_result, vector<LightInfo> &listLight)
     {
-        Mat frame, frame1, gray;
+        Mat frame, frame1, gray, matResize;
         Mat matOutput;
+        int resizeWidth = 640;
+        int resizeHeight = 360;
 
-        frame1 = img_input.clone();
+        listLight.clear();
+
+        resize(img_input, matResize, Size(resizeWidth, resizeHeight));
+
+        frame1 = matResize.clone();
 
         //resize(frame1, frame1, Size(400, 300));
 
-        Rect Roi(Point(frame1.cols / 6, 0), Point(5 * frame1.cols / 6, frame1.rows / 2));
+        Rect Roi = Rect(Point(matResize.cols / 6, 0), Point(5 * matResize.cols / 6, matResize.rows / 2));
         frame = frame1(Roi);
-        matOutput = img_result(Roi);
 
         cvtColor(frame, gray, CV_BGR2GRAY);
         Mat HSV(Roi.size(), CV_8U);
@@ -68,10 +73,10 @@ public:
 
         imgLabelingBlack.doLabeling();
 
-        for (int i = 0; i < imgLabelingBlack.m_nBlobs; i++)
+/*        for (int i = 0; i < imgLabelingBlack.m_nBlobs; i++)
         {
             rectangle(afterBlack, imgLabelingBlack.m_recBlobs[i], Scalar(255), 1);
-        }
+        }*/
         afterBlack.copyTo(afterBlack);
 
         //red
@@ -192,6 +197,7 @@ public:
 
         imgLabelingR.doLabeling();
 
+        // RED
         for (int i = 0; i<imgLabelingR.m_nBlobs; i++)
         {
             int width, height;
@@ -203,7 +209,7 @@ public:
                 if (imgLabelingR.m_recBlobs[i].x - 5 > 0 && imgLabelingR.m_recBlobs[i].x + 6 * width < frame.cols && imgLabelingR.m_recBlobs[i].y - 5 > 0 &&
                         imgLabelingR.m_recBlobs[i].y < frame.rows)
                 {
-                    rectangle(matOutput, imgLabelingR.m_recBlobs[i], Scalar(0, 255, 255), 2);
+                    //rectangle(matOutput, imgLabelingR.m_recBlobs[i], Scalar(0, 255, 255), 2);
                     for (int j = imgLabelingR.m_recBlobs[i].x; j < imgLabelingR.m_recBlobs[i].x + width; j++)
                     {
                         for (int k = imgLabelingR.m_recBlobs[i].y; k < imgLabelingR.m_recBlobs[i].y + height; k++)
@@ -228,7 +234,17 @@ public:
             }
             if (light_avg > 0.9 * 255 && range_avg < 0.15 * 255)
             {
-                rectangle(matOutput, Rect(imgLabelingR.m_recBlobs[i].x - 5, imgLabelingR.m_recBlobs[i].y - 5, height * 4.5, height + 10), Scalar(0, 0, 255), 2);
+                Rect rectOrigLoc;
+                rectOrigLoc = Rect(imgLabelingR.m_recBlobs[i].x - 5, imgLabelingR.m_recBlobs[i].y - 5, height * 4.5, height + 10);
+                rectOrigLoc.x *= ((float)img_input.cols / resizeWidth);
+                rectOrigLoc.y *= ((float)img_input.rows / resizeHeight);
+                rectOrigLoc.width *= ((float)img_input.cols / resizeWidth);
+                rectOrigLoc.height *= ((float)img_input.rows / resizeHeight);
+
+                rectOrigLoc.x += img_input.cols / 6;
+
+                //rectangle(matOutput, Rect(imgLabelingR.m_recBlobs[i].x - 5, imgLabelingR.m_recBlobs[i].y - 5, height * 4.5, height + 10), Scalar(0, 0, 255), 2);
+                listLight.push_back({rectOrigLoc, PATRONUS_LIGHT_TYPE_RED});
             }
         }
 
@@ -238,6 +254,7 @@ public:
 
         imgLabelingG.doLabeling();
 
+        // GREEN
         for (int i = 0; i<imgLabelingG.m_nBlobs; i++)
         {
             float width, height;
@@ -251,7 +268,7 @@ public:
                 if (imgLabelingG.m_recBlobs[i].x - width * 3.5 > 0 && imgLabelingG.m_recBlobs[i].y - 5 > 0 &&
                         imgLabelingG.m_recBlobs[i].x + 2.5 * width < frame.cols && imgLabelingG.m_recBlobs[i].y + height + 5 < frame.rows)
                 {
-                    rectangle(matOutput, imgLabelingG.m_recBlobs[i], Scalar(0, 255, 255), 2);
+                    //rectangle(matOutput, imgLabelingG.m_recBlobs[i], Scalar(0, 255, 255), 2);
                     for (int j = imgLabelingG.m_recBlobs[i].x; j < imgLabelingG.m_recBlobs[i].x + width; j++)
                     {
                         for (int k = imgLabelingG.m_recBlobs[i].y; k < imgLabelingG.m_recBlobs[i].y + height; k++)
@@ -278,7 +295,17 @@ public:
 
             if (light_avg > 0.75 * 255 && range_avg < 0.1 * 255)
             {
-                rectangle(matOutput, Rect(imgLabelingG.m_recBlobs[i].x - height * 3, imgLabelingG.m_recBlobs[i].y - 5, height * 4.5, height + 10), Scalar(0, 255, 0), 2);
+                Rect rectOrigLoc;
+                rectOrigLoc = Rect(imgLabelingG.m_recBlobs[i].x - height * 3, imgLabelingG.m_recBlobs[i].y - 5, height * 4.5, height + 10);
+                rectOrigLoc.x *= ((float)img_input.cols / resizeWidth);
+                rectOrigLoc.y *= ((float)img_input.rows / resizeHeight);
+                rectOrigLoc.width *= ((float)img_input.cols / resizeWidth);
+                rectOrigLoc.height *= ((float)img_input.rows / resizeHeight);
+
+                rectOrigLoc.x += img_input.cols / 6;
+                //rectangle(matOutput, rectOrigLoc, Scalar(0, 255, 0), 2);
+
+                listLight.push_back({rectOrigLoc, PATRONUS_LIGHT_TYPE_GREEN});
             }
         }
 

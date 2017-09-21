@@ -109,7 +109,6 @@ public class Setting extends AppCompatActivity {
         warninglistview = (ListView)findViewById(R.id.set_listview_warning);
         warningadapter = new WarningAdapter(this);
         warninglistview.setAdapter(warningadapter);
-
         capture_lengthview = (ListView)findViewById(R.id.set_listview_caplength);
         capture_lengthadapter = new AlarmAdapter(this);
         capture_lengthview.setAdapter(capture_lengthadapter);
@@ -130,37 +129,48 @@ public class Setting extends AppCompatActivity {
         recordadapter = new RecordAdapter(this);
         recordlistview.setAdapter(recordadapter);
 
-        alarmadapter.addItem("차선", "주행 중 차선을 5초 이상 밟고 있을 경우 알려줍니다.", settings.getBoolean("lane" , true), true);
-        alarmadapter.addItem("앞차간 거리", "앞차와의 거리가 속도에 비해 너무 가까울 경우 알려줍니다.", settings.getBoolean("distance", true), true);
+        alarmadapter.addItem("차선", "주행 중 차선을 5초 이상 밟고 있을 경우 경고합니다.", settings.getBoolean("lane" , true), true);
+        alarmadapter.addItem("앞차간 거리", "앞차와의 거리가 속도에 비해 너무 가까울 경우 경고합니다.", settings.getBoolean("distance", true), true);
         alarmadapter.addItem("신호 위반", "신호 위반을 한 경우 경고합니다.", settings.getBoolean("signal", true), true);
         alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true), true);
         alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true), true);
 
-        warningadapter.addItem("tts", "음성 메세지 경고 입니다.");
-        warningadapter.addItem("진동", "위반 했을 시 진동 입니다.");
-        warningadapter.addItem("무음", "무음 입니다.");
+        warningadapter.addItem("소리 (TTS)", "음성과 이미지를 사용하여 경고합니다.");
+        warningadapter.addItem("진동", "진동과 이미지를 사용하여 경고합니다.");
+        warningadapter.addItem("무음", "이미지만 사용하여 경고합니다.");
+        warningadapter.SetSelectNumber(settings.getInt("sound", 0));
 
         //--------------------------------------------------------------------------//
         // 듀얼 카메라 지원 확인
         //--------------------------------------------------------------------------//
         SharedPreferences.Editor editor = settings.edit();
+        int nDualcameraSupport = settings.getInt("dualcamera", 0); // 0 = 초기화 안됨, 1 = 사용 불가, 2 = 사용 가능
 
-        Camera mBackCamera = getCameraInstance(0);
-        Camera mFrontCamera = getCameraInstance(1);
+        if (nDualcameraSupport == 0) {
+            Camera mBackCamera = getCameraInstance(0);
+            Camera mFrontCamera = getCameraInstance(1);
 
-        if (mBackCamera == null || mFrontCamera == null)
-        {
-            //Toast.makeText(getApplicationContext(), "듀얼 카메라를 지원하지 않습니다.", Toast.LENGTH_LONG).show();
+            if (mBackCamera == null || mFrontCamera == null) {
+                //Toast.makeText(getApplicationContext(), "듀얼 카메라를 지원하지 않습니다.", Toast.LENGTH_LONG).show();
 
-            editor.putBoolean("dualcamera", false);
-            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.\n듀얼 카메라를 지원하지 않아 기능을 사용할 수 없습니다.", false, false);
-        } else {
-            editor.putBoolean("dualcamera", true);
-            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.", settings.getBoolean("frontcamera", false), true);
+                nDualcameraSupport = 1;
+            } else {
+                nDualcameraSupport = 2;
+            }
+
+            editor.putInt("dualcamera", nDualcameraSupport);
+
+            if (mBackCamera != null) mBackCamera.release();
+            if (mFrontCamera != null) mFrontCamera.release();
         }
 
-        if (mBackCamera != null) mBackCamera.release();
-        if (mFrontCamera != null) mFrontCamera.release();
+        if (nDualcameraSupport == 2) {
+            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.", settings.getBoolean("frontcamera", false), true);
+        } else {
+            //Toast.makeText(getApplicationContext(), "듀얼 카메라를 지원하지 않습니다.", Toast.LENGTH_LONG).show();
+
+            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.\n듀얼 카메라를 지원하지 않아 기능을 사용할 수 없습니다.", false, false);
+        }
 
         capture_lengthadapter.addItem("후면 카메라", "도로 방향의 카메라를 동작시킵니다.", settings.getBoolean("backcamera", true), true);
 
@@ -292,6 +302,8 @@ public class Setting extends AppCompatActivity {
         editor.putBoolean("signal", alarmadapter.isChecked(2));
         editor.putBoolean("sleep", alarmadapter.isChecked(3));
         editor.putBoolean("sign", alarmadapter.isChecked(4));
+
+        editor.putInt("sound", warningadapter.GetChecked()); // 데이터 저장
 
         editor.putBoolean("frontcamera", capture_lengthadapter.isChecked(0));
         editor.putBoolean("backcamera", capture_lengthadapter.isChecked(1));

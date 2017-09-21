@@ -1,10 +1,12 @@
 package luiten.patronus;
 
 import android.content.Context;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.LinearLayout;
 import android.widget.RadioButton;
 import android.widget.TextView;
 
@@ -59,6 +61,22 @@ public class ResolutionAdapter extends BaseAdapter {
 
             holder.resolText = (TextView)convertView.findViewById(R.id.resol_text_item);
             holder.resolRadio = (RadioButton)convertView.findViewById(R.id.resol_radio_item);
+
+            //----------------------------------------------------//
+            // 텍스트 너비 화면에 맞게 재설정
+            // 출처: http://developer88.tistory.com/71
+            //----------------------------------------------------//
+            // dpi와 density 구하는 방법
+            DisplayMetrics outMetrics = new DisplayMetrics();
+            ((Setting)mContext).getWindowManager().getDefaultDisplay().getMetrics(outMetrics);
+
+            // 변경하고 싶은 레이아웃의 파라미터 값을 가져 옴
+            LinearLayout.LayoutParams TextDescParams = (LinearLayout.LayoutParams) holder.resolText.getLayoutParams();
+
+            TextDescParams.width = outMetrics.widthPixels * 2 / 3;
+
+            // 변경된 값의 파라미터를 해당 레이아웃 파라미터 값에 셋팅
+            holder.resolText.setLayoutParams(TextDescParams);
 
             //홀더에 저장되있는 것들을 이제 view에 뿌려준다
 

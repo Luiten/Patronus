@@ -17,7 +17,8 @@
             android:text="현재 기준점"
             android:gravity="center"
             android:textSize="20dp"
-            android:background="@color/colorBackgroundDark"/>
+            android:textColor="@color/colorBackground"
+            android:background="@color/colorPrimary"/>
 
         <TextView
             android:id="@+id/standard_text_retry"
@@ -35,6 +36,7 @@
             android:layout_width="match_parent"
             android:layout_height="200dp"
             android:background="@color/colorBackground"
+            android:src="@drawable/notfound"
             android:layout_marginTop="20dp" />
 
     </LinearLayout>

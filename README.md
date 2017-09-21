@@ -1,5 +1,5 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.92.0 (2017-09-13)
+Version: 0.93.0 (2017-09-21)
 
 <br>
 
@@ -12,8 +12,12 @@ set(pathProject "This Project Path")
 <br>
 
 ---
-#### Problem
-1. 듀얼 카메라 작동시 카메라 전환 속도가 너무 느린 문제(스냅드래곤 800대 AP는 듀얼카메라 지원)
+#### 0.93.0 (2017-09-21)
+1. 로고 추가, 스플래시 추가
+2. 액티비티 레이아웃 및 색상 변경
+3. 경고 알림 설정 추가
+4. Warning: TTS, 진동 오류 수정
+5. Setting: 초기 실행시에만 듀얼카메라 지원 확인
 ---
 #### 0.92.1 (2017-09-16)
 1. setting.java 파일에 WarningAdapter와 Warning 리스트뷰 추가
@@ -30,7 +34,6 @@ set(pathProject "This Project Path")
 8. RecordCrash: 버튼 기능 일부 변경
 9. RecordDrive: 그래프 색상 변경
 10. RecordDrive: CSV 파일을 읽어 운전 점수 적용
-*. TTS: 클래스가 초기화되지 않았는지 오류
 ---
 #### 0.90.2 (2017-09-04)
 1. 속도 측정 개선
