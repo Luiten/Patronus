@@ -1,5 +1,5 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.93.0 (2017-09-21)
+Version: 0.94.0 (2017-09-25)
 
 <br>
 
@@ -11,6 +11,20 @@ set(pathProject "This Project Path")
 #### 2. Build it!
 <br>
 
+---
+#### 0.95.0 (2017-10-07)
+1. RecordDrive: 그래프 값 0 ~ 100 범위로 고정
+2. activity_main.xml: 동영상 녹화를 위한 Videoview 추가
+3. MainActivity: 동영상 녹화 추가
+4. MainActivity, RecordActivity: 수동 녹화 로그 추가
+---
+#### 0.94.0 (2017-09-25)
+1. RecordDrive: 데이터가 7일치 미만시 오류 수정
+2. Setting: 듀얼카메라 지원여부 설정 저장이 안되는 문제 수정
+3. Face: 얼굴 인식 추가
+4. Lane.cpp: 차선(실선) 구분 추가
+5. Manager.cpp: 차선 침범 범위 수정
+6. record_drive.xml: 메달 이미지뷰, 스크롤뷰 추가
 ---
 #### 0.93.0 (2017-09-21)
 1. 로고 추가, 스플래시 추가

@@ -10,15 +10,19 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.media.Image;
+import android.media.MediaRecorder;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.support.annotation.RequiresApi;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.WindowManager;
@@ -34,17 +38,22 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
+import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
  * Created by LG on 2017-05-29.
  */
 
-public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener {
+public class MainActivity extends Activity implements CameraBridgeViewBase.CvCameraViewListener2, SensorEventListener, SurfaceHolder.Callback {
 
     private String WarningType[] = { "자동차간 거리", "끼어들기", "차선 침범", "신호 위반", "신호 주시 안함",
             "표지판", "졸음 운전", "충돌", "운전 점수" };
@@ -62,6 +71,12 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private Mat matResult;
     private boolean bStart = false;
 
+    private VideoView mVideoView = null;
+    private Camera mCamera;
+    private MediaRecorder recorder = null;
+    private static final int RECORDING_TIME = 0; // 녹화시간
+    private int VIDEO_BITRATE = 3000000; // 동영상 비트레이트(3 Mbps)
+
     private boolean frontCamera = false;
     private boolean backCamera = false;
 
@@ -75,6 +90,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             { 800, 600 },
             { 640, 480 } };*/
 
+    // Face
+    private Face mFace;
+
     // GPS 속도
     private LocationManager lm;
     private LocationListener ll;
@@ -82,7 +100,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     // 가속도
     SensorManager mSensorManager = null;
-    SensorEventListener accL;
+    //SensorEventListener accL;
     TextView tv;
     Sensor accSensor = null;
     long checkStartTime = 0, checkEndTime = 0;
@@ -93,6 +111,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     private Warning classWarning;
     public static Context mContext;
 
+    private PowerManager.WakeLock mWakeLock;
+
     // 버튼 보여주기 상태
     private boolean bButtonShow = false;
 
@@ -101,6 +121,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     public native int PushbackAccel(float fValue);
     public native int SetSettings(int type, double value);
     public native double GetValue(int type);
+    public native int PrintLogForRecord(String strMsg);
 
     static {
         System.loadLibrary("opencv_java3");
@@ -133,6 +154,11 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         mContext = this;
 
+        //사용자가 다운로드 중 파워 버튼을 누르더라도 CPU가 잠들지 않도록 해서
+        //다시 파워버튼 누르면 그동안 다운로드가 진행되고 있게 됩니다.
+        PowerManager pm = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+        mWakeLock = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, getClass().getName());
+
         //--------------------------------------------------------------------------//
         // 스플래시 이미지
         //--------------------------------------------------------------------------//
@@ -151,7 +177,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         imageView.setLayoutParams(ImageParams);
 
 
-
         RelativeLayout warning_layout = (RelativeLayout)findViewById(R.id.main_layout_warning);
         warning_layout.setVisibility(View.INVISIBLE);
 
@@ -161,6 +186,13 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         btn_layout.setVisibility(View.INVISIBLE);
 
+        // 녹화용 VideoView
+        mVideoView = (VideoView)findViewById(R.id.activity_videoview);
+        mVideoView.setVisibility(View.INVISIBLE);
+
+        setPreview();
+
+        // 화면 클릭 리스너
         main_layout.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
@@ -198,6 +230,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                     //button1.setText("종료");
                     button1.setBackgroundResource(R.drawable.drivestop);
 
+                    // 백그라운드 동작
+                    mWakeLock.acquire();
+
                     // 영상처리 시작
                     InitializeResolution();
                     StartProcessing();
@@ -209,6 +244,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 else {
                     //button1.setText("시작");
                     button1.setBackgroundResource(R.drawable.drivestart);
+
+                    // 백그라운드 동작 종료
+                    mWakeLock.release();
 
                     // 영상처리 중지
                     StopProcessing();
@@ -229,10 +267,21 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             public void onClick(View v) {
                 if (bRecord) {
                     button2.setBackgroundResource(R.drawable.recordstart);
+                    mVideoView.setVisibility(View.INVISIBLE);
+                    if(recorder != null){
+                        recorder.stop();
+                        recorder.release();
+                        recorder = null;
+                    }
+                    if(mCamera == null){
+                        setCameraPreview(mVideoView.getHolder());
+                        mCamera.startPreview();
+                    }
                 } else {
                     button2.setBackgroundResource(R.drawable.recordstop);
+                    mVideoView.setVisibility(View.VISIBLE);
+                    beginRecording(mVideoView.getHolder());
                 }
-
                 bRecord = !bRecord;
             }
         });
@@ -270,15 +319,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         // 성공적으로 연결되면 콜백 전달
         mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
 
-//        // 속도 초기화
-//        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//        ll = new SpeedActionListener();
-//        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
+        // 속도 초기화
+        lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        ll = new SpeedActionListener();
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
 
         // 가속도 초기화
         mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        accL = new accListener();
+        //accL = new accListener();
         tv = (TextView)findViewById(R.id.main_text_speed);
 
         // 경고 클래스 초기화   출처: http://victor8481.tistory.com/72
@@ -290,7 +339,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
     {
         super.onPause();
 
-        StopProcessing();
+        //StopProcessing();
 
         if (mSensorManager != null)
             mSensorManager.unregisterListener(this);
@@ -301,7 +350,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         if (lm != null)
             lm.removeUpdates(ll);
 
-        mSensorManager.unregisterListener(accL);
+        //mSensorManager.unregisterListener(accL);
     }
 
     @Override
@@ -318,31 +367,31 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
             }
 
-            if (bStart)
-                StartProcessing();
+            //if (bStart)
+                //StartProcessing();
         }
 
-        mSensorManager.registerListener(accL, accSensor, 1000000, 1000001);
+        //mSensorManager.registerListener(accL, accSensor, 10000, 10001);
 
-//        // 속도 초기화
-//        if (lm == null) {
-//            lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-//            ll = new SpeedActionListener();
-//            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
-//        }
-//
-//        // 가속도 초기화
-//        if (mSensorManager == null)
-//            mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
-//        if (accSensor == null)
-//            accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-//
-//        // 주기 설명
-//        // SENSOR_DELAY_UI 갱신에 필요한 정도 주기
-//        // SENSOR_DELAY_NORMAL 화면 방향 전환 등의 일상적인  주기
-//        // SENSOR_DELAY_GAME 게임에 적합한 주기
-//        if (mSensorManager != null)
-//            mSensorManager.registerListener(this, accSensor, mSensorManager.SENSOR_DELAY_NORMAL);
+        // 속도 초기화
+        if (lm == null) {
+            lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+            ll = new SpeedActionListener();
+            lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ll);
+        }
+
+        // 가속도 초기화
+        if (mSensorManager == null)
+            mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if (accSensor == null)
+            accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+
+        // 주기 설명
+        // SENSOR_DELAY_UI 갱신에 필요한 정도 주기
+        // SENSOR_DELAY_NORMAL 화면 방향 전환 등의 일상적인  주기
+        // SENSOR_DELAY_GAME 게임에 적합한 주기
+        if (mSensorManager != null)
+            mSensorManager.registerListener(this, accSensor, mSensorManager.SENSOR_DELAY_NORMAL);
 
     }
 
@@ -366,31 +415,89 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             lm.removeUpdates(ll);
     }
 
-    private class accListener implements SensorEventListener {
+    private void setCameraPreview(SurfaceHolder holder){
+        try{
+            mCamera = Camera.open();
+            Camera.Parameters parameters = mCamera.getParameters();
+            mCamera.setParameters(parameters);
+            mCamera.setPreviewDisplay(holder);
+        }catch (Exception e){
+        }
+    }
 
-        @Override
-        public void onSensorChanged(SensorEvent event) {
-            double accel, accel2, accel3;
+    private void setPreview(){
+        mVideoView = (VideoView)findViewById(R.id.activity_videoview);
+        final SurfaceHolder holder = mVideoView.getHolder();
+        holder.addCallback(this);
+        holder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+    }
 
-            accel  = event.values[0] - 9.8;
-            accel2 = event.values[1];
-            accel3 = event.values[2];
-            accelSpeed = (Math.sqrt(Math.pow(accel, 2) + Math.pow(accel2, 2) + Math.pow(accel3, 2)) - 9.81);
-            speed += accel;
-            if(speed < 0){
-                speed = 0;
-            }
-
-            if (bStart) {
-                PushbackAccel((float)accelSpeed);
-            }
-
-            tv.setText(Double.toString(Math.floor(speed)));
+    private void beginRecording(SurfaceHolder holder){
+        if(recorder != null){
+            recorder.stop();
+            recorder.release();
+        }
+        String state = android.os.Environment.getExternalStorageState();
+        if(!state.equals(Environment.MEDIA_MOUNTED)){
+            Log.e("CAM TEST","I/O Exception");
         }
 
-        @Override
-        public void onAccuracyChanged(Sensor sensor, int accuracy) {
+        String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/video/";
+        File file = new File(dirPath);
 
+        // 일치하는 폴더가 없으면 생성
+        if (!file.exists()) {
+            file.mkdirs();
+        }
+
+        // 현재 시간 구하기
+        String time = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date(System.currentTimeMillis()));
+        String OUTPUT_FILE = dirPath + time + ".mp4"; // 저장위치
+        PrintLogForRecord(time + ".mp4");
+
+        if(mCamera != null){
+            mCamera.stopPreview();
+            mCamera.release();
+            mCamera = null;
+        }
+
+        try{
+            recorder = new MediaRecorder();
+            recorder.setVideoSource(MediaRecorder.VideoSource.CAMERA);
+            recorder.setAudioSource(MediaRecorder.AudioSource.MIC);
+            recorder.setOutputFormat(MediaRecorder.OutputFormat.MPEG_4);
+            recorder.setVideoSize(1280, 720);
+            recorder.setVideoFrameRate(30);
+            recorder.setVideoEncodingBitRate(VIDEO_BITRATE);
+            recorder.setVideoEncoder(MediaRecorder.VideoEncoder.DEFAULT);
+            recorder.setAudioEncoder(MediaRecorder.AudioEncoder.AAC);
+            recorder.setMaxDuration(RECORDING_TIME);
+            recorder.setPreviewDisplay(holder.getSurface());
+            recorder.setOutputFile(OUTPUT_FILE);
+            recorder.prepare();
+            recorder.start();
+        } catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+        setCameraPreview(holder);
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+        if(mCamera != null){
+            mCamera.startPreview();
+        }
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+        if(mCamera != null){
+            mCamera.stopPreview();
+            mCamera = null;
         }
     }
 
@@ -468,17 +575,6 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         Sensor sensor = event.sensor;
         float accelX, accelY, accelZ;
 
-        if (checkStartTime == 0)
-        {
-            checkStartTime = System.nanoTime();
-        }
-        else
-        {
-            checkStartTime = checkEndTime;
-        }
-        checkEndTime =  System.nanoTime();
-        double AccelTime = (double) (checkEndTime - checkStartTime) / 1000000000;
-
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             accelX = event.values[0];
             accelY = event.values[1];
@@ -488,21 +584,11 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             if (bStart) {
                 PushbackAccel((float)accelSpeed);
             }
-
-            if (Math.abs(accelSpeed) < 0.3)
-            {
-                accelSpeed = 0.0;
-                nowSpeed = 0.0;
-            }
-            else
-            {
-                nowSpeed += accelSpeed * AccelTime * 3.6;
-            }
         }
 
-        tv = (TextView)findViewById(R.id.main_text_speed);
-        String strSpeed = (int)mySpeed + " km/h";
-        tv.setText(strSpeed);
+        //tv = (TextView)findViewById(R.id.main_text_speed);
+        //String strSpeed = (int)mySpeed + " km/h";
+        //tv.setText(strSpeed);
         //tv.setText("Speed: " + mySpeed + " km/h\n" + "nowSpeed: " + nowSpeed + "km/h");
     }
 
@@ -510,6 +596,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
         @Override
         public void onLocationChanged(Location location) {
+            TextView tv = (TextView)findViewById(R.id.main_text_speed);
+
             if (location != null) {
                 // GPS 위도, 경도   출처: http://mainia.tistory.com/1153
                 SetSettings(100, location.getLatitude());
@@ -520,11 +608,17 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 if (mySpeed > maxSpeed) {
                     maxSpeed = mySpeed;
                 }
-                TextView tv = (TextView)findViewById(R.id.main_text_speed);
+
+                // 현재 속도 전달
+                SetSettings(102, mySpeed);
 
                 String strSpeed = (int)mySpeed + " km/h";
                 tv.setText(strSpeed);
                 //tv.setText("Speed: " + mySpeed + " km/h\n" + "nowSpeed: " + nowSpeed);
+            }
+            else {
+                String strSpeed = "0 km/h";
+                tv.setText(strSpeed);
             }
         }
 
@@ -582,7 +676,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         mOpenCvCameraView.setMaxFrameSize(savedWidth, savedHeight);
         mOpenCvCameraView2.setMinimumWidth(savedWidth);
         mOpenCvCameraView2.setMinimumHeight(savedHeight);
-        mOpenCvCameraView2.setMaxFrameSize(savedWidth, savedHeight);
+        mOpenCvCameraView2.setMaxFrameSize(400, 300);
 
         InitializeNativeLib(savedWidth, savedHeight);
 
@@ -613,6 +707,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         if (frontCamera) {
             if (dualcamera == 2 || !mOpenCvCameraView.isEnabled()) {
                 mOpenCvCameraView2.enableView();
+                if (mFace == null)
+                    mFace = new Face();
+
+                mFace.LoadCascade();
             }
         }
 
@@ -717,8 +815,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             //--------------------------------------------------------------------------//
             if (matResult != null) matResult.release();
             matResult = new Mat(matInput.rows(), matInput.cols(), matInput.type());
-
             matInput.copyTo(matResult);
+
+            matResult = mFace.ProcessFace(matInput);
+
             return matResult;
         }
 

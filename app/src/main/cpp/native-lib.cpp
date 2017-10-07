@@ -68,7 +68,7 @@ Java_luiten_patronus_SplashActivity_SetSettings(JNIEnv *, jobject, jint type, jd
     return 0;
 }
 
-// Manager 클래스에 세팅 값 적용(GPS 용)
+// Manager 클래스에 세팅 값 적용(데이터용)
 JNIEXPORT jint JNICALL
 Java_luiten_patronus_MainActivity_SetSettings(JNIEnv *, jobject, jint type, jdouble value)
 {
@@ -81,6 +81,19 @@ JNIEXPORT jint JNICALL
 Java_luiten_patronus_Setting_SetSettings(JNIEnv *, jobject, jint type, jdouble value)
 {
     mgr.SetSettings(type, value);
+    return 0;
+}
+
+// 수동 녹화용 로그
+JNIEXPORT jint JNICALL
+Java_luiten_patronus_MainActivity_PrintLogForRecord(JNIEnv *env, jobject, jstring javaString)
+{
+    // jstring to string(char*) 변경   출처: https://stackoverflow.com/questions/4181934/jni-converting-jstring-to-char
+    const char *nativeString = env->GetStringUTFChars(javaString, JNI_FALSE);
+
+    mgr.PrintLogForRecord(nativeString);
+
+    env->ReleaseStringUTFChars(javaString, nativeString);
     return 0;
 }
 

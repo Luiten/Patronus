@@ -36,11 +36,10 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 
-public class Face extends Activity implements CvCameraViewListener2 {
+public class Face {
 
-    private LayoutInflater li;
-    private static final String TAG = "OCVSample::Activity";
     private static final Scalar FACE_RECT_COLOR = new Scalar(0, 255, 0, 255);
+    private String TAG = "FACE";
     public static final int JAVA_DETECTOR = 0;
     private static final int TM_SQDIFF = 0;
     private static final int TM_SQDIFF_NORMED = 1;
@@ -78,10 +77,6 @@ public class Face extends Activity implements CvCameraViewListener2 {
     private float mRelativeFaceSize = 0.5f;
     private int mAbsoluteFaceSize = 0;
 
-    private CameraBridgeViewBase mOpenCvCameraView;
-    private SeekBar mMethodSeekbar;
-    private TextView mValue;
-
     private static int cameraWidth = 400; //1280*720
     private static int cameraHeight = 300; //352*288
 
@@ -92,63 +87,31 @@ public class Face extends Activity implements CvCameraViewListener2 {
     double xCenter = -1;
     double yCenter = -1;
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-        @Override
-        public void onManagerConnected(int status) {
-            switch (status) {
-                case LoaderCallbackInterface.SUCCESS: {
-                    Log.i(TAG, "OpenCV loaded successfully");
+    public void LoadCascade() {
+        // load cascade file from application resources
+        mCascadeFile = new File("/sdcard/Patronus/lbpcascade_frontalface.xml");
+
+        File cascadeFileT = new File("/sdcard/Patronus/haarcascade_eye.xml");
+        //-- end --//
+
+        mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
+        if (mJavaDetector.empty()) {
+            Log.e(TAG, "Failed to load cascade classifier");
+            mJavaDetector = null;
+        } else
+            Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
 
 
-                    try {
-                        // load cascade file from application resources
-                        File cascadeDir = getDir("cascade", Context.MODE_PRIVATE);
-                        mCascadeFile = new File(cascadeDir, "lbpcascade_frontalface.xml");
-                        FileOutputStream os = new FileOutputStream(mCascadeFile);
-                        os.close();
+        mJavaDetectorTest = new CascadeClassifier(cascadeFileT.getAbsolutePath());
+        if (mJavaDetectorTest.empty()) {
+            Log.e(TAG, "Failed to load cascade classifier");
+            mJavaDetectorTest = null;
+        } else
+            Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
 
-
-                        File cascadeDirT = getDir("cascadeER", Context.MODE_PRIVATE);
-                        File cascadeFileT = new File(cascadeDirT, "haarcascade_eye.xml");
-                        FileOutputStream ost = new FileOutputStream(cascadeFileT);
-                        ost.close();
-                        //-- end --//
-
-                        mJavaDetector = new CascadeClassifier(mCascadeFile.getAbsolutePath());
-                        if (mJavaDetector.empty()) {
-                            Log.e(TAG, "Failed to load cascade classifier");
-                            mJavaDetector = null;
-                        } else
-                            Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
-
-
-                        mJavaDetectorTest = new CascadeClassifier(cascadeFileT.getAbsolutePath());
-                        if (mJavaDetectorTest.empty()) {
-                            Log.e(TAG, "Failed to load cascade classifier");
-                            mJavaDetectorTest = null;
-                        } else
-                            Log.i(TAG, "Loaded cascade classifier from " + mCascadeFile.getAbsolutePath());
-
-                        cascadeDir.delete();
-                        cascadeDirT.delete();
-
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Log.e(TAG, "Failed to load cascade. Exception thrown: " + e);
-                    }
-                    mOpenCvCameraView.enableFpsMeter();
-                    mOpenCvCameraView.setCameraIndex(1);
-                    mOpenCvCameraView.setMaxFrameSize(cameraWidth, cameraHeight);// TODO : 최대 크기 지정
-                    mOpenCvCameraView.enableView();
-                }
-                break;
-                default: {
-                    super.onManagerConnected(status);
-                }
-                break;
-            }
-        }
-    };
+        mGray = new Mat();
+        mRgba = new Mat();
+    }
 
     public Face() {
         mDetectorName = new String[2];
@@ -157,22 +120,10 @@ public class Face extends Activity implements CvCameraViewListener2 {
         Log.i(TAG, "Instantiated new " + this.getClass());
     }
 
-    public void onCameraViewStarted(int width, int height) {
-        mGray = new Mat();
-        mRgba = new Mat();
-    }
+    public Mat ProcessFace(Mat inputFrame) {
 
-    public void onCameraViewStopped() {
-        mGray.release();
-        mRgba.release();
-        //mZoomWindow.release();
-        //mZoomWindow2.release();
-    }
-
-    public Mat onCameraFrame(CvCameraViewFrame inputFrame) {
-
-        mRgba = inputFrame.rgba();
-        mGray = inputFrame.gray();
+        mRgba = inputFrame.clone();
+        Imgproc.cvtColor(inputFrame, mGray, Imgproc.COLOR_BGR2GRAY);
 
         Core.flip(mRgba, mRgba, 1);
         Core.flip(mGray, mGray, 1);//(352,288)
@@ -282,9 +233,7 @@ public class Face extends Activity implements CvCameraViewListener2 {
 
 
         Imgproc.putText(mRgba, "numBlink: " + Num_Blink, new Point(100, 30),
-                Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(255, 0, 0,
-                        255));
-
+                Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(255, 0, 0, 255));
 
         return mRgba;
     }

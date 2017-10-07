@@ -14,14 +14,19 @@
 
     <org.opencv.android.JavaCameraView
         android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_alignParentRight="true"
+        android:layout_height="75dp"
+        android:layout_alignParentLeft="true"
         android:id="@+id/activity_surface_view2"/>
 
     <org.opencv.android.JavaCameraView
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:id="@+id/activity_surface_view"/>
+
+    <VideoView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:id="@+id/activity_videoview"/>
 
     <RelativeLayout
         android:id="@+id/main_layout_warning"

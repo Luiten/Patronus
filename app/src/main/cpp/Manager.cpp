@@ -26,7 +26,11 @@ public:
         width = w;
         height = h;
 
+        m_dSpeed = 0;
+
         m_Detectcars.Initialize(width, height);
+
+        video = new VideoWriter("/sdcard/Patronus/video/blackbox.avi", CV_FOURCC('M', 'J', 'P', 'G'), 30, Size(width, height), true);
     }
 
     //------------------------------------------------------------------------------------------------//
@@ -89,6 +93,8 @@ public:
         CalculateCollision();
 
         img_result.copyTo(output);
+
+        video->write(img_result);
     }
 
     void GetDetectedCar(Mat& output)
@@ -104,9 +110,12 @@ public:
     {
         for (int i = 0; i < m_listLane.size(); i++)
         {
+            line(img_result, m_listLane[i].start, m_listLane[i].end, Scalar(0, 255, 0), 5);
+
             // 임시로 경고 차선 설정
             // 나중에 시간을 추가해 3초이상 선이 해당 영역일 경우 경고
-            if ((m_listLane[i].start.x > (1 * width / 3)) && (m_listLane[i].end.x < (2 * width / 3)))
+            if ((m_listLane[i].start.x > (1 * width / 3)) && (m_listLane[i].start.x < (2 * width / 3)) &&
+                    (m_listLane[i].end.x > (1 * width / 3)) && (m_listLane[i].end.x < (2 * width / 3)))
             {
                 putText(img_result, "Warning: Lane", cvPoint(100, 100), FONT_HERSHEY_SIMPLEX, 1.3, Scalar(255, 0, 0), 3);
 
@@ -185,7 +194,7 @@ public:
             if (*it >= m_fCollision)
             {
                 putText(img_result, "Collision", cvPoint(100, 200), FONT_HERSHEY_SIMPLEX, 1.3, Scalar(255, 0, 0), 3);
-                m_Log.Write(PATRONUS_LOG_TYPE_COLLISION, tostr(*it), "", m_dLatitude, m_dLongitude);
+                m_Log.Write(PATRONUS_LOG_TYPE_COLLISION, tostr((*it / 0.58 )+ 10), "", m_dLatitude, m_dLongitude);
             }
 
             it++;
@@ -266,11 +275,26 @@ public:
                 m_dLongitude = value;
                 break;
 
+            // 현재 속도
+            case 102:
+                m_dSpeed = value;
+                break;
+
             // 최근 로그 값 초기화
             case 200:
                 m_Log.InitLastType();
                 break;
+
+            // 동영상 녹화 로그
+            case 300:
+                m_dSpeed = value;
+                break;
         }
+    }
+
+    void PrintLogForRecord(string str)
+    {
+        m_Log.Write(PATRONUS_LOG_TYPE_RECORD, "", str, m_dLatitude, m_dLongitude);
     }
 
     //------------------------------------------------------------------------------------------------//
@@ -308,12 +332,15 @@ private:
     int width;
     double m_dLatitude; // 위도
     double m_dLongitude; // 경도
+    double m_dSpeed; // 현재 속도
     Mat img_input;
     Mat img_result;
     vector <LaneInfo> m_listLane;
     vector <CarInfo> m_listCar;
     vector <LightInfo> m_listLight;
     list <float> m_listCollision;
+
+    VideoWriter* video;
 
 protected:
     // int/float to string 출처: https://stackoverflow.com/questions/2125880/convert-float-to-stdstring-in-c

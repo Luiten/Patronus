@@ -50,9 +50,9 @@ public class SplashActivity extends AppCompatActivity {
     String[] PERMISSIONS  = {"android.permission.CAMERA", "android.permission.READ_EXTERNAL_STORAGE", "android.permission.WRITE_EXTERNAL_STORAGE",
             "android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE", "android.permission.READ_PHONE_STATE",
             "android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION", "android.permission.VIBRATE",
-            "android.permission.WAKE_LOCK" };
+            "android.permission.WAKE_LOCK", "android.permission.RECORD_AUDIO" };
 
-    String[] strFileLists = {"cars.xml", "checkcas.xml" };
+    String[] strFileLists = {"cars.xml", "checkcas.xml", "lbpcascade_frontalface.xml", "haarcascade_eye.xml" };
     ArrayList<String> strDownloadLists = new ArrayList<String>();
 
     private ProgressDialog progressBar;

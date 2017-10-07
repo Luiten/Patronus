@@ -159,6 +159,7 @@ public class Setting extends AppCompatActivity {
             }
 
             editor.putInt("dualcamera", nDualcameraSupport);
+            editor.apply(); // 완료한다.
 
             if (mBackCamera != null) mBackCamera.release();
             if (mFrontCamera != null) mFrontCamera.release();

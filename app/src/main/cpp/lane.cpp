@@ -82,6 +82,28 @@ private:
         }
     }
 
+    //------------------------------------------------------------------------------------------------//
+    // 원-직선 교차 확인
+    // 출처: https://stackoverflow.com/questions/6091728/line-segment-circle-intersection
+    //------------------------------------------------------------------------------------------------//
+    bool CircleLineIntersection(float x1, float y1, float x2, float y2, float cx, float cy, float cr ) {
+        float dx = x2 - x1;
+        float dy = y2 - y1;
+        float a = dx * dx + dy * dy;
+        float b = 2 * (dx * (x1 - cx) + dy * (y1 - cy));
+        float c = cx * cx + cy * cy;
+        c += x1 * x1 + y1 * y1;
+        c -= 2 * (cx * x1 + cy * y1);
+        c -= cr * cr;
+        float bb4ac = b * b - 4 * a * c;
+
+        if (bb4ac < 0) {
+            return false;    // No collision
+        } else {
+            return true;      //Collision
+        }
+    }
+
 public:
     Point GetCenterPoint()
     {
@@ -106,6 +128,8 @@ public:
         height = matInput.rows;
         resizeWidth = 640;
         resizeHeight = 360;
+
+        listLane.clear();
 
         // 초기값이 설정되지 않은 경우 값 설정
         if (ptCenter.x <= 0 && ptCenter.y <= 0)
@@ -229,7 +253,7 @@ public:
 
         for (int i = 1; i < h - 1; i++)
         {
-            for (int j = 1; j < w - 5; j++)
+            for (int j = 1; j < w - 10; j++)
             {
                 if (right_border.at<uchar>(i, j) == 255)
                 {
@@ -413,6 +437,43 @@ public:
         }
 
         circle(matLaneROI, ptCenter, 10, Scalar(255, 0, 0), CV_FILLED, CV_AA);
+
+
+
+        vector<Vec2f>::const_iterator it = vLines.begin();
+        while (it != vLines.end())
+        {
+            float rho = (*it)[0];   // 첫 번째 요소는 rho 거리
+            float theta = (*it)[1]; // 두 번째 요소는 델타 각도
+            //if (theta > 1.0 * CV_PI / 4. && theta < 3.0 * CV_PI / 4.)
+            {
+                // 수평 행
+                //Point pt1(0, rho / sin(theta)); // 첫 번째 열에서 해당 선의 교차점
+                //Point pt2(non_maxima.cols, (rho - non_maxima.cols * cos(theta)) / sin(theta));
+
+
+                float rho = (*it)[0];
+                float theta = (*it)[1];
+
+                Point pt1(rho / cos(theta), 0); // point of intersection of the line with first row
+                Point pt2((rho - matLaneROI.rows*sin(theta)) / cos(theta), matLaneROI.rows); // point of interseaction of the line with last row
+                //line(frame, pt1, pt2, Scalar(0, 255, 0), 2);
+                //line(hough, pt1, pt2, Scalar(255), 8);
+
+                // cout<<"line : (" << rho <<", " <<theta<<")"<<endl;
+
+                if (CircleLineIntersection(pt1.x, pt1.y, pt2.x, pt2.y, ptCenter.x, ptCenter.y, raito)) {
+                    pt1.y += matLaneROI.rows;
+                    pt2.y += matLaneROI.rows;
+
+                    listLane.push_back({ pt1, pt2, 0 });
+                }
+
+                //line(non_maxima, maxpt1, maxpt2, cv::Scalar(0, 0, 255), 1); // 빨간 선으로 그리기
+            }
+            ++it;
+        }
+
 
     }
 

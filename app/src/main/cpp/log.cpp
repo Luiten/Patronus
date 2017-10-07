@@ -18,6 +18,7 @@
 #define PATRONUS_LOG_TYPE_DROWSINESS        7
 #define PATRONUS_LOG_TYPE_COLLISION         8
 #define PATRONUS_LOG_TYPE_SCORE             9
+#define PATRONUS_LOG_TYPE_RECORD            10
 
 
 using namespace std;

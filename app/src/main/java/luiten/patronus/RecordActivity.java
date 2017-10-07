@@ -59,7 +59,7 @@ public class RecordActivity extends AppCompatActivity {
     private ArrayList<ArrayList<String>> mChildDesc =  new ArrayList<ArrayList<String>>();
     //private HashMap<String, ArrayList<String>> log_content = new HashMap<String, ArrayList<String>>();
     private String LogType[] = { "자동차간 거리", "끼어들기", "차선 침범", "신호 위반", "신호 주시 안함",
-            "표지판", "졸음 운전", "충돌", "운전 점수" };
+            "표지판", "졸음 운전", "충돌", "운전 점수", "수동 녹화" };
 
     List<String[]> csvLogs;
 
@@ -149,6 +149,13 @@ public class RecordActivity extends AppCompatActivity {
                     // 운전 점수 - 현재는 운전 끝을 의미
                     case 9:
                         intent = new Intent(getApplicationContext(), RecordDrive.class);
+                        startActivity(intent);
+                        break;
+
+                    // 수동녹화
+                    case 10:
+                        intent = new Intent(getApplicationContext(), RecordCrash.class);
+                        intent.putExtra("Logs", temp);
                         startActivity(intent);
                         break;
 

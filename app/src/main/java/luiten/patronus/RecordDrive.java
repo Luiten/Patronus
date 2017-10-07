@@ -50,6 +50,8 @@ public class RecordDrive extends AppCompatActivity {
     private TextView cutin_score;
     private TextView total_score;
 
+    private int minusValue = 0;
+
     private String LogType[] = { "자동차간 거리", "끼어들기", "차선 침범", "신호 위반", "신호 주시 안함",
             "표지판", "졸음 운전", "충돌", "운전 점수" };
     private Integer LogTypeScore[] = { 2, 5, 1, 5, 3,
@@ -90,7 +92,13 @@ public class RecordDrive extends AppCompatActivity {
         setArrayData();
 
         int n = 0;
-        for (int i = mLogDate.size() - 7; i < mLogDate.size(); i++, n++) {
+        if (7 - mLogDate.size() > 0) {
+            minusValue = mLogDate.size();
+        } else {
+            minusValue = 7;
+        }
+
+        for (int i = mLogDate.size() - minusValue; i < mLogDate.size(); i++, n++) {
             mDate.add(mLogDate.get(i).substring(5)); // 연도를 지우고 월-일만 표시한다
             valueSet.add(new BarEntry(CalculateScore(i), n)); // 총 점수 계산값 적용
         }
@@ -125,6 +133,8 @@ public class RecordDrive extends AppCompatActivity {
         drive_chart.invalidate();
         drive_chart.setDragEnabled(true);
         drive_chart.setDrawBorders(false);
+        drive_chart.getAxisLeft().setAxisMaxValue(100);
+        drive_chart.getAxisLeft().setAxisMinValue(0);
         //drive_chart.setBackgroundColor(getResources().getColor(R.color.colorAccent));
 
         drive_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
@@ -132,7 +142,7 @@ public class RecordDrive extends AppCompatActivity {
         public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
             if (e == null)
                 return;
-            CalculateScore(mLogDate.size() - 7 + e.getXIndex());
+            CalculateScore(mLogDate.size() - minusValue + e.getXIndex());
         }
 
         @Override
