@@ -202,7 +202,7 @@ public:
 
         inRange(matRoadBin, Scalar(0, averageSat - 30, averageVal - 50), Scalar(180, averageSat + 30, averageVal + 50), matRoadBin);
 
-        rectangle(matResult, Rect(width / 2 - 30, height * 6 / 7, 60, 10), Scalar(0, 0, 255), 2);
+        //rectangle(matResult, Rect(width / 2 - 30, height * 6 / 7, 60, 10), Scalar(0, 0, 255), 2);
 
         //--------------------------------------------------------------------------//
         // Bird's Eye View   출처: https://marcosnietoblog.wordpress.com/2014/02/22/source-code-inverse-perspective-mapping-c-opencv/
@@ -241,7 +241,7 @@ public:
         //ipm->applyHomography(matBirdView, matBirdOutput);
 
         // 결과 화면에 Bird's Eye View 영역 보기
-        ipm->drawPoints(origPoints, matResult);
+        //ipm->drawPoints(origPoints, matResult);
 
         //--------------------------------------------------------------------------//
         // Haar 검출
@@ -450,7 +450,7 @@ public:
                             maxpt1.x = 0; maxpt2.x = width;
 
                             // 마지막 열에서 해당 선의 교차점
-                            line(matResult, maxpt1, maxpt2, cv::Scalar(255, 0, 0), 2); // 빨간 선으로 그리기
+                            //line(matResult, maxpt1, maxpt2, cv::Scalar(255, 0, 0), 2); // 빨간 선으로 그리기
 
                             // 해당 직선이 거리계산 관심영역(IPM)에 들면 IPM에 맞는 직선 변환
                             if (origPoints[0].y >= maxpt1.y && origPoints[3].y <= maxpt1.y)
@@ -459,7 +459,7 @@ public:
                                 maxpt1 = ipm->applyHomography(maxpt1);
                                 maxpt2 = ipm->applyHomography(maxpt2);
 
-                                float tempDist = 0.2 * (dstPoints[0].y - maxpt1.y);
+                                float tempDist = 0.5 * (dstPoints[0].y - maxpt1.y);
 
                                 //vecDist.push_back(tempDist);
                                 listCar.push_back( {Point(), Point(), tempDist} );

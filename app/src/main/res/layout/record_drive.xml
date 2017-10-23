@@ -3,11 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/colorBackgroundDark"
-    android:paddingRight="10dp"
-    android:paddingLeft="10dp"
-    android:paddingTop="10dp"
-    android:paddingBottom="10dp">
+    android:background="@color/colorBackgroundDark">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -17,127 +13,153 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="10dp">
 
             <com.github.mikephil.charting.charts.BarChart
+                android:id="@+id/recorddrive_barchart"
                 android:layout_width="match_parent"
                 android:layout_height="400dp"
-                android:layout_marginTop="15dp"
-                android:id="@+id/recorddrive_barchart"
-                android:background="@color/colorBackground"/>
+                android:background="@color/colorBackground" />
+
+            <TextView
+                android:id="@+id/recorddrive_text_date"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:textSize="20dp"
+                android:textAlignment="center"
+                android:textColor="@color/colorBackground"
+                android:background="@color/colorPrimary"
+                android:text="Date" />
 
             <ImageView
+                android:id="@+id/recorddrive_image_medal"
                 android:layout_width="match_parent"
-                android:layout_height="400dp"
-                android:src="@drawable/logo"/>
+                android:layout_height="300dp"
+                android:src="@drawable/logo" />
 
+            <TextView
+                android:id="@+id/recorddrive_text_medaldesc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:textSize="18dp"
+                android:textAlignment="center"
+                android:text="설명" />
 
             <LinearLayout
+                android:id="@+id/recorddrive_layout_score"
                 android:layout_width="match_parent"
                 android:layout_height="180dp"
                 android:layout_marginTop="10dp"
-                android:orientation="vertical"
-                android:id = "@+id/recorddrive_layout_score">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_weight="1">
-
-                    <TextView
-                        android:id="@+id/recorddrive_text_crashscore"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:background="@drawable/border"
-                        android:text="충돌: 0" />
-
-                    <TextView
-                        android:id="@+id/recorddrive_text_signalscore"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:background="@drawable/border"
-                        android:text="신호위반: 0" />
-
-                    <TextView
-                        android:id="@+id/recorddrive_text_linescore"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:background="@drawable/border"
-                        android:text="차선침범: 0" />
-
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:orientation="horizontal"
-                    android:layout_weight="1">
-
-                    <!--            <TextView
-                                    android:id="@+id/recorddrive_text_sleepscore"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="match_parent"
-                                    android:layout_weight="1"
-                                    android:gravity="center"
-                                    android:background="@drawable/border"
-                                    android:text="졸음: 0" />-->
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/recorddrive_text_distancescore"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:gravity="center"
                         android:background="@drawable/border"
+                        android:gravity="center"
                         android:text="차간 거리: 0" />
 
-                    <TextView
-                        android:id="@+id/recorddrive_text_attentionscore"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:gravity="center"
-                        android:background="@drawable/border"
-                        android:text="신호 부주의: 0" />
 
                     <TextView
                         android:id="@+id/recorddrive_text_cutinscore"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:gravity="center"
                         android:background="@drawable/border"
+                        android:gravity="center"
                         android:text="끼어들기: 0" />
+
+                    <TextView
+                        android:id="@+id/recorddrive_text_linescore"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/border"
+                        android:gravity="center"
+                        android:text="차선침범: 0" />
 
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/recorddrive_text_totalscore"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:gravity="center"
-                    android:background="@drawable/border"
-                    android:text="총 점수: 0"/>
+                    android:orientation="horizontal">
 
+                    <TextView
+                        android:id="@+id/recorddrive_text_signalscore"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/border"
+                        android:gravity="center"
+                        android:text="신호위반: 0" />
+
+                    <TextView
+                        android:id="@+id/recorddrive_text_attentionscore"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/border"
+                        android:gravity="center"
+                        android:text="신호 부주의: 0" />
+
+                    <TextView
+                        android:id="@+id/recorddrive_text_sleepscore"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:gravity="center"
+                        android:background="@drawable/border"
+                        android:text="졸음운전: 0" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/recorddrive_text_crashscore"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="2"
+                        android:background="@drawable/border"
+                        android:gravity="center"
+                        android:text="충돌: 0" />
+
+                    <TextView
+                        android:id="@+id/recorddrive_text_totalscore"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:background="@drawable/border"
+                        android:gravity="center"
+                        android:text="총 점수: 0" />
+
+                </LinearLayout>
 
             </LinearLayout>
 
-
         </LinearLayout>
 
-
     </ScrollView>
-
-
-
 
 </LinearLayout>

@@ -52,7 +52,7 @@ public class SplashActivity extends AppCompatActivity {
             "android.permission.ACCESS_COARSE_LOCATION", "android.permission.ACCESS_FINE_LOCATION", "android.permission.VIBRATE",
             "android.permission.WAKE_LOCK", "android.permission.RECORD_AUDIO" };
 
-    String[] strFileLists = {"cars.xml", "checkcas.xml", "lbpcascade_frontalface.xml", "haarcascade_eye.xml" };
+    String[] strFileLists = {"cars.xml", "checkcas.xml", "lbpcascade_frontalface.xml", "haarcascade_frontalface_alt.xml", "haarcascade_eye.xml" };
     ArrayList<String> strDownloadLists = new ArrayList<String>();
 
     private ProgressDialog progressBar;
@@ -169,6 +169,11 @@ public class SplashActivity extends AppCompatActivity {
         //SetSettings(7, settings.getInt("resolution", 1)); // Video Size
         SetSettings(8, settings.getInt("resolutionwidth", 0)); // Video Width
         SetSettings(9, settings.getInt("resolutionheight", 0)); // Video Height
+        SetSettings(10, (settings.getInt("sensitivity", 4) + 1) * 30); // Record Length
+        SetSettings(400, settings.getInt("standardlanex0", 0));
+        SetSettings(401, settings.getInt("standardlaney0", 0));
+        SetSettings(402, settings.getInt("standardlanex1", 0));
+        SetSettings(403, settings.getInt("standardlaney1", 0));
 
         // 파일이 하나라도 없으면 다운로드
         for (int i = 0; i < strFileLists.length; i++)
@@ -356,7 +361,7 @@ public class SplashActivity extends AppCompatActivity {
                             float per = ((float) downloadedSize / nFileSize) * 100;
                             String str = strDownloadLists[0].get(i) + ": " + (downloadedSize / 1024) + "KB / " + (nFileSize / 1024) + "KB";
                             publishProgress("" + (int) per, str);
-                            Thread.sleep(10);
+                            //Thread.sleep(1);
                         }
 
                         //파일에 데이터를 기록합니다.

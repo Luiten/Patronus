@@ -50,14 +50,17 @@ Java_luiten_patronus_PointActivity_convertNativeLib(JNIEnv *, jobject, jlong add
     return 0;
 }
 
-JNIEXPORT jint JNICALL
-Java_luiten_patronus_PointActivity_CaptureImage(JNIEnv *, jobject, jlong addrResult)
+JNIEXPORT jintArray JNICALL
+Java_luiten_patronus_PointActivity_GetToStandardLane(JNIEnv *env, jobject, jint nLaneType)
 {
-    Mat &img_result = *(Mat *) addrResult;
+    int arr[2];
+    jintArray result;
+    result = env->NewIntArray(2);
 
-    //detectcars.get_result(img_result);
-    mgr.GetDetectedCar(img_result);
-    return 0;
+    mgr.GetStandardLane(arr, nLaneType);
+
+    env->SetIntArrayRegion(result, 0, 2, arr);
+    return result;
 }
 
 // Manager 클래스에 세팅 값 적용

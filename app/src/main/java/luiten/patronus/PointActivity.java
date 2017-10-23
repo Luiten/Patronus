@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 
 /**
  * Created by LG on 2017-05-29.
@@ -46,7 +47,8 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
 
     public native int InitializeNativeLib(int w, int h);
     public native int convertNativeLib(long matAddrInput, long matAddrResult, int iCamera);
-    public native int CaptureImage(long matAddrResult);
+    public native ArrayList<Integer> GetToStandardLane(int nLaneType);
+    public native int SetSettings(int type, double value);
 
     static {
         System.loadLibrary("opencv_java3");
@@ -77,12 +79,12 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
         setContentView(R.layout.point_main);
 
         // Start
-        Button button1 = (Button)findViewById(R.id.point_btn_capture);
-        button1.setOnClickListener(new View.OnClickListener() {
+        Button btnCapture = (Button)findViewById(R.id.point_btn_capture);
+        btnCapture.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CaptureImage(img_result.getNativeObjAddr());
                 SaveImage();
+                SaveLane();
                 Toast.makeText(getApplicationContext(),"기준점을 설정했습니다.",Toast.LENGTH_SHORT).show();
                 finish();
             }
@@ -155,7 +157,7 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
         if ( img_result != null ) img_result.release();
         img_result = new Mat(img_input.rows(), img_input.cols(), img_input.type());
 
-        convertNativeLib(img_input.getNativeObjAddr(), img_result.getNativeObjAddr(), 0);
+        convertNativeLib(img_input.getNativeObjAddr(), img_result.getNativeObjAddr(), 2);
 
         return img_result;
     }
@@ -181,5 +183,26 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
         }
         catch (IOException e) {
         }
+    }
+
+    private void SaveLane() {
+        ArrayList<Integer> arr = null;
+
+        SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
+        SharedPreferences.Editor editor = settings.edit();
+
+        arr = GetToStandardLane(0);
+        editor.putInt("standardlanex0", arr.get(0));
+        editor.putInt("standardlaney0", arr.get(1));
+        SetSettings(400, arr.get(0));
+        SetSettings(401, arr.get(1));
+
+        arr = GetToStandardLane(1);
+        editor.putInt("standardlanex1", arr.get(0));
+        editor.putInt("standardlaney1", arr.get(1));
+        SetSettings(402, arr.get(0));
+        SetSettings(403, arr.get(1));
+
+        editor.apply(); // 완료한다.
     }
 }

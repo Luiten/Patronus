@@ -16,6 +16,7 @@ struct LaneInfo
     Point start;
     Point end;
     int type; // 1 = 중앙선, 0 = 흰색 실선
+    float theta; // 각도
 };
 
 class Lane {
@@ -306,7 +307,7 @@ public:
         vector<Vec2f> s_lines;
         vector<Vec2f> left_lines;
         vector<Vec2f> right_lines;
-        int hough_threshold = w / 15;
+        int hough_threshold = w / 11;
 
         HoughLines(right_border, s_lines, 1, CV_PI / 180, hough_threshold, 0, 0);
 
@@ -315,11 +316,11 @@ public:
             float r = s_lines[i][0], theta = s_lines[i][1];
             float degree = theta * 180 / CV_PI;
 
-            if (90 < degree && degree < 170) // lane on leftside
+            if (90 < degree && degree < 160) // lane on leftside
             {
                 right_lines.push_back(s_lines[i]);
             }
-            if (10 < degree && degree < 90) // lane on leftside
+            if (20 < degree && degree < 90) // lane on leftside
             {
                 left_lines.push_back(s_lines[i]);
             }
@@ -451,9 +452,8 @@ public:
                 //Point pt1(0, rho / sin(theta)); // 첫 번째 열에서 해당 선의 교차점
                 //Point pt2(non_maxima.cols, (rho - non_maxima.cols * cos(theta)) / sin(theta));
 
-
-                float rho = (*it)[0];
-                float theta = (*it)[1];
+//                float rho = (*it)[0];
+//                float theta = (*it)[1];
 
                 Point pt1(rho / cos(theta), 0); // point of intersection of the line with first row
                 Point pt2((rho - matLaneROI.rows*sin(theta)) / cos(theta), matLaneROI.rows); // point of interseaction of the line with last row
@@ -466,7 +466,7 @@ public:
                     pt1.y += matLaneROI.rows;
                     pt2.y += matLaneROI.rows;
 
-                    listLane.push_back({ pt1, pt2, 0 });
+                    listLane.push_back({ pt1, pt2, 0, theta });
                 }
 
                 //line(non_maxima, maxpt1, maxpt2, cv::Scalar(0, 0, 255), 1); // 빨간 선으로 그리기

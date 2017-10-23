@@ -40,8 +40,8 @@ public class SensitivityTestActivity extends Activity implements SensorEventList
         accSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
 
         // 적용
-        Button button1 = (Button)findViewById(R.id.sensitivetest_btn_save);
-        button1.setOnClickListener(new View.OnClickListener() {
+        Button btnApply = (Button)findViewById(R.id.sensitivetest_btn_save);
+        btnApply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 ((Setting)Setting.mContext).sb_sensi.setProgress((int)(maxAccel / 5.8));
@@ -50,8 +50,8 @@ public class SensitivityTestActivity extends Activity implements SensorEventList
         });
 
         // 취소
-        Button button2 = (Button)findViewById(R.id.sensitivetest_btn_cancel);
-        button2.setOnClickListener(new View.OnClickListener() {
+        Button btnCancel = (Button)findViewById(R.id.sensitivetest_btn_cancel);
+        btnCancel.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 finish();

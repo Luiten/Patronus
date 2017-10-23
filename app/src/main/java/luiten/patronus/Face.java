@@ -1,15 +1,7 @@
 //https://github.com/auejin/winklick
 package luiten.patronus;
 
-import android.app.Activity;
-import android.content.Context;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.WindowManager;
-import android.widget.SeekBar;
-import android.widget.TextView;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
@@ -48,21 +40,6 @@ public class Face {
     private static final int TM_CCORR = 4;
     private static final int TM_CCORR_NORMED = 5;
 
-    private int learn_frames = 0;
-    private Mat teplateR;
-    private Mat teplateL;
-    //int method = 0;
-
-    // matrix for zooming
-    //private Mat mZoomWindow;
-    //private Mat mZoomWindow2;
-
-    //private MenuItem               mItemFace50;
-    //private MenuItem               mItemFace40;
-    //private MenuItem               mItemFace30;
-    //private MenuItem               mItemFace20;
-    // private MenuItem               mItemType;
-
     private Mat mRgba;
     private Mat mGray;
     private File mCascadeFile;
@@ -74,22 +51,21 @@ public class Face {
     //private int                    mDetectorType       = JAVA_DETECTOR;
     private String[] mDetectorName;
 
-    private float mRelativeFaceSize = 0.5f;
+    private float mRelativeFaceSize = 0.3f;
     private int mAbsoluteFaceSize = 0;
-
-    private static int cameraWidth = 400; //1280*720
-    private static int cameraHeight = 300; //352*288
-
-    private WindowManager.LayoutParams mParams; //뷰의 위치 및 크기
-    private WindowManager mWindowManager;
-    //private RelativeLayout mPopupView;//항상 보이게할 뷰(nativecam_view.xml의 레이아웃)
 
     double xCenter = -1;
     double yCenter = -1;
 
+    int nEyeStatus = 0; // 0 = 얼굴 검출 안됨, 1 = 눈 검출 안됨, 2 = 감은 상태, 3 = 뜬 상태
+
+    public int GetBlinkList() {
+        return nEyeStatus;
+    }
+
     public void LoadCascade() {
         // load cascade file from application resources
-        mCascadeFile = new File("/sdcard/Patronus/lbpcascade_frontalface.xml");
+        mCascadeFile = new File("/sdcard/Patronus/haarcascade_frontalface_alt.xml");
 
         File cascadeFileT = new File("/sdcard/Patronus/haarcascade_eye.xml");
         //-- end --//
@@ -122,6 +98,7 @@ public class Face {
 
     public Mat ProcessFace(Mat inputFrame) {
 
+        nEyeStatus = 0;
         mRgba = inputFrame.clone();
         Imgproc.cvtColor(inputFrame, mGray, Imgproc.COLOR_BGR2GRAY);
 
@@ -161,6 +138,7 @@ public class Face {
 //        }
 
         if (facesArray.length > 0) {
+            nEyeStatus = 1;
             if (isLineVisible)
                 Imgproc.rectangle(mRgba, facesArray[0].tl(), facesArray[0].br(), FACE_RECT_COLOR, 3);
             xCenter = (facesArray[0].x + facesArray[0].width + facesArray[0].x) / 2;
@@ -231,6 +209,7 @@ public class Face {
 
         }
 
+        // 눈 데이터 배열에 넣기   30 fps * 60 seconds
 
         Imgproc.putText(mRgba, "numBlink: " + Num_Blink, new Point(100, 30),
                 Core.FONT_HERSHEY_SIMPLEX, 0.5, new Scalar(255, 0, 0, 255));
@@ -278,6 +257,7 @@ public class Face {
     private ArrayList<Integer> maxH_list = new ArrayList<Integer>();//윙크인식용
 
     private int learn_course = 0;//0:없음, 1:가운데, 2:위 얻음->작동 시작
+
 
     private Rect returnEye(Rect eye) {
         eye = new Rect(eye.x + eye.width / 16
@@ -331,17 +311,23 @@ public class Face {
                 isWinkTmp = getPupilBlink(eye_temp);
 
                 if (isLeftEye == true) {
-                    if (blink_L && (blink_L != isWinkTmp)) Num_Blink++;
+                    if (blink_L && (blink_L != isWinkTmp)) {
+                        Num_Blink++;
+                        nEyeStatus = 2;
+                    }
                     blink_L = isWinkTmp;
                 } else {
-                    if (blink_R && (blink_R != isWinkTmp)) Num_Blink++;
+                    if (blink_R && (blink_R != isWinkTmp)) {
+                        Num_Blink++;
+                        nEyeStatus = 2;
+                    }
                     blink_R = isWinkTmp;
-
                 }
             }
 
 
         } else {
+            nEyeStatus = 3;
             if (isLeftEye) {
                 eyeLMissingFrame = 0;
             } else {
@@ -363,11 +349,17 @@ public class Face {
             eye_temp = m.submat(eyesArray[0]);//.clone()하면 원래 mGray에서 잘리게 나옴. 지우면 히스토그램부터 블러처리까지 된걸 자른 mat이 리턴된다.
             isWinkTmp = getPupilBlink(eye_temp);//Imgproc.resize(setPupilWink_mat(m.submat(eyesArray[0])), mZoomWindow2,mZoomWindow2.size());//표시하는거//setPupilWink_mat
             if (isLeftEye) {
-                if (blink_L && (blink_L != isWinkTmp)) Num_Blink++;
+                if (blink_L && (blink_L != isWinkTmp)) {
+                    Num_Blink++;
+                    nEyeStatus = 2;
+                }
                 blink_L = isWinkTmp;
 
             } else {
-                if (blink_R && (blink_R != isWinkTmp)) Num_Blink++;
+                if (blink_R && (blink_R != isWinkTmp)) {
+                    Num_Blink++;
+                    nEyeStatus = 2;
+                }
                 blink_R = isWinkTmp;
             }
         }
@@ -378,12 +370,9 @@ public class Face {
 
         prev_facearea = face;
         faceMissingFrame = 0;
-
-
     }
 
     private Rect returnEyeArea(Rect face, boolean isLeft) {
-
         if (!isLeft) {
             face = new Rect(face.x + face.width / 16
                     + (face.width - 2 * face.width / 16) / 2,
@@ -394,7 +383,6 @@ public class Face {
                     (int) (face.y + (face.height / 4.5)),
                     (face.width - 2 * face.width / 16) / 2, (int) (face.height / 3.0));
         }
-
 
         return face;
     }
@@ -700,9 +688,7 @@ public class Face {
 
         }
 
-
         //TODO : 가운데 쳐다보게 머신러닝된 값중 최대값인 a_bri_midmax와 a_bri값을 비교해 위 쳐다봄 -> 아니면 dg값으로 아래 쳐다봄 검사.
-
         eye_temp = eye_a;//스레시홀드된 눈 영역 리턴
 
         Imgproc.rectangle(eye_temp, eye_a_area.tl(), eye_a_area.br(), new Scalar(100, 100, 100, 255), 1);//추정된 눈영역 리턴
@@ -994,48 +980,6 @@ public class Face {
         Rect rec = new Rect(matchLoc_tx, matchLoc_ty);
 
 
-    }
-
-    private Mat get_template(CascadeClassifier clasificator, Rect area, int size) {
-        Mat template = new Mat();
-        Mat mROI = mGray.submat(area);
-        MatOfRect eyes = new MatOfRect();
-        Point iris = new Point();
-        Rect eye_template = new Rect();
-        clasificator.detectMultiScale(mROI, eyes, 1.1, 2,
-                Objdetect.CASCADE_FIND_BIGGEST_OBJECT
-                        | Objdetect.CASCADE_SCALE_IMAGE, new Size(30, 30),
-                new Size());
-
-        Rect[] eyesArray = eyes.toArray();
-        for (int i = 0; i < eyesArray.length; ) {
-            Rect e = eyesArray[i];
-            e.x = area.x + e.x;
-            e.y = area.y + e.y;
-            Rect eye_only_rectangle = new Rect((int) e.tl().x,
-                    (int) (e.tl().y + e.height * 0.4), (int) e.width,
-                    (int) (e.height * 0.6));
-            mROI = mGray.submat(eye_only_rectangle);
-            Mat vyrez = mRgba.submat(eye_only_rectangle);
-
-
-            Core.MinMaxLocResult mmG = Core.minMaxLoc(mROI);
-
-            Imgproc.circle(vyrez, mmG.minLoc, 2, new Scalar(255, 255, 255, 255), 2);
-            iris.x = mmG.minLoc.x + eye_only_rectangle.x;
-            iris.y = mmG.minLoc.y + eye_only_rectangle.y;
-            eye_template = new Rect((int) iris.x - size / 2, (int) iris.y
-                    - size / 2, size, size);
-            Imgproc.rectangle(mRgba, eye_template.tl(), eye_template.br(),
-                    new Scalar(255, 0, 0, 255), 2);
-            template = (mGray.submat(eye_template)).clone();
-            return template;
-        }
-        return template;
-    }
-
-    public void onRecreateClick(View v) {
-        learn_course = 0;
     }
 
 }

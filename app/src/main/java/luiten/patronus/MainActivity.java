@@ -38,8 +38,11 @@ import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.Point;
+import org.opencv.core.Scalar;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.videoio.VideoCapture;
 
@@ -60,6 +63,9 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
 
     private String WarningDesc[] = { "앞차와 너무 가깝습니다", " 자동차를 주의하세요", "차선을 침범 중입니다", " 신호를 위반했습니다",
             " 신호를 확인하세요", "입니다", "졸음운전 경고입니다", "충돌이 감지됐습니다", "" };
+
+    private Button btnStart;
+    private Button btnRecord;
 
     private final long FINISH_INTERVAL_TIME = 2000;
     private long backPressedTime = 0;
@@ -222,16 +228,27 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         });
 
         // Start
-        final Button button1 = (Button)findViewById(R.id.main_btn_start);
-        button1.setOnClickListener(new View.OnClickListener() {
+        btnStart = (Button)findViewById(R.id.main_btn_start);
+        btnStart.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(!bStart) {
-                    //button1.setText("종료");
-                    button1.setBackgroundResource(R.drawable.drivestop);
+                    btnRecord.setBackgroundResource(R.drawable.recordstart);
+                    mVideoView.setVisibility(View.INVISIBLE);
+                    if(recorder != null){
+                        recorder.stop();
+                        recorder.release();
+                        recorder = null;
+                    }
+                    if(mCamera == null){
+                        setCameraPreview(mVideoView.getHolder());
+                        mCamera.startPreview();
+                    }
+
+                    btnStart.setBackgroundResource(R.drawable.drivestop);
 
                     // 백그라운드 동작
-                    mWakeLock.acquire();
+                    if (!mWakeLock.isHeld()) mWakeLock.acquire();
 
                     // 영상처리 시작
                     InitializeResolution();
@@ -243,10 +260,10 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                 }
                 else {
                     //button1.setText("시작");
-                    button1.setBackgroundResource(R.drawable.drivestart);
+                    btnStart.setBackgroundResource(R.drawable.drivestart);
 
                     // 백그라운드 동작 종료
-                    mWakeLock.release();
+                    if (mWakeLock.isHeld()) mWakeLock.release();
 
                     // 영상처리 중지
                     StopProcessing();
@@ -259,14 +276,14 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         });
 
         // 동영상 녹화
-        final Button button2 = (Button)findViewById(R.id.main_btn_capture);
-        button2.setOnClickListener(new View.OnClickListener() {
+        btnRecord = (Button)findViewById(R.id.main_btn_capture);
+        btnRecord.setOnClickListener(new View.OnClickListener() {
             boolean bRecord = false;
 
             @Override
             public void onClick(View v) {
                 if (bRecord) {
-                    button2.setBackgroundResource(R.drawable.recordstart);
+                    btnRecord.setBackgroundResource(R.drawable.recordstart);
                     mVideoView.setVisibility(View.INVISIBLE);
                     if(recorder != null){
                         recorder.stop();
@@ -277,8 +294,20 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
                         setCameraPreview(mVideoView.getHolder());
                         mCamera.startPreview();
                     }
+
+                    // 백그라운드 동작 종료
+                    if (mWakeLock.isHeld()) mWakeLock.release();
                 } else {
-                    button2.setBackgroundResource(R.drawable.recordstop);
+                    btnStart.setBackgroundResource(R.drawable.drivestart);
+
+                    // 영상처리 중지
+                    StopProcessing();
+                    bStart = false;
+
+                    // 백그라운드 동작
+                    if (!mWakeLock.isHeld()) mWakeLock.acquire();
+
+                    btnRecord.setBackgroundResource(R.drawable.recordstop);
                     mVideoView.setVisibility(View.VISIBLE);
                     beginRecording(mVideoView.getHolder());
                 }
@@ -287,14 +316,29 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         });
 
         // Setting
-        Button button3 = (Button)findViewById(R.id.main_btn_setting);
-        button3.setOnClickListener(new View.OnClickListener() {
+        Button btnSetting = (Button)findViewById(R.id.main_btn_setting);
+        btnSetting.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                button1.setBackgroundResource(R.drawable.drivestart);
+                btnStart.setBackgroundResource(R.drawable.drivestart);
 
                 StopProcessing();
                 bStart = false;
+
+                btnRecord.setBackgroundResource(R.drawable.recordstart);
+                mVideoView.setVisibility(View.INVISIBLE);
+                if(recorder != null){
+                    recorder.stop();
+                    recorder.release();
+                    recorder = null;
+                }
+                if(mCamera == null){
+                    setCameraPreview(mVideoView.getHolder());
+                    mCamera.startPreview();
+                }
+
+                // 백그라운드 동작 종료
+                if (mWakeLock.isHeld()) mWakeLock.release();
 
                 Intent intent = new Intent(getApplicationContext(), Setting.class);
                 startActivity(intent);
@@ -552,7 +596,7 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         if (nWarningMode == 0) {
             this.handler.sendMessage(Message.obtain(handler, 2, (int) GetValue(1))); // TTS
         } else if (nWarningMode == 1) {
-            this.handler.sendMessage(Message.obtain(handler, 3, (int) GetValue(1))); // TTS
+            this.handler.sendMessage(Message.obtain(handler, 3, (int) GetValue(1))); // 진동
         }
 
         //ShowAlert((int) GetValue(1)); // 이미지 Fade in/out 경고
@@ -808,6 +852,8 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         //------------------------------------------------------------------------------------------------//
         @Override
         public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
+            final ArrayList<Integer> m_BlinkList = new ArrayList<Integer>();
+            int nEyeStatus = 0;
             matInput = inputFrame.rgba();
 
             //--------------------------------------------------------------------------//
@@ -818,6 +864,30 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
             matInput.copyTo(matResult);
 
             matResult = mFace.ProcessFace(matInput);
+            nEyeStatus = mFace.GetBlinkList();
+            if (m_BlinkList.size() > (30 * 60)) {
+                m_BlinkList.remove(0);
+            }
+            m_BlinkList.add(nEyeStatus);
+
+
+            int blink = 0;
+            for (int i = 0; i < m_BlinkList.size(); i++) {
+                if (m_BlinkList.get(i) == 2) {
+                    blink++;
+                }
+            }
+
+
+//            Imgproc.putText(matResult, "blink: " + ((double)(m_BlinkList.size() / 30) / blink), new Point(200, 30),
+//                    Core.FONT_HERSHEY_SIMPLEX, 1, new Scalar(255, 0, 0, 255));
+
+            if ((m_BlinkList.size () > 30 * 5) && ((double)(m_BlinkList.size() / 30) / blink) < 1)
+            {
+                // 졸음운전 여부 데이터 전송
+                SetSettings(300, 0);
+                m_BlinkList.clear();
+            }
 
             return matResult;
         }

@@ -7,6 +7,7 @@ import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -44,7 +45,7 @@ public class RecordDrive extends AppCompatActivity {
     private TextView crash_score;
     private TextView signal_score;
     private TextView line_score;
-    //private TextView sleep_score;
+    private TextView sleep_score;
     private TextView distance_score;
     private TextView attention_score;
     private TextView cutin_score;
@@ -53,9 +54,10 @@ public class RecordDrive extends AppCompatActivity {
     private int minusValue = 0;
 
     private String LogType[] = { "자동차간 거리", "끼어들기", "차선 침범", "신호 위반", "신호 주시 안함",
-            "표지판", "졸음 운전", "충돌", "운전 점수" };
+            "표지판", "졸음 운전", "충돌", "운전 점수", "수동 녹화" };
     private Integer LogTypeScore[] = { 2, 5, 1, 5, 3,
-            0, 20, 30, 100 };
+            0, 20, 30, 100, 0 };
+    private String MedalDesc[] = { "아주 완벽해요!", "잘했어요!", "괜찮았어요!", "조금 더 노력해봐요!", "무슨 일이 있었나요?", "... 자요?" };
 
     private ArrayList<String> mLogDate = new ArrayList<String>();
     private ArrayList<ArrayList<Integer>> arrIndex = new ArrayList<ArrayList<Integer>>();
@@ -71,10 +73,12 @@ public class RecordDrive extends AppCompatActivity {
         setContentView(R.layout.record_drive);
         setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
+        ArrayList<String> mDate = new ArrayList<>();
+
         crash_score = (TextView)findViewById(R.id.recorddrive_text_crashscore);
         signal_score = (TextView)findViewById(R.id.recorddrive_text_signalscore);
         line_score = (TextView)findViewById(R.id.recorddrive_text_linescore);
-        //sleep_score = (TextView)findViewById(R.id.recorddrive_text_sleepscore);
+        sleep_score = (TextView)findViewById(R.id.recorddrive_text_sleepscore);
         distance_score = (TextView)findViewById(R.id.recorddrive_text_distancescore);
         attention_score = (TextView)findViewById(R.id.recorddrive_text_attentionscore);
         cutin_score = (TextView)findViewById(R.id.recorddrive_text_cutinscore);
@@ -84,7 +88,6 @@ public class RecordDrive extends AppCompatActivity {
 
         drive_chart = (BarChart)findViewById(R.id.recorddrive_barchart);
 
-        ArrayList<String> mDate = new ArrayList<>();
         ArrayList<IBarDataSet> dataSets = null;
         ArrayList<BarEntry> valueSet = new ArrayList<>();
 
@@ -117,7 +120,7 @@ public class RecordDrive extends AppCompatActivity {
         XAxis xAxis = drive_chart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
 
-        BarData data = new BarData(mDate,dataSets);
+        BarData data = new BarData(mDate, dataSets);
         data.setValueFormatter(new CustomValueFormatter());
 
         Legend legend = drive_chart.getLegend();
@@ -138,17 +141,17 @@ public class RecordDrive extends AppCompatActivity {
         //drive_chart.setBackgroundColor(getResources().getColor(R.color.colorAccent));
 
         drive_chart.setOnChartValueSelectedListener(new OnChartValueSelectedListener() {
-        @Override
-        public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
-            if (e == null)
-                return;
-            CalculateScore(mLogDate.size() - minusValue + e.getXIndex());
-        }
+            @Override
+            public void onValueSelected(Entry e, int dataSetIndex, Highlight h) {
+                if (e == null)
+                    return;
+                CalculateScore(mLogDate.size() - minusValue + e.getXIndex());
+            }
 
-        @Override
-        public void onNothingSelected() {
-            Toast.makeText(getApplicationContext(), "다시 눌러주세요", Toast.LENGTH_LONG).show();
-        }
+            @Override
+            public void onNothingSelected() {
+                //Toast.makeText(getApplicationContext(), "다시 눌러주세요", Toast.LENGTH_LONG).show();
+            }
         });
     }
 
@@ -262,7 +265,39 @@ public class RecordDrive extends AppCompatActivity {
         signal_score.setText("신호위반: " + signal + "회");
         attention_score.setText("신호 부주의: " + attention + "회");
         crash_score.setText("충돌: " + crash + "회");
+        sleep_score.setText("졸음운전: " + sleep + "회");
         total_score.setText("총 점수: " + resultScore + "점");
+
+        // 날짜
+        TextView textDate = (TextView)findViewById(R.id.recorddrive_text_date);
+        textDate.setText(mLogDate.get(idx));
+
+        // 날짜 설명
+        TextView textDesc = (TextView)findViewById(R.id.recorddrive_text_medaldesc);
+
+        // 이미지 뷰 메달 설정
+        final ImageView imageMedal = (ImageView) findViewById(R.id.recorddrive_image_medal);
+        if (resultScore >= 90) {
+            imageMedal.setImageResource(R.drawable.trophy);
+            textDesc.setText(MedalDesc[0]);
+        }
+        else if (resultScore >= 80) {
+            imageMedal.setImageResource(R.drawable.medal1);
+            textDesc.setText(MedalDesc[1]);
+        }
+        else if (resultScore >= 60) {
+            imageMedal.setImageResource(R.drawable.medal2);
+            textDesc.setText(MedalDesc[2]);
+        }
+        else if (resultScore >= 40) {
+            imageMedal.setImageResource(R.drawable.medal3);
+            textDesc.setText(MedalDesc[3]);
+        }
+        else  {
+            imageMedal.setImageResource(R.drawable.logo);
+            if (resultScore >= 10) textDesc.setText(MedalDesc[4]);
+            else textDesc.setText(MedalDesc[5]);
+        }
 
         return resultScore;
     }

@@ -129,11 +129,11 @@ public class Setting extends AppCompatActivity {
         recordadapter = new RecordAdapter(this);
         recordlistview.setAdapter(recordadapter);
 
-        alarmadapter.addItem("차선", "주행 중 차선을 5초 이상 밟고 있을 경우 경고합니다.", settings.getBoolean("lane" , true), true);
-        alarmadapter.addItem("앞차간 거리", "앞차와의 거리가 속도에 비해 너무 가까울 경우 경고합니다.", settings.getBoolean("distance", true), true);
-        alarmadapter.addItem("신호 위반", "신호 위반을 한 경우 경고합니다.", settings.getBoolean("signal", true), true);
+        alarmadapter.addItem("차선", "주행 중 차선을 밟고 있을 경우 경고합니다.", settings.getBoolean("lane" , true), true);
+        alarmadapter.addItem("차간 거리", "앞 차와의 거리가 너무 가깝거나 옆 차량이 내 차선에 끼어들 경우 경고합니다.", settings.getBoolean("distance", true), true);
+        alarmadapter.addItem("신호등", "신호 위반을 하거나 신호 대기 후 주행 신호에 출발하지 않을 경우 경고합니다.", settings.getBoolean("signal", true), true);
         alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true), true);
-        alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true), true);
+        //alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true), true);
 
         warningadapter.addItem("소리 (TTS)", "음성과 이미지를 사용하여 경고합니다.");
         warningadapter.addItem("진동", "진동과 이미지를 사용하여 경고합니다.");
@@ -302,7 +302,7 @@ public class Setting extends AppCompatActivity {
         editor.putBoolean("distance", alarmadapter.isChecked(1));
         editor.putBoolean("signal", alarmadapter.isChecked(2));
         editor.putBoolean("sleep", alarmadapter.isChecked(3));
-        editor.putBoolean("sign", alarmadapter.isChecked(4));
+        //editor.putBoolean("sign", alarmadapter.isChecked(4));
 
         editor.putInt("sound", warningadapter.GetChecked()); // 데이터 저장
 
@@ -319,11 +319,12 @@ public class Setting extends AppCompatActivity {
         SetSettings(2, alarmadapter.isChecked(1) ? 1 : 0); // Distance
         SetSettings(3, alarmadapter.isChecked(2) ? 1 : 0); // Signal Light
         SetSettings(4, alarmadapter.isChecked(3) ? 1 : 0); // Sleep
-        SetSettings(5, alarmadapter.isChecked(4) ? 1 : 0); // Sign
+        //SetSettings(5, alarmadapter.isChecked(4) ? 1 : 0); // Sign
         SetSettings(6, sb_sensi.getProgress());
         SetSettings(7, resolutionadapter.GetChecked()); // Video Size
         SetSettings(8, strResolution.get(resolutionadapter.GetChecked())[0]); // Video Width
         SetSettings(9, strResolution.get(resolutionadapter.GetChecked())[1]); // Video Height
+        SetSettings(10, (sb_cap.getProgress() + 1) * 30); // Record Length
 
         super.onDestroy();
     }

@@ -1,5 +1,5 @@
 ### Patronus: Advanced Driver Assistance Systems(ADAS) for Android
-Version: 0.94.0 (2017-09-25)
+Version: 0.96.0 (2017-10-23)
 
 <br>
 
@@ -10,7 +10,23 @@ set(pathProject "This Project Path")
 <br>
 #### 2. Build it!
 <br>
-
+---
+To do
+1. 졸음 운전 판별 미완성
+2. 차선 기준점 데이터 저장 미완성
+3. 신호등 검출 미완성
+4. 끼어들기, 신호주시, 신호위반 미완성
+5. OpenCV 녹화 스레드 추가 필요
+6. 동영상 뷰 액티비티 필요
+---
+#### 0.96.0 (2017-10-23)
+1. Manager.cpp: 수동 녹화 길이 추가
+2. RecordDrive: 메달 이미지, 졸음운전 추가
+3. MainActivity: 시작, 녹화 동시 기능 제거(기기 미지원)
+4. MainActivity: 졸음운전 인식 및 Manager 클래스 전달 추가
+5. Manager.cpp: 경고 함수 추가 및 변경
+6. PointActivity: 차선 기준점 저장 추가
+7. Lane.cpp: 차선 검출 알고리즘을 기준점 선을 기준으로 인식 변경
 ---
 #### 0.95.0 (2017-10-07)
 1. RecordDrive: 그래프 값 0 ~ 100 범위로 고정
