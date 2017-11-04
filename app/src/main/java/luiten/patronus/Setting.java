@@ -1,27 +1,20 @@
 package luiten.patronus;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.hardware.Camera;
 import android.os.Bundle;
-import android.support.v4.app.NotificationCompatBase;
-import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.CheckBox;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -206,6 +199,7 @@ public class Setting extends AppCompatActivity {
 
         recordadapter.addItem("운전 점수");
         recordadapter.addItem("로그");
+        recordadapter.addItem("수동 동영상");
 
         setListViewHeightBasedOnChildren(alarmlistview);
         setListViewHeightBasedOnChildren(warninglistview);
@@ -259,6 +253,10 @@ public class Setting extends AppCompatActivity {
                         break;
                     case 1 :
                         intent = new Intent(getApplicationContext(), RecordActivity.class);
+                        startActivity(intent);
+                        break;
+                    case 2 :
+                        intent = new Intent(getApplicationContext(), Manual_Recording.class);
                         startActivity(intent);
                         break;
                 }
