@@ -1,35 +1,21 @@
 package luiten.patronus;
 
-import android.app.Activity;
-import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Parcelable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.view.LayoutInflater;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Adapter;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.BaseExpandableListAdapter;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
-import android.widget.FrameLayout;
-import android.widget.ListView;
-import android.widget.ListAdapter;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+import android.widget.ExpandableListView.OnChildClickListener;
+import android.widget.ExpandableListView.OnGroupClickListener;
+import android.widget.ExpandableListView.OnGroupCollapseListener;
+import android.widget.ExpandableListView.OnGroupExpandListener;
 import android.widget.Toast;
-
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -37,13 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-
-import android.widget.ExpandableListView.OnChildClickListener;
-import android.widget.ExpandableListView.OnGroupClickListener;
-import android.widget.ExpandableListView.OnGroupCollapseListener;
-import android.widget.ExpandableListView.OnGroupExpandListener;
 
 /**
  * Created by LG on 2017-05-31.
@@ -164,7 +144,69 @@ public class RecordActivity extends AppCompatActivity {
                 return false;
             }
         });
+
+        registerForContextMenu(log_listview);
     }
+
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo){
+        super.onCreateContextMenu(menu, v, menuInfo);
+
+        ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) menuInfo;
+
+        int type = ExpandableListView.getPackedPositionType(info.packedPosition);
+
+        if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+            menu.add(0, 0, 1, "삭제");
+            //그룹 날짜있는 곳을 눌렀을때 나오는곳
+        } else if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+            menu.add(0, 0, 1, "삭제");
+            menu.add(0, 1, 1, "보기");
+            //자식 있는곳을 눌렀을때 나오는곳
+        }
+    } //ContextMenu 항목 추가 란!!~~~~~~
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+        ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) item.getMenuInfo();
+
+        int type = ExpandableListView.getPackedPositionType(info.packedPosition);
+
+        if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
+            switch(item.getItemId()) {
+                case 0 :
+                    Toast.makeText(getApplicationContext(), "그룹삭제를 누르셨습니다", Toast.LENGTH_LONG).show();
+                    break;
+            } //그룹 포지션일때 0번 포지션에 있는 아이템을 눌렀을경우
+        } else if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+            switch(item.getItemId()) {
+                case 0 :
+                    Toast.makeText(getApplicationContext(), "자식삭제를 누르셨습니다", Toast.LENGTH_LONG).show();
+                    AlertDialog.Builder alert_confirm = new AlertDialog.Builder(RecordActivity.this);
+                    alert_confirm.setMessage("삭제 하시겠습니까?").setCancelable(false).setPositiveButton("확인",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                }
+                            }).setNegativeButton("취소",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                    return;
+                                }
+                            });
+                    AlertDialog alert = alert_confirm.create();
+                    alert.show();
+                    break; //자식 포지션일때 0번 포지션에 있는 아이템을 눌렀을 경우
+                case 1 :
+                    Toast.makeText(getApplicationContext(), "보기를 누르셨습니다", Toast.LENGTH_LONG).show();
+                    break; //자식 포지션일때 1번 포지션에 있는 아이템을 눌렀을 경우
+            }
+        }
+        return super.onContextItemSelected(item);
+    }// 해당 ContextMenu에 아이템들을 각각 클릭햇을때 나오는 함수설정
 
     @Override
     public void onDestroy() {
