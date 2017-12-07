@@ -51,7 +51,6 @@
         <activity android:name=".RecordDrive"/>
         <activity android:name=".Setting"/>
         <activity android:name=".Manual_Recording"/>
-        <activity android:name=".Warning"/>
 
         <activity android:name=".SplashActivity"
             android:theme="@style/SplashTheme"

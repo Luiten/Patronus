@@ -47,7 +47,7 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
 
     public native int InitializeNativeLib(int w, int h);
     public native int convertNativeLib(long matAddrInput, long matAddrResult, int iCamera);
-    public native ArrayList<Integer> GetToStandardLane(int nLaneType);
+    public native int[] GetToStandardLane(int nLaneType, int[] arr);
     public native int SetSettings(int type, double value);
 
     static {
@@ -165,7 +165,7 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
     public void SaveImage()
     {
         Bitmap img_bmp = Bitmap.createBitmap(img_result.cols(), img_result.rows(), Bitmap.Config.ARGB_8888);
-        Utils.matToBitmap(img_result, img_bmp);
+        Utils.matToBitmap(img_result, img_bmp, false);
 
         String dirPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/Patronus/";
         File file = new File(dirPath);
@@ -186,22 +186,30 @@ public class PointActivity extends Activity implements CameraBridgeViewBase.CvCa
     }
 
     private void SaveLane() {
-        ArrayList<Integer> arr = null;
+        int[] arr = new int[4];
 
         SharedPreferences settings = getSharedPreferences("settings", MODE_PRIVATE);
         SharedPreferences.Editor editor = settings.edit();
 
-        arr = GetToStandardLane(0);
-        editor.putInt("standardlanex0", arr.get(0));
-        editor.putInt("standardlaney0", arr.get(1));
-        SetSettings(400, arr.get(0));
-        SetSettings(401, arr.get(1));
+        GetToStandardLane(0, arr);
+        editor.putInt("standardlane0x0", arr[0]);
+        editor.putInt("standardlane0y0", arr[1]);
+        editor.putInt("standardlane0x1", arr[2]);
+        editor.putInt("standardlane0y1", arr[3]);
+        SetSettings(400, arr[0]);
+        SetSettings(401, arr[1]);
+        SetSettings(402, arr[2]);
+        SetSettings(403, arr[3]);
 
-        arr = GetToStandardLane(1);
-        editor.putInt("standardlanex1", arr.get(0));
-        editor.putInt("standardlaney1", arr.get(1));
-        SetSettings(402, arr.get(0));
-        SetSettings(403, arr.get(1));
+        GetToStandardLane(1, arr);
+        editor.putInt("standardlane1x0", arr[0]);
+        editor.putInt("standardlane1y0", arr[1]);
+        editor.putInt("standardlane1x1", arr[2]);
+        editor.putInt("standardlane1y1", arr[3]);
+        SetSettings(404, arr[0]);
+        SetSettings(405, arr[1]);
+        SetSettings(406, arr[2]);
+        SetSettings(407, arr[3]);
 
         editor.apply(); // 완료한다.
     }

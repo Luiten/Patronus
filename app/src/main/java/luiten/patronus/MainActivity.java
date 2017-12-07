@@ -21,7 +21,9 @@ import android.os.PowerManager;
 import android.support.annotation.RequiresApi;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.MotionEvent;
+import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
@@ -535,6 +537,17 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         if(mCamera != null){
             mCamera.startPreview();
         }
+
+        int rotation = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay().getRotation();
+
+        if(rotation == Surface.ROTATION_90)
+        {
+            mCamera.setDisplayOrientation(90);
+        }
+        if(rotation == Surface.ROTATION_270)
+        {
+            mCamera.setDisplayOrientation(270);
+        }
     }
 
     @Override
@@ -606,15 +619,15 @@ public class MainActivity extends Activity implements CameraBridgeViewBase.CvCam
         return matResult;
     }
 
+    //------------------------------------------------------------------------------------------------//
+    // 센서값 얻어오기
+    // 출처: http://h5bak.tistory.com/271
+    //------------------------------------------------------------------------------------------------//
     //정확도에 대한 메소드 호출 (사용안함)
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
     }
 
-    //------------------------------------------------------------------------------------------------//
-    // 센서값 얻어오기
-    // 출처: http://h5bak.tistory.com/271
-    //------------------------------------------------------------------------------------------------//
     public void onSensorChanged(SensorEvent event) {
         Sensor sensor = event.sensor;
         float accelX, accelY, accelZ;

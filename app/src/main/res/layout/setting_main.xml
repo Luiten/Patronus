@@ -69,21 +69,30 @@
                 android:layout_width="match_parent"
                 android:layout_height="40dp"
                 android:layout_below="@+id/margin02"
-                android:text="녹화"
+                android:text="카메라"
                 android:gravity="center"
                 android:textSize="20dp" />
 
+            <ListView
+                android:id="@+id/set_listview_caplength"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/colorBackground"
+                android:layout_below="@+id/set_text_caplength" />
+
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="100dp"
+                android:layout_height="wrap_content"
                 android:id="@+id/set_layout_capseek"
-                android:layout_below="@+id/set_text_caplength"
+                android:layout_below="@+id/set_listview_caplength"
                 android:background="@color/colorBackground"
+                android:paddingTop="10dp"
+                android:paddingBottom="15dp"
                 android:orientation="horizontal">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_height="wrap_content"
                     android:layout_weight="0.15"
                     android:orientation="vertical">
 
@@ -92,15 +101,18 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="0.4"
+                        android:layout_marginTop="10dp"
                         android:layout_marginLeft="10dp"
+                        android:layout_marginBottom="10dp"
                         android:max = "9"/>
 
                     <TextView
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
                         android:layout_weight="0.6"
+                        android:layout_marginTop="10dp"
                         android:layout_marginLeft="20dp"
-                        android:text="충돌 시, 사고 전후를 저장할 녹화 시간입니다."
+                        android:text="충돌 전과 후를 모두 녹화하므로 지정된 시간의 두 배 길이로 녹화됩니다."
                         android:textSize="15dp"/>
 
                 </LinearLayout>
@@ -114,23 +126,16 @@
                     android:textColor="@color/colorPrimary"
                     android:textAlignment="gravity"
                     android:gravity="right"
-                    android:layout_marginTop="20dp"
+                    android:layout_marginTop="10dp"
                     android:layout_marginRight="20dp" />
 
             </LinearLayout>
-
-            <ListView
-                android:id="@+id/set_listview_caplength"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/colorBackground"
-                android:layout_below="@+id/set_layout_capseek" />
 
             <TextView
                 android:id = "@+id/margin03"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/set_listview_caplength"
+                android:layout_below="@+id/set_layout_capseek"
                 android:textSize="10dp"/>
 
             <TextView

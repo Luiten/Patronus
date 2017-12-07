@@ -90,57 +90,7 @@ public class RecordActivity extends AppCompatActivity {
             @Override
             public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
 
-                ArrayList<Integer> arrTemp = arrIndex.get(groupPosition);
-                int position = arrTemp.get(childPosition);
-
-                String[] temp = csvLogs.get(position);
-                Intent intent = null;
-
-                switch (Integer.valueOf(temp[2])) {
-                    // 자동차간 거리
-                    case 1:
-
-                        break;
-
-                    // 끼어들기
-                    // 차선 침범
-                    // 신호 위반
-                    // 신호 주시 안함
-                    // 표지판
-                    // 졸음 운전
-                    case 2:
-                    case 3:
-                    case 4:
-                    case 5:
-                    case 6:
-                    case 7:
-                        intent = new Intent(getApplicationContext(), RecordSignal.class);
-                        intent.putExtra("Logs", temp);
-                        startActivity(intent);
-                        break;
-
-                    // 충돌
-                    case 8:
-                        intent = new Intent(getApplicationContext(), RecordCrash.class);
-                        intent.putExtra("Logs", temp);
-                        startActivity(intent);
-                        break;
-
-                    // 운전 점수 - 현재는 운전 끝을 의미
-                    case 9:
-                        intent = new Intent(getApplicationContext(), RecordDrive.class);
-                        startActivity(intent);
-                        break;
-
-                    // 수동녹화
-                    case 10:
-                        intent = new Intent(getApplicationContext(), RecordCrash.class);
-                        intent.putExtra("Logs", temp);
-                        startActivity(intent);
-                        break;
-
-                }
-
+                ShowLogActivity(groupPosition, childPosition);
                 return false;
             }
         });
@@ -149,7 +99,7 @@ public class RecordActivity extends AppCompatActivity {
     }
 
     @Override
-    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo){
+    public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
         super.onCreateContextMenu(menu, v, menuInfo);
 
         ExpandableListView.ExpandableListContextMenuInfo info = (ExpandableListView.ExpandableListContextMenuInfo) menuInfo;
@@ -173,21 +123,15 @@ public class RecordActivity extends AppCompatActivity {
         int type = ExpandableListView.getPackedPositionType(info.packedPosition);
 
         if (type == ExpandableListView.PACKED_POSITION_TYPE_GROUP) {
-            switch(item.getItemId()) {
-                case 0 :
-                    Toast.makeText(getApplicationContext(), "그룹삭제를 누르셨습니다", Toast.LENGTH_LONG).show();
-                    break;
-            } //그룹 포지션일때 0번 포지션에 있는 아이템을 눌렀을경우
-        } else if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
-            switch(item.getItemId()) {
-                case 0 :
-                    Toast.makeText(getApplicationContext(), "자식삭제를 누르셨습니다", Toast.LENGTH_LONG).show();
+            switch (item.getItemId()) {
+                case 0:
                     AlertDialog.Builder alert_confirm = new AlertDialog.Builder(RecordActivity.this);
-                    alert_confirm.setMessage("삭제 하시겠습니까?").setCancelable(false).setPositiveButton("확인",
+                    alert_confirm.setMessage("해당 날짜의 로그를 삭제 하시겠습니까?").setCancelable(false).setPositiveButton("확인",
                             new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
 
+                                    Toast.makeText(getApplicationContext(), "로그가 삭제되었습니다.", Toast.LENGTH_LONG).show();
                                 }
                             }).setNegativeButton("취소",
                             new DialogInterface.OnClickListener() {
@@ -199,9 +143,34 @@ public class RecordActivity extends AppCompatActivity {
                             });
                     AlertDialog alert = alert_confirm.create();
                     alert.show();
+                    break;
+
+            } //그룹 포지션일때 0번 포지션에 있는 아이템을 눌렀을경우
+        }
+        else if (type == ExpandableListView.PACKED_POSITION_TYPE_CHILD) {
+            switch(item.getItemId()) {
+                case 0:
+                    AlertDialog.Builder alert_confirm = new AlertDialog.Builder(RecordActivity.this);
+                    alert_confirm.setMessage("해당 로그를 삭제 하시겠습니까?").setCancelable(false).setPositiveButton("확인",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+
+                                    Toast.makeText(getApplicationContext(), "로그가 삭제되었습니다.", Toast.LENGTH_LONG).show();
+                                }
+                            }).setNegativeButton("취소",
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    return;
+                                }
+                            });
+                    AlertDialog alert = alert_confirm.create();
+                    alert.show();
                     break; //자식 포지션일때 0번 포지션에 있는 아이템을 눌렀을 경우
-                case 1 :
-                    Toast.makeText(getApplicationContext(), "보기를 누르셨습니다", Toast.LENGTH_LONG).show();
+
+                case 1:
+                    ShowLogActivity(item.getGroupId(), item.getItemId());
                     break; //자식 포지션일때 1번 포지션에 있는 아이템을 눌렀을 경우
             }
         }
@@ -274,5 +243,58 @@ public class RecordActivity extends AppCompatActivity {
         catch (IOException e) {
         }
 
+    }
+
+    private void ShowLogActivity(int GroupID, int ChildID) {
+        ArrayList<Integer> arrTemp = arrIndex.get(GroupID);
+        int position = arrTemp.get(ChildID);
+
+        String[] temp = csvLogs.get(position);
+        Intent intent = null;
+
+        switch (Integer.valueOf(temp[2])) {
+            // 자동차간 거리
+            case 1:
+
+                break;
+
+            // 끼어들기
+            // 차선 침범
+            // 신호 위반
+            // 신호 주시 안함
+            // 표지판
+            // 졸음 운전
+            case 2:
+            case 3:
+            case 4:
+            case 5:
+            case 6:
+            case 7:
+                intent = new Intent(getApplicationContext(), RecordSignal.class);
+                intent.putExtra("Logs", temp);
+                startActivity(intent);
+                break;
+
+            // 충돌
+            case 8:
+                intent = new Intent(getApplicationContext(), RecordCrash.class);
+                intent.putExtra("Logs", temp);
+                startActivity(intent);
+                break;
+
+            // 운전 점수 - 현재는 운전 끝을 의미
+            case 9:
+                intent = new Intent(getApplicationContext(), RecordDrive.class);
+                startActivity(intent);
+                break;
+
+            // 수동녹화
+            case 10:
+                intent = new Intent(getApplicationContext(), RecordCrash.class);
+                intent.putExtra("Logs", temp);
+                startActivity(intent);
+                break;
+
+        }
     }
 }

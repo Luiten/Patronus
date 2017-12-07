@@ -468,7 +468,7 @@ public:
                                 text << tempDist;
                                 text << "m";
 
-                                putText(matResult, text.str(), Point(rectOrigLoc.x, rectOrigLoc.y), 2, 1.7, Scalar(255, 0, 0), 2);
+                                putText(matResult, text.str(), Point(rectOrigLoc.x, rectOrigLoc.y), 2, 1.7, Scalar(0, 0, 255), 2);
                             }
                         }
                     }

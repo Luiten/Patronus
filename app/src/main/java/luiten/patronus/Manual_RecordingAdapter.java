@@ -19,7 +19,7 @@ import java.util.ArrayList;
 
 public class Manual_RecordingAdapter extends BaseAdapter {
     private Context mContext = null;
-    private ArrayList<AlarmData> mAlarmData = new ArrayList <AlarmData>();
+    private ArrayList<RecordingData> mRecordingData = new ArrayList <RecordingData>();
     //알람 아이템들의 정보값들을 배열로 저장 리스트 포지션 하나당 들어갈 것들
 
     public Manual_RecordingAdapter(Context mContext){
@@ -29,12 +29,12 @@ public class Manual_RecordingAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        return mAlarmData.size();
+        return mRecordingData.size();
     } //리스트뷰 포지션의 개수가 배열의 수만큼 나오게한다
 
     @Override
     public Object getItem(int position) {
-        return mAlarmData.get(position);
+        return mRecordingData.get(position);
     } //각 리스트 포지션마다 배열의 저장된 데이터 반환
 
     @Override
@@ -44,51 +44,55 @@ public class Manual_RecordingAdapter extends BaseAdapter {
 
     @Override
     public View getView(final int position, View convertView, ViewGroup parent) {
-        final AlarmViewHolder holder;
+        final RecordingViewHolder holder;
         if(convertView == null) {
-            holder = new AlarmViewHolder();
+            holder = new RecordingViewHolder();
 
             LayoutInflater inflater = (LayoutInflater)mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             convertView = inflater.inflate(R.layout.manual_recording_item, null);
 
-            holder.recording_date = (TextView)convertView.findViewById(R.id.manual_recording_date);
             holder.recording_thumbnail = (ImageView)convertView.findViewById(R.id.manual_recording_thumbnail);
+            holder.recording_date = (TextView)convertView.findViewById(R.id.manual_recording_date);
+            holder.recording_desc = (TextView)convertView.findViewById(R.id.manual_recording_desc);
 
             //홀더에 저장되있는 것들을 이제 view에 뿌려준다
             convertView.setTag(holder);
         } else {
-            holder = (AlarmViewHolder)convertView.getTag();
+            holder = (RecordingViewHolder)convertView.getTag();
         }
 
-        AlarmData mData = mAlarmData.get(position);
+        RecordingData mData = mRecordingData.get(position);
 
         Bitmap bmThumbnail;
-        bmThumbnail = ThumbnailUtils.createVideoThumbnail(mData.minfo, MediaStore.Images.Thumbnails.MINI_KIND);
+        bmThumbnail = ThumbnailUtils.createVideoThumbnail(mData.mPath, MediaStore.Images.Thumbnails.MINI_KIND);
 
         holder.recording_thumbnail.setImageBitmap(bmThumbnail);
-        holder.recording_date.setText(mData.mDesc);
+        holder.recording_date.setText(mData.mName);
+        holder.recording_desc.setText(mData.mDesc);
 
         return convertView;
     }
 
-    public void addItem(String minfo, String desc) {
-        AlarmData addInfo = null;
-        addInfo = new AlarmData();
+    public void addItem(String path, String name, String desc) {
+        RecordingData addInfo = new RecordingData();
 
-        addInfo.minfo = minfo;
+        addInfo.mPath = path;
+        addInfo.mName = name;
         addInfo.mDesc = desc;
 
-        mAlarmData.add(addInfo);
+        mRecordingData.add(addInfo);
     }
 
-    private class AlarmViewHolder {
-        public TextView recording_date;
+    private class RecordingViewHolder {
         public ImageView recording_thumbnail;
+        public TextView recording_date;
+        public TextView recording_desc;
     } //알람 리스트뷰의 아이템 홀더
 
-    public class AlarmData {
+    public class RecordingData {
 
-        public String minfo; // 체크박스 이름
-        public String mDesc; // 체크박스 설명
+        public String mPath; // 비디오 경로
+        public String mName; // 비디오 이름
+        public String mDesc; // 비디오 설명
     }
 }

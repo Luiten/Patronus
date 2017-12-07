@@ -57,7 +57,7 @@ public class RecordDrive extends AppCompatActivity {
             "표지판", "졸음 운전", "충돌", "운전 점수", "수동 녹화" };
     private Integer LogTypeScore[] = { 2, 5, 1, 5, 3,
             0, 20, 30, 100, 0 };
-    private String MedalDesc[] = { "아주 완벽해요!", "잘했어요!", "괜찮았어요!", "조금 더 노력해봐요!", "무슨 일이 있었나요?", "... 자요?" };
+    private String MedalDesc[] = { "아주 완벽해요!", "잘했어요!", "괜찮았어요!", "조금 더 노력해봐요!", "무슨 일이 있었나요?", "면허를 따신지 얼마 안되셨나요?" };
 
     private ArrayList<String> mLogDate = new ArrayList<String>();
     private ArrayList<ArrayList<Integer>> arrIndex = new ArrayList<ArrayList<Integer>>();

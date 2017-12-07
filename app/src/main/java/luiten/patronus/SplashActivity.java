@@ -162,18 +162,23 @@ public class SplashActivity extends AppCompatActivity {
         // Manager 클래스에 적용
         SetSettings(1, settings.getBoolean("lane", true) ? 1 : 0);
         SetSettings(2, settings.getBoolean("distance", true) ? 1 : 0);
-        SetSettings(3, settings.getBoolean("signal", true) ? 1 : 0);
-        SetSettings(4, settings.getBoolean("sleep", true) ? 1 : 0);
-        SetSettings(5, settings.getBoolean("sign", true) ? 1 : 0);
+        SetSettings(3, settings.getBoolean("attention", true) ? 1 : 0);
+        SetSettings(4, settings.getBoolean("signal", true) ? 1 : 0);
+        SetSettings(5, settings.getBoolean("sleep", true) ? 1 : 0);
         SetSettings(6, settings.getInt("sensitivity", 4));
         //SetSettings(7, settings.getInt("resolution", 1)); // Video Size
         SetSettings(8, settings.getInt("resolutionwidth", 0)); // Video Width
         SetSettings(9, settings.getInt("resolutionheight", 0)); // Video Height
         SetSettings(10, (settings.getInt("sensitivity", 4) + 1) * 30); // Record Length
-        SetSettings(400, settings.getInt("standardlanex0", 0));
-        SetSettings(401, settings.getInt("standardlaney0", 0));
-        SetSettings(402, settings.getInt("standardlanex1", 0));
-        SetSettings(403, settings.getInt("standardlaney1", 0));
+        SetSettings(11, settings.getBoolean("record", true) ? 1 : 0);
+        SetSettings(400, settings.getInt("standardlane0x0", 0));
+        SetSettings(401, settings.getInt("standardlane0y0", 0));
+        SetSettings(402, settings.getInt("standardlane0x1", 0));
+        SetSettings(403, settings.getInt("standardlane0y1", 0));
+        SetSettings(404, settings.getInt("standardlane1x0", 0));
+        SetSettings(405, settings.getInt("standardlane1y0", 0));
+        SetSettings(406, settings.getInt("standardlane1x1", 0));
+        SetSettings(407, settings.getInt("standardlane1y1", 0));
 
         // 파일이 하나라도 없으면 다운로드
         for (int i = 0; i < strFileLists.length; i++)

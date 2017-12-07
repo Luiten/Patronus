@@ -80,7 +80,7 @@ public:
             }
         }
 
-        afterBlack.copyTo(afterBlack);
+        //afterBlack.copyTo(afterBlack);
 
         //red
         inRange(HSV, Scalar(0, 100, 50), Scalar(14, 255, 255), red1);
@@ -205,12 +205,12 @@ public:
 
                     rectOrigLoc.x += img_input.cols / 6;
 
-                    rectangle(img_result, imgLabelingR.m_recBlobs[i], Scalar(0, 255, 255), 2);
+                    //rectangle(img_result, rectOrigLoc, Scalar(0, 255, 255), 2);
                     for (int j = imgLabelingR.m_recBlobs[i].x; j < imgLabelingR.m_recBlobs[i].x + width; j++)
                     {
                         for (int k = imgLabelingR.m_recBlobs[i].y; k < imgLabelingR.m_recBlobs[i].y + height; k++)
                         {
-                            light_avg += afterBlack.at<uchar>(k, j);
+                            light_avg += bin_dilate.at<uchar>(k, j);
                         }
                     }
                     light_avg = light_avg / (float)(width * height);
@@ -224,15 +224,15 @@ public:
                             //black_avg += black.at<uchar>(k, j);
                         }
                     }
-                    range_avg = range_avg / (float)((height - 4)* 2 * width);
-                    black_avg = black_avg / (float)((height - 4)* 2 * width);
+                    range_avg = range_avg / (float)(height * (3 * width));
+                    black_avg = black_avg / (float)(height * (3 * width));
 
                 }
             }
-            if (light_avg > 0.75 * 255 && range_avg < 0.15 * 255)
+            if (light_avg > 0.75 * 255 && range_avg < 0.1 * 255)
             {
                 Rect rectOrigLoc;
-                rectOrigLoc = Rect(imgLabelingR.m_recBlobs[i].x - 5, imgLabelingR.m_recBlobs[i].y - 5, height * 4.5, height + 10);
+                rectOrigLoc = Rect(imgLabelingR.m_recBlobs[i].x, imgLabelingR.m_recBlobs[i].y, 4 * width, height);
                 rectOrigLoc.x *= ((float)img_input.cols / resizeWidth);
                 rectOrigLoc.y *= ((float)img_input.rows / resizeHeight);
                 rectOrigLoc.width *= ((float)img_input.cols / resizeWidth);
@@ -240,7 +240,7 @@ public:
 
                 rectOrigLoc.x += img_input.cols / 6;
 
-                rectangle(img_result, Rect(imgLabelingR.m_recBlobs[i].x - 5, imgLabelingR.m_recBlobs[i].y - 5, height * 4.5, height + 10), Scalar(0, 0, 255), 2);
+                //rectangle(img_result, rectOrigLoc, Scalar(0, 0, 255), 2);
 
                 listLight.push_back({rectOrigLoc, PATRONUS_LIGHT_TYPE_RED});
             }
@@ -271,12 +271,12 @@ public:
 
                     rectOrigLoc.x += img_input.cols / 6;
 
-                    rectangle(img_result, rectOrigLoc, Scalar(0, 255, 255), 2);
+                    //rectangle(img_result, rectOrigLoc, Scalar(0, 255, 255), 2);
                     for (int j = imgLabelingG.m_recBlobs[i].x; j < imgLabelingG.m_recBlobs[i].x + width; j++)
                     {
                         for (int k = imgLabelingG.m_recBlobs[i].y; k < imgLabelingG.m_recBlobs[i].y + height; k++)
                         {
-                            light_avg += afterBlack.at<uchar>(k, j);
+                            light_avg += bin_dilate.at<uchar>(k, j);
 
 
                         }
@@ -284,7 +284,7 @@ public:
 
                     light_avg = light_avg / (float)(width * height);
 
-                    for (int j = imgLabelingG.m_recBlobs[i].x - 2 * width; j < imgLabelingG.m_recBlobs[i].x; j++)
+                    for (int j = imgLabelingG.m_recBlobs[i].x - 3 * width; j < imgLabelingG.m_recBlobs[i].x; j++)
                     {
                         for (int k = imgLabelingG.m_recBlobs[i].y; k < imgLabelingG.m_recBlobs[i].y + height; k++)
                         {
@@ -294,15 +294,15 @@ public:
                         }
                     }
 
-                    range_avg = range_avg / (float)((height) * width * 2);
-                    black_avg = black_avg / (float)((height) * width * 2);
+                    range_avg = range_avg / (float)(height * (width * 3));
+                    black_avg = black_avg / (float)(height * (width * 3));
                 }
             }
 
             if (light_avg > 0.75 * 255 && range_avg < 0.1 * 255)
             {
                 Rect rectOrigLoc;
-                rectOrigLoc = Rect(imgLabelingG.m_recBlobs[i].x - height * 3, imgLabelingG.m_recBlobs[i].y - 5, height * 4.5, height + 10);
+                rectOrigLoc = Rect(imgLabelingG.m_recBlobs[i].x - 3 * width, imgLabelingG.m_recBlobs[i].y, 4 * width, height);
                 rectOrigLoc.x *= ((float)img_input.cols / resizeWidth);
                 rectOrigLoc.y *= ((float)img_input.rows / resizeHeight);
                 rectOrigLoc.width *= ((float)img_input.cols / resizeWidth);
@@ -310,10 +310,11 @@ public:
 
                 rectOrigLoc.x += img_input.cols / 6;
 
-                rectangle(img_result, Rect(imgLabelingG.m_recBlobs[i].x - height * 3, imgLabelingG.m_recBlobs[i].y - 5, height * 4.5, height + 10), Scalar(0, 255, 0), 2);
+                //rectangle(img_result, rectOrigLoc, Scalar(0, 255, 0), 2);
 
                 listLight.push_back({rectOrigLoc, PATRONUS_LIGHT_TYPE_GREEN});
             }
         }
+
     }
 };

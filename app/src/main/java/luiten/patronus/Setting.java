@@ -122,16 +122,6 @@ public class Setting extends AppCompatActivity {
         recordadapter = new RecordAdapter(this);
         recordlistview.setAdapter(recordadapter);
 
-        alarmadapter.addItem("차선", "주행 중 차선을 밟고 있을 경우 경고합니다.", settings.getBoolean("lane" , true), true);
-        alarmadapter.addItem("차간 거리", "앞 차와의 거리가 너무 가깝거나 옆 차량이 내 차선에 끼어들 경우 경고합니다.", settings.getBoolean("distance", true), true);
-        alarmadapter.addItem("신호등", "신호 위반을 하거나 신호 대기 후 주행 신호에 출발하지 않을 경우 경고합니다.", settings.getBoolean("signal", true), true);
-        alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true), true);
-        //alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true), true);
-
-        warningadapter.addItem("소리 (TTS)", "음성과 이미지를 사용하여 경고합니다.");
-        warningadapter.addItem("진동", "진동과 이미지를 사용하여 경고합니다.");
-        warningadapter.addItem("무음", "이미지만 사용하여 경고합니다.");
-        warningadapter.SetSelectNumber(settings.getInt("sound", 0));
 
         //--------------------------------------------------------------------------//
         // 듀얼 카메라 지원 확인
@@ -158,15 +148,35 @@ public class Setting extends AppCompatActivity {
             if (mFrontCamera != null) mFrontCamera.release();
         }
 
+
+        alarmadapter.addItem("차선", "주행 중 차선을 밟고 있을 경우 경고합니다.", settings.getBoolean("lane" , true), true);
+        alarmadapter.addItem("차간 거리", "앞 차와의 거리가 너무 가깝거나 옆 차량이 내 차선에 끼어들 경우 경고합니다.", settings.getBoolean("distance", true), true);
+        alarmadapter.addItem("신호 주시", "신호 대기 후 주행 신호에 출발하지 않을 경우 경고합니다.", settings.getBoolean("attention", true), true);
+        alarmadapter.addItem("신호 위반", "신호를 위반할 경우 경고합니다.", settings.getBoolean("signal", true), true);
+
+        if (nDualcameraSupport == 2) {
+            alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.", settings.getBoolean("sleep", true), true);
+        } else {
+            alarmadapter.addItem("졸음 운전", "주행 중 졸음 운전을 하거나 운전에 집중하지 않을 경우 경고합니다.\n* 듀얼 카메라를 지원하지 않아 기능을 사용할 수 없습니다.", settings.getBoolean("sleep", false), false);
+        }
+
+        //alarmadapter.addItem("표지판", "표지판 내용을 알려줍니다.", settings.getBoolean("sign", true), true);
+
+        warningadapter.addItem("소리 (TTS)", "음성과 이미지를 사용하여 경고합니다.");
+        warningadapter.addItem("진동", "진동과 이미지를 사용하여 경고합니다.");
+        warningadapter.addItem("무음", "이미지만 사용하여 경고합니다.");
+        warningadapter.SetSelectNumber(settings.getInt("sound", 0));
+
         if (nDualcameraSupport == 2) {
             capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.", settings.getBoolean("frontcamera", false), true);
         } else {
             //Toast.makeText(getApplicationContext(), "듀얼 카메라를 지원하지 않습니다.", Toast.LENGTH_LONG).show();
 
-            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.\n듀얼 카메라를 지원하지 않아 기능을 사용할 수 없습니다.", false, false);
+            capture_lengthadapter.addItem("전면 카메라", "운전자 방향의 카메라를 동작시킵니다.\n* 듀얼 카메라를 지원하지 않아 기능을 사용할 수 없습니다.", false, false);
         }
 
         capture_lengthadapter.addItem("후면 카메라", "도로 방향의 카메라를 동작시킵니다.", settings.getBoolean("backcamera", true), true);
+        capture_lengthadapter.addItem("충돌 녹화", "차량이 충돌할 경우 충돌 전과 후를 정해진 시간만큼 자동으로 녹화합니다.", settings.getBoolean("record", true), true);
 
         // 지원 해상도 알아내기
         Camera camera = Camera.open();
@@ -198,8 +208,8 @@ public class Setting extends AppCompatActivity {
         standardadapter.addItem("다시 기준점 찍기");
 
         recordadapter.addItem("운전 점수");
+        recordadapter.addItem("동영상");
         recordadapter.addItem("로그");
-        recordadapter.addItem("수동 동영상");
 
         setListViewHeightBasedOnChildren(alarmlistview);
         setListViewHeightBasedOnChildren(warninglistview);
@@ -252,11 +262,11 @@ public class Setting extends AppCompatActivity {
                         startActivity(intent);
                         break;
                     case 1 :
-                        intent = new Intent(getApplicationContext(), RecordActivity.class);
+                        intent = new Intent(getApplicationContext(), Manual_Recording.class);
                         startActivity(intent);
                         break;
                     case 2 :
-                        intent = new Intent(getApplicationContext(), Manual_Recording.class);
+                        intent = new Intent(getApplicationContext(), RecordActivity.class);
                         startActivity(intent);
                         break;
                 }
@@ -298,14 +308,16 @@ public class Setting extends AppCompatActivity {
 
         editor.putBoolean("lane", alarmadapter.isChecked(0));
         editor.putBoolean("distance", alarmadapter.isChecked(1));
-        editor.putBoolean("signal", alarmadapter.isChecked(2));
-        editor.putBoolean("sleep", alarmadapter.isChecked(3));
+        editor.putBoolean("attention", alarmadapter.isChecked(2));
+        editor.putBoolean("signal", alarmadapter.isChecked(3));
+        editor.putBoolean("sleep", alarmadapter.isChecked(4));
         //editor.putBoolean("sign", alarmadapter.isChecked(4));
 
         editor.putInt("sound", warningadapter.GetChecked()); // 데이터 저장
 
         editor.putBoolean("frontcamera", capture_lengthadapter.isChecked(0));
         editor.putBoolean("backcamera", capture_lengthadapter.isChecked(1));
+        editor.putBoolean("record", capture_lengthadapter.isChecked(2));
 
         editor.putInt("resolution", resolutionadapter.GetChecked()); // 데이터 저장
         editor.putInt("resolutionwidth", strResolution.get(resolutionadapter.GetChecked())[0]);
@@ -315,9 +327,11 @@ public class Setting extends AppCompatActivity {
         // Manager 클래스에 적용
         SetSettings(1, alarmadapter.isChecked(0) ? 1 : 0); // Lane
         SetSettings(2, alarmadapter.isChecked(1) ? 1 : 0); // Distance
-        SetSettings(3, alarmadapter.isChecked(2) ? 1 : 0); // Signal Light
-        SetSettings(4, alarmadapter.isChecked(3) ? 1 : 0); // Sleep
+        SetSettings(3, alarmadapter.isChecked(2) ? 1 : 0); // Attention
+        SetSettings(4, alarmadapter.isChecked(3) ? 1 : 0); // Signal Light
+        SetSettings(5, alarmadapter.isChecked(4) ? 1 : 0); // Sleep
         //SetSettings(5, alarmadapter.isChecked(4) ? 1 : 0); // Sign
+        SetSettings(11, capture_lengthadapter.isChecked(2) ? 1 : 0); // Record
         SetSettings(6, sb_sensi.getProgress());
         SetSettings(7, resolutionadapter.GetChecked()); // Video Size
         SetSettings(8, strResolution.get(resolutionadapter.GetChecked())[0]); // Video Width

@@ -50,17 +50,23 @@ Java_luiten_patronus_PointActivity_convertNativeLib(JNIEnv *, jobject, jlong add
     return 0;
 }
 
-JNIEXPORT jintArray JNICALL
-Java_luiten_patronus_PointActivity_GetToStandardLane(JNIEnv *env, jobject, jint nLaneType)
+JNIEXPORT jint JNICALL
+Java_luiten_patronus_PointActivity_GetToStandardLane(JNIEnv *env, jobject, jint nLaneType, jintArray array)
 {
-    int arr[2];
-    jintArray result;
-    result = env->NewIntArray(2);
+    jint arr[4];
 
     mgr.GetStandardLane(arr, nLaneType);
 
-    env->SetIntArrayRegion(result, 0, 2, arr);
-    return result;
+    env->SetIntArrayRegion(array, 0, 4, arr);
+    return 0;
+}
+
+// 세팅 값 적용
+JNIEXPORT jint JNICALL
+Java_luiten_patronus_PointActivity_SetSettings(JNIEnv *, jobject, jint type, jdouble value)
+{
+    mgr.SetSettings(type, value);
+    return 0;
 }
 
 // Manager 클래스에 세팅 값 적용
